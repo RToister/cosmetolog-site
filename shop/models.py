@@ -10,14 +10,19 @@ from django.utils import timezone
 
 class ProductCategory(models.Model):
     name = models.CharField(
+        "Назва",
         max_length=100,
         unique=True,
     )
-    description = models.TextField(blank=True)
+    description = models.TextField(
+        "Опис",
+        blank=True,
+    )
 
     class Meta:
         ordering = ("name",)
-        verbose_name_plural = "product categories"
+        verbose_name = "Категорія товарів"
+        verbose_name_plural = "Категорії товарів"
 
     def __str__(self):
         return self.name
@@ -25,31 +30,39 @@ class ProductCategory(models.Model):
 
 class Product(models.Model):
     class Availability(models.TextChoices):
-        PUBLIC = "public", "Available to everyone"
+        PUBLIC = "public", "Для всіх"
         PROFESSIONALS_ONLY = (
             "professionals_only",
-            "Cosmetologists only",
+            "Лише для косметологів",
         )
 
     category = models.ForeignKey(
         ProductCategory,
         on_delete=models.PROTECT,
         related_name="products",
+        verbose_name="Категорія",
     )
     name = models.CharField(
+        "Назва",
         max_length=150,
         unique=True,
     )
     sku = models.CharField(
+        "Артикул SKU",
         max_length=50,
         unique=True,
     )
-    description = models.TextField(blank=True)
+    description = models.TextField(
+        "Опис",
+        blank=True,
+    )
     image = models.ImageField(
+        "Зображення",
         upload_to="products/",
         blank=True,
     )
     retail_price = models.DecimalField(
+        "Роздрібна ціна",
         max_digits=10,
         decimal_places=2,
         null=True,
@@ -57,22 +70,38 @@ class Product(models.Model):
         validators=[MinValueValidator(Decimal("0.01"))],
     )
     professional_price = models.DecimalField(
+        "Професійна ціна",
         max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.01"))],
     )
     availability = models.CharField(
+        "Доступність",
         max_length=30,
         choices=Availability.choices,
         default=Availability.PUBLIC,
     )
-    stock_quantity = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    stock_quantity = models.PositiveIntegerField(
+        "Кількість на складі",
+        default=0,
+    )
+    is_active = models.BooleanField(
+        "Активний",
+        default=True,
+    )
+    created_at = models.DateTimeField(
+        "Створено",
+        auto_now_add=True,
+    )
+    updated_at = models.DateTimeField(
+        "Оновлено",
+        auto_now=True,
+    )
 
     class Meta:
         ordering = ("name",)
+        verbose_name = "Товар"
+        verbose_name_plural = "Товари"
 
     def clean(self):
         super().clean()
@@ -84,8 +113,8 @@ class Product(models.Model):
             raise ValidationError(
                 {
                     "retail_price": (
-                        "A public product must have "
-                        "a retail price."
+                        "Для загальнодоступного товару "
+                        "потрібно вказати роздрібну ціну."
                     )
                 }
             )
@@ -99,11 +128,15 @@ class Product(models.Model):
             raise ValidationError(
                 {
                     "professional_price": (
-                        "Professional price must be lower "
-                        "than retail price."
+                        "Професійна ціна повинна бути "
+                        "нижчою за роздрібну."
                     )
                 }
             )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -111,65 +144,141 @@ class Product(models.Model):
 
 class Order(models.Model):
     class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
-        PAID = "paid", "Paid"
-        CANCELLED = "cancelled", "Cancelled"
+        PENDING = "pending", "Очікує обробки"
+        PAID = "paid", "Оплачено"
+        CANCELLED = "cancelled", "Скасовано"
 
     class Source(models.TextChoices):
-        ONLINE = "online", "Online"
-        CLINIC = "clinic", "Clinic"
+        ONLINE = "online", "Сайт"
+        CLINIC = "clinic", "Клініка"
         TELEGRAM = "telegram", "Telegram"
 
     class PaymentMethod(models.TextChoices):
-        CASH = "cash", "Cash"
-        CARD = "card", "Card"
-        BANK_TRANSFER = "bank_transfer", "Bank transfer"
+        CASH = "cash", "Готівка"
+        CARD = "card", "Картка"
+        BANK_TRANSFER = "bank_transfer", "Банківський переказ"
 
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         related_name="orders",
+        verbose_name="Зареєстрований клієнт",
+        null=True,
+        blank=True,
+    )
+    client_name = models.CharField(
+        "Ім’я покупця",
+        max_length=150,
+    )
+    client_phone = models.CharField(
+        "Номер телефону",
+        max_length=20,
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         related_name="created_orders",
+        verbose_name="Хто створив",
         null=True,
         blank=True,
     )
     status = models.CharField(
+        "Статус",
         max_length=20,
         choices=Status.choices,
         default=Status.PENDING,
     )
     source = models.CharField(
+        "Джерело",
         max_length=20,
         choices=Source.choices,
         default=Source.ONLINE,
     )
     payment_method = models.CharField(
+        "Спосіб оплати",
         max_length=20,
         choices=PaymentMethod.choices,
         blank=True,
     )
     total_price = models.DecimalField(
+        "Загальна сума",
         max_digits=10,
         decimal_places=2,
         default=Decimal("0.00"),
         editable=False,
     )
     paid_at = models.DateTimeField(
+        "Дата оплати",
         null=True,
         blank=True,
         editable=False,
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(
+        "Створено",
+        auto_now_add=True,
+    )
+    updated_at = models.DateTimeField(
+        "Оновлено",
+        auto_now=True,
+    )
 
     class Meta:
         ordering = ("-created_at",)
+        verbose_name = "Замовлення"
+        verbose_name_plural = "Замовлення"
+
+    @property
+    def client_is_cosmetologist(self):
+        return bool(
+            self.client_id
+            and self.client.user_type == "cosmetologist"
+        )
+
+    def clean(self):
+        super().clean()
+
+        if not self.client_name.strip():
+            raise ValidationError(
+                {
+                    "client_name": (
+                        "Вкажіть ім’я покупця."
+                    )
+                }
+            )
+
+        digits = "".join(
+            character
+            for character in self.client_phone
+            if character.isdigit()
+        )
+
+        if len(digits) < 10 or len(digits) > 15:
+            raise ValidationError(
+                {
+                    "client_phone": (
+                        "Введіть коректний номер телефону."
+                    )
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        if self.client_id:
+            if not self.client_name:
+                self.client_name = (
+                        self.client.get_full_name()
+                        or self.client.username
+                )
+
+            if not self.client_phone:
+                self.client_phone = self.client.phone_number
+
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     def recalculate_total(self):
+        if not self.pk:
+            return
+
         total = sum(
             (item.subtotal for item in self.items.all()),
             Decimal("0.00"),
@@ -187,12 +296,12 @@ class Order(models.Model):
 
         if self.status == self.Status.CANCELLED:
             raise ValidationError(
-                "A cancelled order cannot be paid."
+                "Скасоване замовлення не можна оплатити."
             )
 
         if not self.payment_method:
             raise ValidationError(
-                "Select a payment method before payment."
+                "Перед оплатою оберіть спосіб оплати."
             )
 
         items = list(
@@ -202,21 +311,21 @@ class Order(models.Model):
 
         if not items:
             raise ValidationError(
-                "An empty order cannot be paid."
+                "Порожнє замовлення не можна оплатити."
             )
 
         for item in items:
             if item.quantity > item.product.stock_quantity:
                 raise ValidationError(
                     (
-                        f"Not enough stock for "
-                        f"{item.product.name}."
+                        f"Недостатньо товару "
+                        f"«{item.product.name}» на складі."
                     )
                 )
 
         for item in items:
             Product.objects.filter(
-                pk=item.product_id
+                pk=item.product_id,
             ).update(
                 stock_quantity=(
                         F("stock_quantity") - item.quantity
@@ -241,7 +350,7 @@ class Order(models.Model):
         if self.status == self.Status.PAID:
             for item in self.items.all():
                 Product.objects.filter(
-                    pk=item.product_id
+                    pk=item.product_id,
                 ).update(
                     stock_quantity=(
                             F("stock_quantity") + item.quantity
@@ -257,7 +366,12 @@ class Order(models.Model):
         )
 
     def __str__(self):
-        return f"Order #{self.pk} — {self.client}"
+        order_number = self.pk or "нове"
+
+        return (
+            f"Замовлення №{order_number} — "
+            f"{self.client_name}"
+        )
 
 
 class OrderItem(models.Model):
@@ -265,23 +379,29 @@ class OrderItem(models.Model):
         Order,
         on_delete=models.CASCADE,
         related_name="items",
+        verbose_name="Замовлення",
     )
     product = models.ForeignKey(
         Product,
         on_delete=models.PROTECT,
         related_name="order_items",
+        verbose_name="Товар",
     )
     quantity = models.PositiveIntegerField(
+        "Кількість",
         default=1,
         validators=[MinValueValidator(1)],
     )
     price_at_purchase = models.DecimalField(
+        "Ціна під час покупки",
         max_digits=10,
         decimal_places=2,
         editable=False,
     )
 
     class Meta:
+        verbose_name = "Товар у замовленні"
+        verbose_name_plural = "Товари в замовленні"
         constraints = [
             models.UniqueConstraint(
                 fields=("order", "product"),
@@ -294,9 +414,7 @@ class OrderItem(models.Model):
         return self.price_at_purchase * self.quantity
 
     def client_is_cosmetologist(self):
-        return (
-                self.order.client.user_type == "cosmetologist"
-        )
+        return self.order.client_is_cosmetologist
 
     def clean(self):
         super().clean()
@@ -306,14 +424,27 @@ class OrderItem(models.Model):
 
         is_cosmetologist = self.client_is_cosmetologist()
 
+        if not self.product.is_active:
+            raise ValidationError(
+                {
+                    "product": (
+                        "Цей товар зараз недоступний."
+                    )
+                }
+            )
+
         if (
                 self.product.availability
                 == Product.Availability.PROFESSIONALS_ONLY
                 and not is_cosmetologist
         ):
             raise ValidationError(
-                "This product is available only "
-                "to cosmetologists."
+                {
+                    "product": (
+                        "Цей товар доступний лише "
+                        "зареєстрованим косметологам."
+                    )
+                }
             )
 
         if (
@@ -321,15 +452,20 @@ class OrderItem(models.Model):
                 and self.product.retail_price is None
         ):
             raise ValidationError(
-                "This product does not have a retail price."
+                {
+                    "product": (
+                        "Для цього товару не вказана "
+                        "роздрібна ціна."
+                    )
+                }
             )
 
         if self.quantity > self.product.stock_quantity:
             raise ValidationError(
                 {
                     "quantity": (
-                        "The requested quantity exceeds "
-                        "available stock."
+                        "Запитана кількість перевищує "
+                        "залишок товару на складі."
                     )
                 }
             )
@@ -346,8 +482,10 @@ class OrderItem(models.Model):
                 )
 
         self.full_clean()
-        super().save(*args, **kwargs)
+        result = super().save(*args, **kwargs)
         self.order.recalculate_total()
+
+        return result
 
     def delete(self, *args, **kwargs):
         order = self.order
@@ -359,5 +497,5 @@ class OrderItem(models.Model):
     def __str__(self):
         return (
             f"{self.product} × {self.quantity} "
-            f"in order #{self.order_id}"
+            f"у замовленні №{self.order_id}"
         )
