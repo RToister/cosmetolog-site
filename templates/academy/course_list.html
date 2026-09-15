@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Навчання | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="mb-5">
+            <h1 class="display-4 mb-3">
+                Навчання
+            </h1>
+
+            <p class="lead text-muted">
+                Освітні програми з догляду за шкірою та
+                професійне навчання для косметологів.
+            </p>
+
+            <p class="text-muted mb-0">
+                Формат, дата, час, програма та остаточна
+                вартість навчання узгоджуються після подання заявки.
+            </p>
+        </div>
+
+        <section class="mb-5">
+            <div class="mb-4">
+      <span class="badge text-bg-light mb-2">
+        Для всіх
+      </span>
+
+                <h2 class="display-6">
+                    Навчання для домашнього догляду
+                </h2>
+
+                <p class="text-muted">
+                    Курси для тих, хто хоче краще розуміти
+                    свою шкіру, косметичні засоби та правильний догляд.
+                </p>
+            </div>
+
+            {% if public_courses %}
+                <div class="row g-4">
+                    {% for course in public_courses %}
+                        <div class="col-md-6 col-xl-4">
+                            <article class="card h-100 border-0 shadow-sm">
+                                {% if course.image %}
+                                    <a
+                                            href="{% url 'academy:course-detail' course.pk %}"
+                                    >
+                                        <img
+                                                src="{{ course.image.url }}"
+                                                alt="{{ course.title }}"
+                                                class="card-img-top"
+                                                style="height: 280px; object-fit: cover;"
+                                        >
+                                    </a>
+                                {% else %}
+                                    <a
+                                            href="{% url 'academy:course-detail' course.pk %}"
+                                            class="text-decoration-none"
+                                    >
+                                        <div
+                                                class="bg-light d-flex align-items-center justify-content-center text-muted"
+                                                style="height: 280px;"
+                                        >
+                                            Зображення буде додано
+                                        </div>
+                                    </a>
+                                {% endif %}
+
+                                <div class="card-body d-flex flex-column p-4">
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                  <span class="badge text-bg-light">
+                    {{ course.get_format_display }}
+                  </span>
+
+                                        <span class="badge text-bg-light">
+                    {{ course.get_training_type_display }}
+                  </span>
+                                    </div>
+
+                                    <h3 class="h4">
+                                        <a
+                                                href="{% url 'academy:course-detail' course.pk %}"
+                                                class="text-dark text-decoration-none"
+                                        >
+                                            {{ course.title }}
+                                        </a>
+                                    </h3>
+
+                                    <p class="text-muted">
+                                        {{ course.description|truncatewords:25 }}
+                                    </p>
+
+                                    <div class="mt-auto">
+                                        <div class="small text-muted">
+                                            Тривалість
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ course.duration_hours }} год.
+                                        </div>
+
+                                        <div class="small text-muted">
+                                            Орієнтовна вартість
+                                        </div>
+
+                                        <div class="fs-4 fw-semibold mb-3">
+                                            {{ course.price|floatformat:2 }} грн
+                                        </div>
+
+                                        <a
+                                                href="{% url 'academy:course-detail' course.pk %}"
+                                                class="btn btn-dark w-100"
+                                        >
+                                            Детальніше та залишити заявку
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-light border">
+                    Курси для загальної аудиторії скоро з’являться.
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="pt-4">
+            <div class="mb-4">
+      <span class="badge text-bg-dark mb-2">
+        Для косметологів
+      </span>
+
+                <h2 class="display-6">
+                    Професійне навчання
+                </h2>
+
+                <p class="text-muted">
+                    Поглиблені програми для практикуючих косметологів:
+                    техніки проведення процедур, робота з препаратами
+                    та профілактика ускладнень.
+                </p>
+            </div>
+
+            {% if professional_courses %}
+                <div class="row g-4">
+                    {% for course in professional_courses %}
+                        <div class="col-md-6 col-xl-4">
+                            <article class="card h-100 border-0 shadow-sm">
+                                {% if course.image %}
+                                    <a
+                                            href="{% url 'academy:course-detail' course.pk %}"
+                                    >
+                                        <img
+                                                src="{{ course.image.url }}"
+                                                alt="{{ course.title }}"
+                                                class="card-img-top"
+                                                style="height: 280px; object-fit: cover;"
+                                        >
+                                    </a>
+                                {% else %}
+                                    <a
+                                            href="{% url 'academy:course-detail' course.pk %}"
+                                            class="text-decoration-none"
+                                    >
+                                        <div
+                                                class="bg-dark-subtle d-flex align-items-center justify-content-center text-muted"
+                                                style="height: 280px;"
+                                        >
+                                            Зображення буде додано
+                                        </div>
+                                    </a>
+                                {% endif %}
+
+                                <div class="card-body d-flex flex-column p-4">
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                  <span class="badge text-bg-dark">
+                    Для косметологів
+                  </span>
+
+                                        <span class="badge text-bg-light">
+                    {{ course.get_format_display }}
+                  </span>
+
+                                        <span class="badge text-bg-light">
+                    {{ course.get_training_type_display }}
+                  </span>
+                                    </div>
+
+                                    <h3 class="h4">
+                                        <a
+                                                href="{% url 'academy:course-detail' course.pk %}"
+                                                class="text-dark text-decoration-none"
+                                        >
+                                            {{ course.title }}
+                                        </a>
+                                    </h3>
+
+                                    <p class="text-muted">
+                                        {{ course.description|truncatewords:25 }}
+                                    </p>
+
+                                    <div class="mt-auto">
+                                        <div class="small text-muted">
+                                            Тривалість
+                                        </div>
+
+                                        <div class="mb-3">
+                                            {{ course.duration_hours }} год.
+                                        </div>
+
+                                        <div class="small text-muted">
+                                            Орієнтовна вартість
+                                        </div>
+
+                                        <div class="fs-4 fw-semibold mb-3">
+                                            {{ course.price|floatformat:2 }} грн
+                                        </div>
+
+                                        <a
+                                                href="{% url 'academy:course-detail' course.pk %}"
+                                                class="btn btn-dark w-100"
+                                        >
+                                            Детальніше та залишити заявку
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-light border">
+                    Професійні курси скоро з’являться.
+                </div>
+            {% endif %}
+        </section>
+    </div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Заявку надіслано | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center">
+                        <div class="display-4 text-success mb-3">
+                            ✓
+                        </div>
+
+                        <h1 class="mb-3">
+                            Заявку успішно надіслано
+                        </h1>
+
+                        <p class="text-muted">
+                            Ви залишили заявку на курс:
+                        </p>
+
+                        <h2 class="h4 mb-4">
+                            {{ application.course.title }}
+                        </h2>
+
+                        <div class="bg-light rounded p-4 mb-4 text-start">
+                            <div class="mb-2">
+                                <strong>Ім’я:</strong>
+                                {{ application.applicant_name }}
+                            </div>
+
+                            <div class="mb-2">
+                                <strong>Телефон:</strong>
+                                {{ application.applicant_phone }}
+                            </div>
+
+                            <div>
+                                <strong>Орієнтовна вартість:</strong>
+                                {{ application.price_at_enrollment|floatformat:2 }}
+                                грн
+                            </div>
+                        </div>
+
+                        <p class="text-muted mb-4">
+                            Ми зв’яжемося з вами для узгодження формату,
+                            дати, програми та остаточної вартості навчання.
+                        </p>
+
+                        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                            <a
+                                    href="{% url 'academy:course-list' %}"
+                                    class="btn btn-dark"
+                            >
+                                Переглянути інші курси
+                            </a>
+
+                            <a
+                                    href="{% url 'home' %}"
+                                    class="btn btn-outline-dark"
+                            >
+                                На головну
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
