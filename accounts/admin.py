@@ -9,16 +9,13 @@ class CustomUserAdmin(UserAdmin):
     list_display = (
         "username",
         "first_name",
-        "last_name",
-        "email",
         "phone_number",
         "user_type",
-        "professional_status",
         "is_staff",
+        "is_active",
     )
     list_filter = (
         "user_type",
-        "professional_status",
         "is_staff",
         "is_active",
     )
@@ -26,21 +23,31 @@ class CustomUserAdmin(UserAdmin):
         "username",
         "first_name",
         "last_name",
-        "email",
         "phone_number",
     )
 
     fieldsets = UserAdmin.fieldsets + (
         (
-            "Clinic profile",
+            "Профіль",
             {
                 "fields": (
                     "phone_number",
                     "birth_date",
                     "user_type",
-                    "professional_status",
-                    "license_number",
-                    "specialization",
+                )
+            },
+        ),
+    )
+
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        (
+            "Профіль",
+            {
+                "fields": (
+                    "first_name",
+                    "phone_number",
+                    "birth_date",
+                    "user_type",
                 )
             },
         ),

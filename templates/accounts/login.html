@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Вхід | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <h1 class="mb-4">Вхід</h1>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {{ form.as_p }}
+
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
+
+                <button class="btn btn-dark w-100" type="submit">
+                    Увійти
+                </button>
+            </form>
+
+            <p class="mt-4">
+                Ще немає облікового запису?
+
+                <a href="{% url 'accounts:register' %}">
+                    Зареєструватися
+                </a>
+            </p>
+        </div>
+    </div>
+{% endblock %}

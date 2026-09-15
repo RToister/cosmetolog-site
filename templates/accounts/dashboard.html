@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Особистий кабінет | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <header class="mb-5">
+        <h1>
+            Вітаємо,
+            {{ user.get_full_name|default:user.username }}
+        </h1>
+
+        <p class="text-secondary">
+            {{ user.phone_number }}
+        </p>
+
+        {% if user.user_type == "cosmetologist" %}
+            <p>
+                <strong>Професійний кабінет косметолога</strong>
+            </p>
+        {% endif %}
+    </header>
+
+    <section class="mb-5">
+        <h2 class="mb-3">Майбутні записи</h2>
+
+        {% for booking in upcoming_bookings %}
+            <article class="card mb-3">
+                <div class="card-body">
+                    <h3 class="h5">
+                        {{ booking.procedure.name }}
+                    </h3>
+
+                    <p class="mb-1">
+                        {{ booking.date }}
+                        · {{ booking.start_time|time:"H:i" }}
+                        – {{ booking.end_time|time:"H:i" }}
+                    </p>
+
+                    <p class="mb-1">
+                        Статус: {{ booking.get_status_display }}
+                    </p>
+
+                    <p class="mb-0">
+                        Вартість:
+                        {{ booking.price_at_booking|floatformat:2 }} грн
+                    </p>
+                </div>
+            </article>
+        {% empty %}
+            <p class="text-secondary">
+                У вас немає майбутніх записів.
+            </p>
+        {% endfor %}
+    </section>
+
+    <section class="mb-5">
+        <h2 class="mb-3">Історія візитів</h2>
+
+        {% for booking in booking_history %}
+            <article class="card mb-3">
+                <div class="card-body">
+                    <h3 class="h5">
+                        {{ booking.procedure.name }}
+                    </h3>
+
+                    <p>
+                        {{ booking.date }}
+                        · {{ booking.start_time|time:"H:i" }}
+                    </p>
+
+                    <p>
+                        Статус: {{ booking.get_status_display }}
+                    </p>
+
+                    {% if booking.visit_comment %}
+                        <div class="alert alert-light mb-0">
+                            <strong>Коментар лікаря:</strong>
+                            {{ booking.visit_comment.text }}
+                        </div>
+                    {% endif %}
+                </div>
+            </article>
+        {% empty %}
+            <p class="text-secondary">
+                Історія візитів поки порожня.
+            </p>
+        {% endfor %}
+    </section>
+
+    <section class="mb-5">
+        <h2 class="mb-3">Мої замовлення</h2>
+
+        {% for order in orders %}
+            <article class="card mb-3">
+                <div class="card-body">
+                    <h3 class="h5">
+                        Замовлення №{{ order.id }}
+                    </h3>
+
+                    <p>
+                        Статус: {{ order.get_status_display }}
+                    </p>
+
+                    <ul>
+                        {% for item in order.items.all %}
+                            <li>
+                                {{ item.product.name }}
+                                × {{ item.quantity }}
+                                — {{ item.subtotal|floatformat:2 }} грн
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+                    <strong>
+                        Разом:
+                        {{ order.total_price|floatformat:2 }} грн
+                    </strong>
+                </div>
+            </article>
+        {% empty %}
+            <p class="text-secondary">
+                У вас ще немає замовлень.
+            </p>
+        {% endfor %}
+    </section>
+
+    {% if user.user_type == "cosmetologist" %}
+        <section>
+            <h2 class="mb-3">Моє навчання</h2>
+
+            {% for enrollment in course_enrollments %}
+                <article class="card mb-3">
+                    <div class="card-body">
+                        <h3 class="h5">
+                            {{ enrollment.course.title }}
+                        </h3>
+
+                        <p>
+                            Формат:
+                            {{ enrollment.course.get_format_display }}
+                        </p>
+
+                        <p>
+                            Статус:
+                            {{ enrollment.get_status_display }}
+                        </p>
+
+                        <p>
+                            Вартість:
+                            {{ enrollment.price_at_enrollment|floatformat:2 }}
+                            грн
+                        </p>
+                    </div>
+                </article>
+            {% empty %}
+                <p class="text-secondary">
+                    Ви ще не записані на курси.
+                </p>
+            {% endfor %}
+        </section>
+    {% endif %}
+{% endblock %}

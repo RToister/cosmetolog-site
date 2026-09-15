@@ -28,7 +28,7 @@ class Product(models.Model):
         PUBLIC = "public", "Available to everyone"
         PROFESSIONALS_ONLY = (
             "professionals_only",
-            "Approved cosmetologists only",
+            "Cosmetologists only",
         )
 
     category = models.ForeignKey(
@@ -49,7 +49,6 @@ class Product(models.Model):
         upload_to="products/",
         blank=True,
     )
-
     retail_price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -67,7 +66,6 @@ class Product(models.Model):
         choices=Availability.choices,
         default=Availability.PUBLIC,
     )
-
     stock_quantity = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -86,7 +84,8 @@ class Product(models.Model):
             raise ValidationError(
                 {
                     "retail_price": (
-                        "A public product must have a retail price."
+                        "A public product must have "
+                        "a retail price."
                     )
                 }
             )
@@ -219,8 +218,9 @@ class Order(models.Model):
             Product.objects.filter(
                 pk=item.product_id
             ).update(
-                stock_quantity=F("stock_quantity")
-                               - item.quantity
+                stock_quantity=(
+                        F("stock_quantity") - item.quantity
+                )
             )
 
         self.status = self.Status.PAID
@@ -243,8 +243,9 @@ class Order(models.Model):
                 Product.objects.filter(
                     pk=item.product_id
                 ).update(
-                    stock_quantity=F("stock_quantity")
-                                   + item.quantity
+                    stock_quantity=(
+                            F("stock_quantity") + item.quantity
+                    )
                 )
 
         self.status = self.Status.CANCELLED
@@ -292,12 +293,9 @@ class OrderItem(models.Model):
     def subtotal(self):
         return self.price_at_purchase * self.quantity
 
-    def client_is_approved_cosmetologist(self):
-        client = self.order.client
-
+    def client_is_cosmetologist(self):
         return (
-                client.user_type == "cosmetologist"
-                and client.professional_status == "approved"
+                self.order.client.user_type == "cosmetologist"
         )
 
     def clean(self):
@@ -306,22 +304,20 @@ class OrderItem(models.Model):
         if not self.order_id or not self.product_id:
             return
 
-        is_professional = (
-            self.client_is_approved_cosmetologist()
-        )
+        is_cosmetologist = self.client_is_cosmetologist()
 
         if (
                 self.product.availability
                 == Product.Availability.PROFESSIONALS_ONLY
-                and not is_professional
+                and not is_cosmetologist
         ):
             raise ValidationError(
                 "This product is available only "
-                "to approved cosmetologists."
+                "to cosmetologists."
             )
 
         if (
-                not is_professional
+                not is_cosmetologist
                 and self.product.retail_price is None
         ):
             raise ValidationError(
@@ -332,14 +328,15 @@ class OrderItem(models.Model):
             raise ValidationError(
                 {
                     "quantity": (
-                        "The requested quantity exceeds available stock."
+                        "The requested quantity exceeds "
+                        "available stock."
                     )
                 }
             )
 
     def save(self, *args, **kwargs):
         if self._state.adding:
-            if self.client_is_approved_cosmetologist():
+            if self.client_is_cosmetologist():
                 self.price_at_purchase = (
                     self.product.professional_price
                 )

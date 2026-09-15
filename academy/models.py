@@ -117,15 +117,12 @@ class CourseEnrollment(models.Model):
         if not self.student_id:
             return
 
-        if (
-                self.student.user_type != "cosmetologist"
-                or self.student.professional_status != "approved"
-        ):
+        if self.student.user_type != "cosmetologist":
             raise ValidationError(
                 {
                     "student": (
-                        "Only approved cosmetologists "
-                        "can enroll in courses."
+                        "Only cosmetologists can enroll "
+                        "in courses."
                     )
                 }
             )
