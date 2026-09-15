@@ -58,18 +58,11 @@ class UserProfileForm(forms.ModelForm):
             "first_name",
             "last_name",
             "phone_number",
-            "birth_date",
         )
         labels = {
             "first_name": "Ім’я",
             "last_name": "Прізвище",
             "phone_number": "Номер телефону",
-            "birth_date": "Дата народження",
-        }
-        widgets = {
-            "birth_date": forms.DateInput(
-                attrs={"type": "date"}
-            ),
         }
 
     def clean_phone_number(self):

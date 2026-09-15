@@ -1,5 +1,7 @@
+from datetime import date
+
 from django import forms
-from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 from services.models import Procedure
 
@@ -17,29 +19,31 @@ class BookingForm(forms.ModelForm):
             "start_time",
             "client_note",
         )
-        labels = {
-            "client_name": "Ім’я",
-            "client_phone": "Номер телефону",
-            "procedure": "Процедура",
-            "date": "Дата",
-            "start_time": "Час",
-            "client_note": "Коментар",
-        }
         widgets = {
-            "date": forms.DateInput(
-                attrs={"type": "date"},
-            ),
-            "start_time": forms.TimeInput(
+            "client_name": forms.TextInput(
                 attrs={
-                    "type": "time",
-                    "step": "1800",
-                },
+                    "placeholder": "Введіть ваше ім’я",
+                    "autocomplete": "name",
+                }
             ),
+            "client_phone": forms.TextInput(
+                attrs={
+                    "placeholder": "+380XXXXXXXXX",
+                    "autocomplete": "tel",
+                }
+            ),
+            "procedure": forms.Select(),
+            "date": forms.DateInput(
+                attrs={
+                    "type": "date",
+                }
+            ),
+            "start_time": forms.Select(),
             "client_note": forms.Textarea(
                 attrs={
-                    "rows": 3,
-                    "placeholder": "Необов’язково",
-                },
+                    "rows": 4,
+                    "placeholder": "Ваші побажання або додаткова інформація",
+                }
             ),
         }
 
@@ -51,64 +55,78 @@ class BookingForm(forms.ModelForm):
         self.fields["procedure"].queryset = (
             Procedure.objects.filter(is_active=True)
             .select_related("category")
+            .order_by("category__name", "name")
         )
 
-        self.fields["date"].widget.attrs["min"] = (
-            timezone.localdate().isoformat()
-        )
+        self.fields["procedure"].empty_label = "Оберіть процедуру"
+        self.fields["start_time"].choices = [
+            ("", "Спочатку оберіть процедуру та дату")
+        ]
+
+        self.fields["date"].widget.attrs["min"] = date.today().isoformat()
 
         if user and user.is_authenticated:
             self.fields["client_name"].initial = (
                     user.get_full_name() or user.username
             )
-            self.fields["client_phone"].initial = (
-                user.phone_number
-            )
+            self.fields["client_phone"].initial = user.phone_number
 
-    def clean_date(self):
-        booking_date = self.cleaned_data["date"]
+        for field_name, field in self.fields.items():
+            if field_name in ("procedure", "start_time"):
+                field.widget.attrs["class"] = "form-select"
+            else:
+                field.widget.attrs["class"] = "form-control"
 
-        if booking_date < timezone.localdate():
-            raise forms.ValidationError(
-                "Не можна створити запис на минулу дату."
-            )
+        if self.is_bound:
+            selected_time = self.data.get("start_time")
 
-        return booking_date
+            if selected_time:
+                self.fields["start_time"].choices = [
+                    (selected_time, selected_time)
+                ]
 
     def clean_client_name(self):
         client_name = self.cleaned_data["client_name"].strip()
 
         if len(client_name) < 2:
-            raise forms.ValidationError(
-                "Вкажіть коректне ім’я."
+            raise ValidationError(
+                "Ім’я повинно містити щонайменше 2 символи."
             )
 
         return client_name
 
     def clean_client_phone(self):
-        phone_number = self.cleaned_data["client_phone"].strip()
+        client_phone = self.cleaned_data["client_phone"].strip()
 
-        allowed_characters = set("+0123456789 ()-")
+        allowed_characters = "+0123456789 ()-"
 
-        if not phone_number:
-            raise forms.ValidationError(
-                "Вкажіть номер телефону."
-            )
-
-        if not set(phone_number).issubset(allowed_characters):
-            raise forms.ValidationError(
+        if any(
+                character not in allowed_characters
+                for character in client_phone
+        ):
+            raise ValidationError(
                 "Номер телефону містить недопустимі символи."
             )
 
         digits = "".join(
             character
-            for character in phone_number
+            for character in client_phone
             if character.isdigit()
         )
 
-        if len(digits) < 9 or len(digits) > 15:
-            raise forms.ValidationError(
-                "Вкажіть коректний номер телефону."
+        if len(digits) < 10 or len(digits) > 15:
+            raise ValidationError(
+                "Введіть коректний номер телефону."
             )
 
-        return phone_number
+        return client_phone
+
+    def clean_date(self):
+        booking_date = self.cleaned_data["date"]
+
+        if booking_date < date.today():
+            raise ValidationError(
+                "Неможливо створити запис на минулу дату."
+            )
+
+        return booking_date

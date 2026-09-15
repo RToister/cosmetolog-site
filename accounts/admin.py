@@ -32,7 +32,6 @@ class CustomUserAdmin(UserAdmin):
             {
                 "fields": (
                     "phone_number",
-                    "birth_date",
                     "user_type",
                 )
             },
@@ -46,7 +45,6 @@ class CustomUserAdmin(UserAdmin):
                 "fields": (
                     "first_name",
                     "phone_number",
-                    "birth_date",
                     "user_type",
                 )
             },

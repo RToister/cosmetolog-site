@@ -1,10 +1,256 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}
+    Онлайн-запис | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4 p-md-5">
+                        <h1 class="mb-3">Онлайн-запис</h1>
+
+                        <p class="text-muted mb-4">
+                            Оберіть процедуру, дату та доступний час.
+                            Реєстрація для запису не потрібна.
+                        </p>
+
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label
+                                            for="{{ form.client_name.id_for_label }}"
+                                            class="form-label"
+                                    >
+                                        {{ form.client_name.label }}
+                                    </label>
+
+                                    {{ form.client_name }}
+
+                                    {% for error in form.client_name.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label
+                                            for="{{ form.client_phone.id_for_label }}"
+                                            class="form-label"
+                                    >
+                                        {{ form.client_phone.label }}
+                                    </label>
+
+                                    {{ form.client_phone }}
+
+                                    {% for error in form.client_phone.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label
+                                        for="{{ form.procedure.id_for_label }}"
+                                        class="form-label"
+                                >
+                                    {{ form.procedure.label }}
+                                </label>
+
+                                {{ form.procedure }}
+
+                                {% for error in form.procedure.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label
+                                            for="{{ form.date.id_for_label }}"
+                                            class="form-label"
+                                    >
+                                        {{ form.date.label }}
+                                    </label>
+
+                                    {{ form.date }}
+
+                                    {% for error in form.date.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label
+                                            for="{{ form.start_time.id_for_label }}"
+                                            class="form-label"
+                                    >
+                                        {{ form.start_time.label }}
+                                    </label>
+
+                                    {{ form.start_time }}
+
+                                    {% for error in form.start_time.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                    <div
+                                            id="time-help"
+                                            class="form-text"
+                                    >
+                                        Спочатку оберіть процедуру та дату.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label
+                                        for="{{ form.client_note.id_for_label }}"
+                                        class="form-label"
+                                >
+                                    {{ form.client_note.label }}
+                                </label>
+
+                                {{ form.client_note }}
+
+                                {% for error in form.client_note.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <button
+                                    type="submit"
+                                    class="btn btn-dark btn-lg w-100"
+                            >
+                                Підтвердити запис
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const procedureField = document.getElementById("id_procedure");
+            const dateField = document.getElementById("id_date");
+            const timeField = document.getElementById("id_start_time");
+            const timeHelp = document.getElementById("time-help");
+
+            const previouslySelectedTime = timeField.value;
+
+            function setPlaceholder(message) {
+                timeField.innerHTML = "";
+
+                const option = document.createElement("option");
+                option.value = "";
+                option.textContent = message;
+
+                timeField.appendChild(option);
+                timeField.disabled = true;
+            }
+
+            async function loadAvailableTimes() {
+                const procedureId = procedureField.value;
+                const selectedDate = dateField.value;
+
+                if (!procedureId || !selectedDate) {
+                    setPlaceholder("Оберіть процедуру та дату");
+                    timeHelp.textContent =
+                        "Спочатку оберіть процедуру та дату.";
+                    return;
+                }
+
+                setPlaceholder("Завантаження...");
+                timeHelp.textContent = "Перевіряємо доступний час.";
+
+                const url = new URL(
+                    "{% url 'appointments:available-times' %}",
+                    window.location.origin
+                );
+
+                url.searchParams.set("procedure", procedureId);
+                url.searchParams.set("date", selectedDate);
+
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    timeField.innerHTML = "";
+
+                    if (data.error) {
+                        setPlaceholder(data.error);
+                        timeHelp.textContent = data.error;
+                        return;
+                    }
+
+                    if (!data.available_times.length) {
+                        setPlaceholder("Немає доступного часу");
+                        timeHelp.textContent =
+                            "На обрану дату вільного часу немає.";
+                        return;
+                    }
+
+                    const emptyOption = document.createElement("option");
+                    emptyOption.value = "";
+                    emptyOption.textContent = "Оберіть час";
+                    timeField.appendChild(emptyOption);
+
+                    data.available_times.forEach(function (slot) {
+                        const option = document.createElement("option");
+
+                        option.value = slot.value;
+                        option.textContent = slot.label;
+
+                        if (slot.value === previouslySelectedTime) {
+                            option.selected = true;
+                        }
+
+                        timeField.appendChild(option);
+                    });
+
+                    timeField.disabled = false;
+                    timeHelp.textContent =
+                        "Відображено доступний час для обраної процедури.";
+                } catch (error) {
+                    setPlaceholder("Помилка завантаження");
+                    timeHelp.textContent =
+                        "Не вдалося завантажити час. Оновіть сторінку.";
+                }
+            }
+
+            procedureField.addEventListener("change", loadAvailableTimes);
+            dateField.addEventListener("change", loadAvailableTimes);
+
+            if (procedureField.value && dateField.value) {
+                loadAvailableTimes();
+            } else {
+                setPlaceholder("Оберіть процедуру та дату");
+            }
+        });
+    </script>
+{% endblock %}
