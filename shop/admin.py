@@ -46,6 +46,7 @@ class ProductAdmin(admin.ModelAdmin):
         "name",
         "sku",
         "description",
+        "usage_recommendations",
     )
     list_editable = (
         "stock_quantity",
@@ -68,6 +69,7 @@ class ProductAdmin(admin.ModelAdmin):
                     "name",
                     "sku",
                     "description",
+                    "usage_recommendations",
                     "image",
                 )
             },
@@ -128,17 +130,37 @@ class OrderItemInline(admin.TabularInline):
 
         return f"{obj.subtotal:.2f} грн"
 
-    def has_add_permission(self, request, obj=None):
-        if obj and obj.status != Order.Status.PENDING:
+    def has_add_permission(
+            self,
+            request,
+            obj=None,
+    ):
+        if (
+                obj
+                and obj.status != Order.Status.PENDING
+        ):
             return False
 
-        return super().has_add_permission(request, obj)
+        return super().has_add_permission(
+            request,
+            obj,
+        )
 
-    def has_delete_permission(self, request, obj=None):
-        if obj and obj.status != Order.Status.PENDING:
+    def has_delete_permission(
+            self,
+            request,
+            obj=None,
+    ):
+        if (
+                obj
+                and obj.status != Order.Status.PENDING
+        ):
             return False
 
-        return super().has_delete_permission(request, obj)
+        return super().has_delete_permission(
+            request,
+            obj,
+        )
 
 
 @admin.register(Order)
@@ -236,16 +258,33 @@ class OrderAdmin(admin.ModelAdmin):
     def total_price_display(self, obj):
         return f"{obj.total_price:.2f} грн"
 
-    def save_model(self, request, obj, form, change):
+    def save_model(
+            self,
+            request,
+            obj,
+            form,
+            change,
+    ):
         if not obj.created_by_id:
             obj.created_by = request.user
 
         if obj.source == Order.Source.ONLINE:
             obj.source = Order.Source.CLINIC
 
-        super().save_model(request, obj, form, change)
+        super().save_model(
+            request,
+            obj,
+            form,
+            change,
+        )
 
-    def save_related(self, request, form, formsets, change):
+    def save_related(
+            self,
+            request,
+            form,
+            formsets,
+            change,
+    ):
         super().save_related(
             request,
             form,
@@ -255,8 +294,16 @@ class OrderAdmin(admin.ModelAdmin):
 
         form.instance.recalculate_total()
 
-    @admin.action(description="Позначити вибрані замовлення оплаченими")
-    def mark_selected_as_paid(self, request, queryset):
+    @admin.action(
+        description=(
+                "Позначити вибрані замовлення оплаченими"
+        )
+    )
+    def mark_selected_as_paid(
+            self,
+            request,
+            queryset,
+    ):
         completed_count = 0
 
         for order in queryset:
@@ -283,8 +330,14 @@ class OrderAdmin(admin.ModelAdmin):
                 level=messages.SUCCESS,
             )
 
-    @admin.action(description="Скасувати вибрані замовлення")
-    def cancel_selected_orders(self, request, queryset):
+    @admin.action(
+        description="Скасувати вибрані замовлення"
+    )
+    def cancel_selected_orders(
+            self,
+            request,
+            queryset,
+    ):
         cancelled_count = 0
 
         for order in queryset:

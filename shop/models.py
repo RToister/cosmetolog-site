@@ -56,6 +56,10 @@ class Product(models.Model):
         "Опис",
         blank=True,
     )
+    usage_recommendations = models.TextField(
+        "Рекомендації щодо застосування",
+        blank=True,
+    )
     image = models.ImageField(
         "Зображення",
         upload_to="products/",
@@ -67,13 +71,17 @@ class Product(models.Model):
         decimal_places=2,
         null=True,
         blank=True,
-        validators=[MinValueValidator(Decimal("0.01"))],
+        validators=[
+            MinValueValidator(Decimal("0.01")),
+        ],
     )
     professional_price = models.DecimalField(
         "Професійна ціна",
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal("0.01"))],
+        validators=[
+            MinValueValidator(Decimal("0.01")),
+        ],
     )
     availability = models.CharField(
         "Доступність",
@@ -136,6 +144,7 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()
+
         return super().save(*args, **kwargs)
 
     def __str__(self):
@@ -156,7 +165,10 @@ class Order(models.Model):
     class PaymentMethod(models.TextChoices):
         CASH = "cash", "Готівка"
         CARD = "card", "Картка"
-        BANK_TRANSFER = "bank_transfer", "Банківський переказ"
+        BANK_TRANSFER = (
+            "bank_transfer",
+            "Банківський переказ",
+        )
 
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -270,9 +282,12 @@ class Order(models.Model):
                 )
 
             if not self.client_phone:
-                self.client_phone = self.client.phone_number
+                self.client_phone = (
+                    self.client.phone_number
+                )
 
         self.full_clean()
+
         return super().save(*args, **kwargs)
 
     def recalculate_total(self):
@@ -280,13 +295,19 @@ class Order(models.Model):
             return
 
         total = sum(
-            (item.subtotal for item in self.items.all()),
+            (
+                item.subtotal
+                for item in self.items.all()
+            ),
             Decimal("0.00"),
         )
 
-        type(self).objects.filter(pk=self.pk).update(
+        type(self).objects.filter(
+            pk=self.pk,
+        ).update(
             total_price=total,
         )
+
         self.total_price = total
 
     @transaction.atomic
@@ -315,7 +336,10 @@ class Order(models.Model):
             )
 
         for item in items:
-            if item.quantity > item.product.stock_quantity:
+            if (
+                    item.quantity
+                    > item.product.stock_quantity
+            ):
                 raise ValidationError(
                     (
                         f"Недостатньо товару "
@@ -328,12 +352,14 @@ class Order(models.Model):
                 pk=item.product_id,
             ).update(
                 stock_quantity=(
-                        F("stock_quantity") - item.quantity
+                        F("stock_quantity")
+                        - item.quantity
                 )
             )
 
         self.status = self.Status.PAID
         self.paid_at = timezone.now()
+
         self.save(
             update_fields=(
                 "status",
@@ -353,11 +379,13 @@ class Order(models.Model):
                     pk=item.product_id,
                 ).update(
                     stock_quantity=(
-                            F("stock_quantity") + item.quantity
+                            F("stock_quantity")
+                            + item.quantity
                     )
                 )
 
         self.status = self.Status.CANCELLED
+
         self.save(
             update_fields=(
                 "status",
@@ -390,7 +418,9 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(
         "Кількість",
         default=1,
-        validators=[MinValueValidator(1)],
+        validators=[
+            MinValueValidator(1),
+        ],
     )
     price_at_purchase = models.DecimalField(
         "Ціна під час покупки",
@@ -411,7 +441,10 @@ class OrderItem(models.Model):
 
     @property
     def subtotal(self):
-        return self.price_at_purchase * self.quantity
+        return (
+                self.price_at_purchase
+                * self.quantity
+        )
 
     def client_is_cosmetologist(self):
         return self.order.client_is_cosmetologist
@@ -422,7 +455,9 @@ class OrderItem(models.Model):
         if not self.order_id or not self.product_id:
             return
 
-        is_cosmetologist = self.client_is_cosmetologist()
+        is_cosmetologist = (
+            self.client_is_cosmetologist()
+        )
 
         if not self.product.is_active:
             raise ValidationError(
@@ -460,7 +495,10 @@ class OrderItem(models.Model):
                 }
             )
 
-        if self.quantity > self.product.stock_quantity:
+        if (
+                self.quantity
+                > self.product.stock_quantity
+        ):
             raise ValidationError(
                 {
                     "quantity": (
@@ -482,14 +520,18 @@ class OrderItem(models.Model):
                 )
 
         self.full_clean()
+
         result = super().save(*args, **kwargs)
+
         self.order.recalculate_total()
 
         return result
 
     def delete(self, *args, **kwargs):
         order = self.order
+
         result = super().delete(*args, **kwargs)
+
         order.recalculate_total()
 
         return result
