@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Кошик | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="display-5 mb-2">
+                    Кошик
+                </h1>
+
+                <p class="text-muted mb-0">
+                    Перевірте товари перед оформленням замовлення.
+                </p>
+            </div>
+
+            <a
+                    href="{% url 'shop:product-list' %}"
+                    class="btn btn-outline-dark"
+            >
+                Продовжити покупки
+            </a>
+        </div>
+
+        {% if cart_items %}
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    {% for item in cart_items %}
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body p-4">
+                                <div class="row align-items-center g-3">
+                                    <div class="col-md-3">
+                                        {% if item.product.image %}
+                                            <a
+                                                    href="{% url 'shop:product-detail' item.product.pk %}"
+                                            >
+                                                <img
+                                                        src="{{ item.product.image.url }}"
+                                                        alt="{{ item.product.name }}"
+                                                        class="img-fluid rounded"
+                                                        style="height: 130px; width: 100%; object-fit: cover;"
+                                                >
+                                            </a>
+                                        {% else %}
+                                            <div
+                                                    class="bg-light rounded d-flex align-items-center justify-content-center text-muted text-center"
+                                                    style="height: 130px;"
+                                            >
+                                                Без зображення
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="small text-muted">
+                                            {{ item.product.category.name }}
+                                        </div>
+
+                                        <h2 class="h5 mb-2">
+                                            <a
+                                                    href="{% url 'shop:product-detail' item.product.pk %}"
+                                                    class="text-dark text-decoration-none"
+                                            >
+                                                {{ item.product.name }}
+                                            </a>
+                                        </h2>
+
+                                        <div class="text-muted">
+                                            {{ item.price|floatformat:2 }} грн/шт.
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <form
+                                                method="post"
+                                                action="{% url 'shop:cart-update' item.product.pk %}"
+                                        >
+                                            {% csrf_token %}
+
+                                            <label
+                                                    for="{{ item.update_form.quantity.id_for_label }}"
+                                                    class="form-label small"
+                                            >
+                                                Кількість
+                                            </label>
+
+                                            <div class="input-group">
+                                                {{ item.update_form.quantity }}
+
+                                                <button
+                                                        type="submit"
+                                                        class="btn btn-outline-dark"
+                                                        title="Оновити кількість"
+                                                >
+                                                    Оновити
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <div class="col-md-2 text-md-end">
+                                        <div class="fw-semibold mb-3">
+                                            {{ item.total_price|floatformat:2 }} грн
+                                        </div>
+
+                                        <form
+                                                method="post"
+                                                action="{% url 'shop:cart-remove' item.product.pk %}"
+                                        >
+                                            {% csrf_token %}
+
+                                            <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                            >
+                                                Видалити
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h2 class="h4 mb-4">
+                                Ваше замовлення
+                            </h2>
+
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Кількість товарів</span>
+
+                                <strong>
+                                    {{ cart|length }}
+                                </strong>
+                            </div>
+
+                            <hr>
+
+                            <div class="d-flex justify-content-between fs-5 mb-4">
+                                <span>Загальна сума</span>
+
+                                <strong>
+                                    {{ cart.get_total_price|floatformat:2 }} грн
+                                </strong>
+                            </div>
+
+                            <a
+                                    href="{% url 'shop:checkout' %}"
+                                    class="btn btn-dark btn-lg w-100"
+                            >
+                                Оформити замовлення
+                            </a>
+
+                            <p class="small text-muted text-center mt-3 mb-0">
+                                Оплата та спосіб отримання узгоджуються
+                                після підтвердження замовлення.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <h2 class="h3 mb-3">
+                        Ваш кошик порожній
+                    </h2>
+
+                    <p class="text-muted mb-4">
+                        Додайте товари, які хочете замовити.
+                    </p>
+
+                    <a
+                            href="{% url 'shop:product-list' %}"
+                            class="btn btn-dark"
+                    >
+                        Перейти до магазину
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -8,7 +8,13 @@ SECRET_KEY = os.getenv(
     "django-insecure-development-key",
 )
 
-DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
+DEBUG = (
+        os.getenv(
+            "DJANGO_DEBUG",
+            "True",
+        ).lower()
+        == "true"
+)
 
 ALLOWED_HOSTS = [
     host
@@ -49,21 +55,28 @@ ROOT_URLCONF = "dr_toister_site.urls"
 TEMPLATES = [
     {
         "BACKEND": (
-            "django.template.backends.django.DjangoTemplates"
+            "django.template.backends.django."
+            "DjangoTemplates"
         ),
-        "DIRS": [BASE_DIR / "templates"],
+        "DIRS": [
+            BASE_DIR / "templates",
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 (
-                    "django.template.context_processors.request"
+                    "django.template.context_processors."
+                    "request"
                 ),
                 (
-                    "django.contrib.auth.context_processors.auth"
+                    "django.contrib.auth."
+                    "context_processors.auth"
                 ),
                 (
-                    "django.contrib.messages.context_processors.messages"
+                    "django.contrib.messages."
+                    "context_processors.messages"
                 ),
+                "shop.context_processors.cart",
             ],
         },
     },
@@ -117,14 +130,24 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+] if (BASE_DIR / "static").exists() else []
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 MEDIA_URL = "media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = (
+    "django.core.mail.backends.console.EmailBackend"
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "accounts:login"
+
 LOGIN_REDIRECT_URL = "accounts:dashboard"
+
 LOGOUT_REDIRECT_URL = "accounts:login"

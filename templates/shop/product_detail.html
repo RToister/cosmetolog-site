@@ -57,7 +57,9 @@
 
                 {% if product.description %}
                     <div class="mb-4">
-                        <h2 class="h5">Опис</h2>
+                        <h2 class="h5">
+                            Опис
+                        </h2>
 
                         <div class="text-muted">
                             {{ product.description|linebreaks }}
@@ -72,7 +74,7 @@
                                 Рекомендації щодо застосування
                             </h2>
 
-                            <div class="mb-0">
+                            <div>
                                 {{ product.usage_recommendations|linebreaks }}
                             </div>
                         </div>
@@ -107,17 +109,34 @@
                 </div>
 
                 {% if product.stock_quantity > 0 %}
-                    <button
-                            type="button"
-                            class="btn btn-dark btn-lg w-100"
-                            disabled
+                    <form
+                            method="post"
+                            action="{% url 'shop:cart-add' product.pk %}"
                     >
-                        Замовити
-                    </button>
+                        {% csrf_token %}
 
-                    <p class="small text-muted text-center mt-2">
-                        Оформлення замовлення додамо наступним етапом.
-                    </p>
+                        <div class="row g-3">
+                            <div class="col-sm-4">
+                                <label
+                                        for="{{ cart_form.quantity.id_for_label }}"
+                                        class="form-label"
+                                >
+                                    {{ cart_form.quantity.label }}
+                                </label>
+
+                                {{ cart_form.quantity }}
+                            </div>
+
+                            <div class="col-sm-8 d-flex align-items-end">
+                                <button
+                                        type="submit"
+                                        class="btn btn-dark btn-lg w-100"
+                                >
+                                    Додати до кошика
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 {% else %}
                     <button
                             type="button"

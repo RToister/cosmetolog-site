@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Оформлення замовлення | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+        <div class="mb-4">
+            <a
+                    href="{% url 'shop:cart-detail' %}"
+                    class="text-decoration-none text-dark"
+            >
+                ← Повернутися до кошика
+            </a>
+        </div>
+
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4 p-lg-5">
+                        <h1 class="h2 mb-3">
+                            Оформлення замовлення
+                        </h1>
+
+                        <p class="text-muted mb-4">
+                            Вкажіть контактні дані. Реєстрація для
+                            оформлення замовлення не потрібна.
+                        </p>
+
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <label
+                                        for="{{ form.client_name.id_for_label }}"
+                                        class="form-label"
+                                >
+                                    {{ form.client_name.label }}
+                                </label>
+
+                                {{ form.client_name }}
+
+                                {% for error in form.client_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="mb-4">
+                                <label
+                                        for="{{ form.client_phone.id_for_label }}"
+                                        class="form-label"
+                                >
+                                    {{ form.client_phone.label }}
+                                </label>
+
+                                {{ form.client_phone }}
+
+                                {% for error in form.client_phone.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <button
+                                    type="submit"
+                                    class="btn btn-dark btn-lg w-100"
+                            >
+                                Підтвердити замовлення
+                            </button>
+
+                            <p class="small text-muted text-center mt-3 mb-0">
+                                Ми зв’яжемося з вами для підтвердження,
+                                оплати та узгодження способу отримання.
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card border-0 bg-light">
+                    <div class="card-body p-4">
+                        <h2 class="h4 mb-4">
+                            Склад замовлення
+                        </h2>
+
+                        {% for item in cart_items %}
+                            <div class="d-flex justify-content-between gap-3 mb-3">
+                                <div>
+                                    <div class="fw-semibold">
+                                        {{ item.product.name }}
+                                    </div>
+
+                                    <div class="small text-muted">
+                                        {{ item.quantity }} ×
+                                        {{ item.price|floatformat:2 }} грн
+                                    </div>
+                                </div>
+
+                                <strong>
+                                    {{ item.total_price|floatformat:2 }} грн
+                                </strong>
+                            </div>
+                        {% endfor %}
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between fs-5">
+                            <span>Загальна сума</span>
+
+                            <strong>
+                                {{ cart.get_total_price|floatformat:2 }} грн
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

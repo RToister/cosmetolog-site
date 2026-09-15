@@ -11,16 +11,24 @@ admin.site.index_title = "Керування клінікою"
 urlpatterns = [
     path(
         "",
-        TemplateView.as_view(
-            template_name="home.html",
-        ),
+        TemplateView.as_view(template_name="home.html"),
         name="home",
     ),
-    path("admin/", admin.site.urls),
-    path("accounts/", include("accounts.urls")),
+    path(
+        "admin/",
+        admin.site.urls,
+    ),
+    path(
+        "accounts/",
+        include("accounts.urls"),
+    ),
     path(
         "appointments/",
         include("appointments.urls"),
+    ),
+    path(
+        "shop/",
+        include("shop.urls"),
     ),
 ]
 

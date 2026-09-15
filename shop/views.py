@@ -1,8 +1,23 @@
+from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, render
+from django.http import Http404
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
+from django.views.decorators.http import require_POST
 
-from .models import Product, ProductCategory
+from .cart import Cart
+from .forms import CartAddProductForm, CheckoutForm
+from .models import (
+    Order,
+    OrderItem,
+    Product,
+    ProductCategory,
+)
 
 
 def user_is_cosmetologist(user):
@@ -136,14 +151,234 @@ def product_detail(request, pk):
             is_cosmetologist,
         )
 
+    cart_form = CartAddProductForm(
+        product=product,
+    )
+
     context = {
         "product": product,
         "related_products": related_products,
         "is_cosmetologist": is_cosmetologist,
+        "cart_form": cart_form,
     }
 
     return render(
         request,
         "shop/product_detail.html",
         context,
+    )
+
+
+@require_POST
+def cart_add(request, product_id):
+    product = get_object_or_404(
+        get_available_products(request.user),
+        pk=product_id,
+    )
+
+    form = CartAddProductForm(
+        request.POST,
+        product=product,
+    )
+
+    if form.is_valid():
+        cart = Cart(request)
+
+        cart.add(
+            product=product,
+            quantity=form.cleaned_data["quantity"],
+        )
+
+        messages.success(
+            request,
+            f"Товар «{product.name}» додано до кошика.",
+        )
+
+        return redirect("shop:cart-detail")
+
+    messages.error(
+        request,
+        "Не вдалося додати товар до кошика.",
+    )
+
+    return redirect(
+        "shop:product-detail",
+        pk=product.pk,
+    )
+
+
+@require_POST
+def cart_update(request, product_id):
+    product = get_object_or_404(
+        get_available_products(request.user),
+        pk=product_id,
+    )
+
+    form = CartAddProductForm(
+        request.POST,
+        product=product,
+    )
+
+    if form.is_valid():
+        cart = Cart(request)
+
+        cart.add(
+            product=product,
+            quantity=form.cleaned_data["quantity"],
+            override_quantity=True,
+        )
+
+        messages.success(
+            request,
+            "Кількість товару оновлено.",
+        )
+    else:
+        messages.error(
+            request,
+            "Не вдалося оновити кількість товару.",
+        )
+
+    return redirect("shop:cart-detail")
+
+
+@require_POST
+def cart_remove(request, product_id):
+    product = get_object_or_404(
+        Product,
+        pk=product_id,
+    )
+
+    cart = Cart(request)
+    cart.remove(product)
+
+    messages.success(
+        request,
+        f"Товар «{product.name}» видалено з кошика.",
+    )
+
+    return redirect("shop:cart-detail")
+
+
+def cart_detail(request):
+    cart = Cart(request)
+    cart_items = list(cart)
+
+    for item in cart_items:
+        item["update_form"] = CartAddProductForm(
+            product=item["product"],
+            initial={
+                "quantity": item["quantity"],
+            },
+        )
+
+    context = {
+        "cart": cart,
+        "cart_items": cart_items,
+    }
+
+    return render(
+        request,
+        "shop/cart_detail.html",
+        context,
+    )
+
+
+def checkout(request):
+    cart = Cart(request)
+    cart_items = list(cart)
+
+    if not cart_items:
+        messages.warning(
+            request,
+            "Ваш кошик порожній.",
+        )
+
+        return redirect("shop:product-list")
+
+    form = CheckoutForm(
+        request.POST or None,
+        user=request.user,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        for item in cart_items:
+            product = item["product"]
+
+            if item["quantity"] > product.stock_quantity:
+                messages.error(
+                    request,
+                    (
+                        f"Недостатньо товару "
+                        f"«{product.name}» на складі."
+                    ),
+                )
+
+                return redirect("shop:cart-detail")
+
+        with transaction.atomic():
+            order = Order.objects.create(
+                client=(
+                    request.user
+                    if request.user.is_authenticated
+                    else None
+                ),
+                client_name=form.cleaned_data[
+                    "client_name"
+                ],
+                client_phone=form.cleaned_data[
+                    "client_phone"
+                ],
+                source=Order.Source.ONLINE,
+            )
+
+            for item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    product=item["product"],
+                    quantity=item["quantity"],
+                )
+
+        cart.clear()
+
+        request.session["last_order_id"] = order.pk
+
+        return redirect(
+            "shop:order-success",
+            order_id=order.pk,
+        )
+
+    context = {
+        "form": form,
+        "cart": cart,
+        "cart_items": cart_items,
+    }
+
+    return render(
+        request,
+        "shop/checkout.html",
+        context,
+    )
+
+
+def order_success(request, order_id):
+    last_order_id = request.session.get(
+        "last_order_id"
+    )
+
+    if last_order_id != order_id:
+        raise Http404(
+            "Замовлення не знайдено."
+        )
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related(
+            "items__product"
+        ),
+        pk=order_id,
+    )
+
+    return render(
+        request,
+        "shop/order_success.html",
+        {"order": order},
     )
