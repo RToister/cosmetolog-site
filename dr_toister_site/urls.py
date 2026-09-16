@@ -12,7 +12,7 @@ urlpatterns = [
     path(
         "",
         TemplateView.as_view(
-            template_name="home.html"
+            template_name="home.html",
         ),
         name="home",
     ),
@@ -39,6 +39,10 @@ urlpatterns = [
     path(
         "analytics/",
         include("analytics.urls"),
+    ),
+    path(
+        "crm/",
+        include("crm.urls"),
     ),
 ]
 
