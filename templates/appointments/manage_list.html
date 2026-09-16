@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Керування записами | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <style>
+        .manage-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .manage-eyebrow {
+            margin-bottom: 8px;
+            color: #7c6c63;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .manage-title {
+            margin: 0;
+            font-size: clamp(30px, 5vw, 50px);
+            letter-spacing: -0.04em;
+        }
+
+        .manage-subtitle {
+            max-width: 650px;
+            margin: 12px 0 0;
+            color: #6c757d;
+        }
+
+        .manage-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .statistics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 26px;
+        }
+
+        .statistic-card {
+            padding: 20px;
+            background: #f6f2ef;
+            border: 1px solid #ece4df;
+            border-radius: 17px;
+        }
+
+        .statistic-label {
+            color: #756a64;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .statistic-value {
+            margin-top: 7px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .filter-card {
+            padding: 18px;
+            margin-bottom: 22px;
+            background: #faf8f6;
+            border: 1px solid #ece6e2;
+            border-radius: 17px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .filter-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .booking-table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #ece7e3;
+            border-radius: 18px;
+        }
+
+        .booking-table {
+            min-width: 980px;
+            margin: 0;
+        }
+
+        .booking-table th {
+            padding: 15px;
+            color: #746a64;
+            font-size: 12px;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            background: #faf8f6;
+        }
+
+        .booking-table td {
+            padding: 16px 15px;
+            vertical-align: middle;
+            border-color: #f0ece9;
+        }
+
+        .booking-client {
+            color: #212529;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .booking-client:hover {
+            text-decoration: underline;
+        }
+
+        .booking-secondary {
+            margin-top: 3px;
+            color: #756d68;
+            font-size: 13px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 50px;
+        }
+
+        .status-pending {
+            color: #765326;
+            background: #f8ead4;
+        }
+
+        .status-confirmed {
+            color: #245071;
+            background: #deedf8;
+        }
+
+        .status-completed {
+            color: #315b43;
+            background: #e1f1e7;
+        }
+
+        .status-cancelled {
+            color: #7d3434;
+            background: #f6dfdf;
+        }
+
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .filter-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .manage-header {
+                display: block;
+            }
+
+            .manage-actions {
+                margin-top: 20px;
+            }
+
+            .statistics-grid,
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <header class="manage-header">
+        <div>
+            <div class="manage-eyebrow">
+                Панель адміністратора
+            </div>
+
+            <h1 class="manage-title">
+                Керування записами
+            </h1>
+
+            <p class="manage-subtitle">
+                Перегляд, підтвердження, перенесення та завершення
+                записів клієнтів.
+            </p>
+        </div>
+
+        <div class="manage-actions">
+            <a
+                    href="{% url 'crm:customer-list' %}"
+                    class="btn btn-outline-dark"
+            >
+                CRM
+            </a>
+
+            <a
+                    href="{% url 'appointments:manage-create' %}"
+                    class="btn btn-dark"
+            >
+                + Новий запис
+            </a>
+        </div>
+    </header>
+
+    <div class="statistics-grid">
+        <article class="statistic-card">
+            <div class="statistic-label">
+                Записи сьогодні
+            </div>
+
+            <div class="statistic-value">
+                {{ today_count }}
+            </div>
+        </article>
+
+        <article class="statistic-card">
+            <div class="statistic-label">
+                Очікують підтвердження
+            </div>
+
+            <div class="statistic-value">
+                {{ pending_count }}
+            </div>
+        </article>
+
+        <article class="statistic-card">
+            <div class="statistic-label">
+                Підтверджені
+            </div>
+
+            <div class="statistic-value">
+                {{ confirmed_count }}
+            </div>
+        </article>
+    </div>
+
+    <section class="filter-card">
+        <form method="get" class="filter-grid">
+            <div>
+                <label for="booking-search" class="filter-label">
+                    Пошук
+                </label>
+
+                <input
+                        id="booking-search"
+                        type="search"
+                        name="q"
+                        value="{{ search_query }}"
+                        class="form-control"
+                        placeholder="Ім’я, телефон або процедура"
+                >
+            </div>
+
+            <div>
+                <label for="booking-date" class="filter-label">
+                    Дата
+                </label>
+
+                <input
+                        id="booking-date"
+                        type="date"
+                        name="date"
+                        value="{{ selected_date }}"
+                        class="form-control"
+                >
+            </div>
+
+            <div>
+                <label for="booking-status" class="filter-label">
+                    Статус
+                </label>
+
+                <select
+                        id="booking-status"
+                        name="status"
+                        class="form-select"
+                >
+                    <option value="">Усі статуси</option>
+
+                    {% for value, label in status_choices %}
+                        <option
+                                value="{{ value }}"
+                                {% if selected_status == value %}selected{% endif %}
+                        >
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-dark">
+                    Застосувати
+                </button>
+
+                <a
+                        href="{% url 'appointments:manage-list' %}"
+                        class="btn btn-outline-secondary"
+                >
+                    Очистити
+                </a>
+            </div>
+        </form>
+    </section>
+
+    <div class="booking-table-wrapper">
+        {% if page_obj %}
+            <table class="table booking-table">
+                <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Клієнт</th>
+                    <th>Процедура</th>
+                    <th>Статус</th>
+                    <th>Джерело</th>
+                    <th>Вартість</th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for booking in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>
+                                {{ booking.date|date:"d.m.Y" }}
+                            </strong>
+
+                            <div class="booking-secondary">
+                                {{ booking.start_time|time:"H:i" }}
+                                –
+                                {{ booking.end_time|time:"H:i" }}
+                            </div>
+                        </td>
+
+                        <td>
+                            <a
+                                    href="{% url 'appointments:manage-detail' booking.pk %}"
+                                    class="booking-client"
+                            >
+                                {{ booking.client_name }}
+                            </a>
+
+                            <div class="booking-secondary">
+                                {{ booking.client_phone }}
+                            </div>
+                        </td>
+
+                        <td>
+                            {{ booking.procedure.name }}
+
+                            <div class="booking-secondary">
+                                {{ booking.procedure.category.name }}
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="status-badge status-{{ booking.status }}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ booking.get_source_display }}
+                        </td>
+
+                        <td class="fw-semibold">
+                            {{ booking.price_at_booking|floatformat:2 }} ₴
+                        </td>
+
+                        <td class="text-end">
+                            <a
+                                    href="{% url 'appointments:manage-detail' booking.pk %}"
+                                    class="btn btn-sm btn-outline-dark"
+                            >
+                                Відкрити
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <h2 class="h5">
+                    Записів не знайдено
+                </h2>
+
+                <p class="mb-3 text-secondary">
+                    Зміни фільтри або створи новий запис.
+                </p>
+
+                <a
+                        href="{% url 'appointments:manage-create' %}"
+                        class="btn btn-dark"
+                >
+                    Створити запис
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <nav class="mt-4" aria-label="Навігація сторінками">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a
+                                class="page-link"
+                                href="?page=
+                                        {{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                        >
+                            Назад
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                <span class="page-link">
+                    {{ page_obj.number }}
+                    із
+                    {{ page_obj.paginator.num_pages }}
+                </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a
+                                class="page-link"
+                                href="?page=
+                                        {{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}"
+                        >
+                            Далі
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endblock %}
