@@ -36,6 +36,10 @@ urlpatterns = [
         "academy/",
         include("academy.urls"),
     ),
+    path(
+        "analytics/",
+        include("analytics.urls"),
+    ),
 ]
 
 if settings.DEBUG:

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "appointments",
     "shop",
     "academy",
+    "analytics",
 ]
 
 MIDDLEWARE = [
