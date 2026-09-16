@@ -1,583 +1,703 @@
-from decimal import Decimal
-
-from django.contrib.auth import get_user_model
-from django.test import TestCase
-from django.urls import reverse
-
-from shop.models import (
-Order,
-Product,
-ProductCategory,
-)
-
-
-User = get_user_model()
-
-
-class ShoppingCartTests(TestCase):
-@classmethod
-def setUpTestData(cls):
-cls.category = ProductCategory.objects.create(
-name="Тестова категорія",
-)
-
-cls.first_product = Product.objects.create(
-category=cls.category,
-name="Крем для обличчя",
-sku="CART-001",
-description="Тестовий крем",
-retail_price=Decimal("1000.00"),
-professional_price=Decimal("800.00"),
-availability=Product.Availability.PUBLIC,
-stock_quantity=10,
-is_active=True,
-)
-
-cls.second_product = Product.objects.create(
-category=cls.category,
-name="Сироватка",
-sku="CART-002",
-description="Тестова сироватка",
-retail_price=Decimal("1500.00"),
-professional_price=Decimal("1200.00"),
-availability=Product.Availability.PUBLIC,
-stock_quantity=5,
-is_active=True,
-)
-
-cls.professional_product = Product.objects.create(
-category=cls.category,
-name="Професійний препарат",
-sku="CART-PRO-001",
-professional_price=Decimal("2000.00"),
-availability=(
-Product.Availability.PROFESSIONALS_ONLY
-),
-stock_quantity=5,
-is_active=True,
-)
-
-cls.regular_user = User.objects.create_user(
-username="regular-client",
-phone_number="+380991110001",
-user_type=User.UserType.CLIENT,
-)
-
-cls.unverified_cosmetologist = (
-User.objects.create_user(
-username="unverified-cosmetologist",
-phone_number="+380991110002",
-user_type=(
-User.UserType.COSMETOLOGIST
-),
-is_cosmetologist_verified=False,
-)
-)
-
-cls.verified_cosmetologist = (
-User.objects.create_user(
-username="verified-cosmetologist",
-phone_number="+380991110003",
-user_type=(
-User.UserType.COSMETOLOGIST
-),
-is_cosmetologist_verified=True,
-)
-)
-
-def professional_product_url(self):
-return reverse(
-"shop:product-detail",
-args=[self.professional_product.pk],
-)
-
-def add_professional_product_url(self):
-return reverse(
-"shop:cart-add",
-args=[self.professional_product.pk],
-)
-
-def assert_professional_product_not_in_cart(
-self,
-):
-session_cart = self.client.session.get(
-"cart",
-{},
-)
-
-self.assertNotIn(
-str(self.professional_product.pk),
-session_cart,
-)
-
-def test_guest_can_add_public_product_to_cart(self):
-response = self.client.post(
-reverse(
-"shop:cart-add",
-args=[self.first_product.pk],
-),
-{
-"quantity": 2,
-},
-)
-
-self.assertRedirects(
-response,
-reverse("shop:cart-detail"),
-)
-
-self.assertEqual(
-self.client.session["cart"][
-str(self.first_product.pk)
-]["quantity"],
-2,
-)
-
-def test_guest_can_update_product_quantity(self):
-self.client.post(
-reverse(
-"shop:cart-add",
-args=[self.first_product.pk],
-),
-{
-"quantity": 1,
-},
-)
-
-response = self.client.post(
-reverse(
-"shop:cart-update",
-args=[self.first_product.pk],
-),
-{
-"quantity": 4,
-},
-)
-
-self.assertRedirects(
-response,
-reverse("shop:cart-detail"),
-)
-
-self.assertEqual(
-self.client.session["cart"][
-str(self.first_product.pk)
-]["quantity"],
-4,
-)
-
-def test_guest_can_remove_product_from_cart(self):
-self.client.post(
-reverse(
-"shop:cart-add",
-args=[self.first_product.pk],
-),
-{
-"quantity": 1,
-},
-)
-
-response = self.client.post(
-reverse(
-"shop:cart-remove",
-args=[self.first_product.pk],
-),
-)
-
-self.assertRedirects(
-response,
-reverse("shop:cart-detail"),
-)
-
-self.assertNotIn(
-str(self.first_product.pk),
-self.client.session["cart"],
-)
-
-def test_guest_can_view_professional_product(self):
-response = self.client.get(
-self.professional_product_url()
-)
-
-self.assertEqual(
-response.status_code,
-200,
-)
-self.assertContains(
-response,
-self.professional_product.name,
-)
-self.assertNotContains(
-response,
-"2000,00 грн",
-)
-
-def test_guest_cannot_add_professional_product(self):
-response = self.client.post(
-self.add_professional_product_url(),
-{
-"quantity": 1,
-},
-)
-
-self.assertRedirects(
-response,
-self.professional_product_url(),
-)
-self.assert_professional_product_not_in_cart()
-
-def test_regular_user_cannot_view_professional_price(
-self,
-):
-self.client.force_login(
-self.regular_user
-)
-
-response = self.client.get(
-self.professional_product_url()
-)
-
-self.assertEqual(
-response.status_code,
-200,
-)
-self.assertNotContains(
-response,
-"2000,00 грн",
-)
-
-def test_regular_user_cannot_add_professional_product(
-self,
-):
-self.client.force_login(
-self.regular_user
-)
-
-response = self.client.post(
-self.add_professional_product_url(),
-{
-"quantity": 1,
-},
-)
-
-self.assertRedirects(
-response,
-self.professional_product_url(),
-)
-self.assert_professional_product_not_in_cart()
-
-def test_unverified_cosmetologist_cannot_view_price(
-self,
-):
-self.client.force_login(
-self.unverified_cosmetologist
-)
-
-response = self.client.get(
-self.professional_product_url()
-)
-
-self.assertEqual(
-response.status_code,
-200,
-)
-self.assertNotContains(
-response,
-"2000,00 грн",
-)
-self.assertContains(
-response,
-"до 24 годин",
-)
-
-def test_unverified_cosmetologist_cannot_add_product(
-self,
-):
-self.client.force_login(
-self.unverified_cosmetologist
-)
-
-response = self.client.post(
-self.add_professional_product_url(),
-{
-"quantity": 1,
-},
-)
-
-self.assertRedirects(
-response,
-self.professional_product_url(),
-)
-self.assert_professional_product_not_in_cart()
-
-def test_verified_cosmetologist_can_view_price(
-self,
-):
-self.client.force_login(
-self.verified_cosmetologist
-)
-
-response = self.client.get(
-self.professional_product_url()
-)
-
-self.assertEqual(
-response.status_code,
-200,
-)
-self.assertContains(
-response,
-"2000,00 грн",
-)
-
-def test_verified_cosmetologist_can_add_product(
-self,
-):
-self.client.force_login(
-self.verified_cosmetologist
-)
-
-response = self.client.post(
-self.add_professional_product_url(),
-{
-"quantity": 1,
-},
-)
-
-self.assertRedirects(
-response,
-reverse("shop:cart-detail"),
-)
-
-self.assertEqual(
-self.client.session["cart"][
-str(self.professional_product.pk)
-]["quantity"],
-1,
-)
-
-def test_verified_cosmetologist_gets_professional_price(
-self,
-):
-self.client.force_login(
-self.verified_cosmetologist
-)
-
-response = self.client.get(
-reverse(
-"shop:product-detail",
-args=[self.first_product.pk],
-)
-)
-
-self.assertContains(
-response,
-"800,00 грн",
-)
-self.assertNotContains(
-response,
-"1000,00 грн",
-)
-
-def test_quantity_cannot_exceed_stock(self):
-response = self.client.post(
-reverse(
-"shop:cart-add",
-args=[self.first_product.pk],
-),
-{
-"quantity": 11,
-},
-)
-
-self.assertRedirects(
-response,
-reverse(
-"shop:product-detail",
-args=[self.first_product.pk],
-),
-)
-
-self.assertNotIn(
-str(self.first_product.pk),
-self.client.session.get(
-"cart",
-{},
-),
-)
-
-def test_cart_page_displays_added_product(self):
-self.client.post(
-reverse(
-"shop:cart-add",
-args=[self.first_product.pk],
-),
-{
-"quantity": 2,
-},
-)
-
-response = self.client.get(
-reverse("shop:cart-detail")
-)
-
-self.assertEqual(
-response.status_code,
-200,
-)
-self.assertTemplateUsed(
-response,
-"shop/cart_detail.html",
-)
-self.assertContains(
-response,
-self.first_product.name,
-)
-self.assertContains(
-response,
-"2000,00",
-)
-
-def test_guest_can_checkout_multiple_products(self):
-self.client.post(
-reverse(
-"shop:cart-add",
-args=[self.first_product.pk],
-),
-{
-"quantity": 2,
-},
-)
-
-self.client.post(
-reverse(
-"shop:cart-add",
-args=[self.second_product.pk],
-),
-{
-"quantity": 1,
-},
-)
-
-response = self.client.post(
-reverse("shop:checkout"),
-{
-"client_name": "Марія",
-"client_phone": "+380991112233",
-},
-)
-
-order = Order.objects.get()
-
-self.assertRedirects(
-response,
-reverse(
-"shop:order-success",
-args=[order.pk],
-),
-)
-
-self.assertEqual(
-order.client_name,
-"Марія",
-)
-self.assertEqual(
-order.client_phone,
-"+380991112233",
-)
-self.assertEqual(
-order.source,
-Order.Source.ONLINE,
-)
-self.assertEqual(
-order.items.count(),
-2,
-)
-
-order.refresh_from_db()
-
-self.assertEqual(
-order.total_price,
-Decimal("3500.00"),
-)
-
-self.assertEqual(
-self.client.session["cart"],
-{},
-)
-
-def test_empty_cart_redirects_from_checkout(self):
-response = self.client.get(
-reverse("shop:checkout")
-)
-
-self.assertRedirects(
-response,
-reverse("shop:product-list"),
-)
-
-self.assertFalse(
-Order.objects.exists()
-)
-
-def test_order_success_is_available_after_checkout(
-self,
-):
-self.client.post(
-reverse(
-"shop:cart-add",
-args=[self.first_product.pk],
-),
-{
-"quantity": 1,
-},
-)
-
-self.client.post(
-reverse("shop:checkout"),
-{
-"client_name": "Олена",
-"client_phone": "+380991112244",
-},
-)
-
-order = Order.objects.get()
-
-response = self.client.get(
-reverse(
-"shop:order-success",
-args=[order.pk],
-)
-)
-
-self.assertEqual(
-response.status_code,
-200,
-)
-self.assertTemplateUsed(
-response,
-"shop/order_success.html",
-)
-self.assertContains(
-response,
-f"№{order.pk}",
-)
-
-def test_other_order_success_page_is_hidden(self):
-order = Order.objects.create(
-client_name="Інший клієнт",
-client_phone="+380991112255",
-source=Order.Source.ONLINE,
-)
-
-response = self.client.get(
-reverse(
-"shop:order-success",
-args=[order.pk],
-)
-)
-
-self.assertEqual(
-response.status_code,
-404,
-)
+{% extends "base.html" %}
+
+{% block title %}
+    Магазин | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <style>
+        .shop-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 34px;
+        }
+
+        .shop-eyebrow {
+            margin-bottom: 9px;
+            color: #7b3f3a;
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .shop-title {
+            margin: 0;
+            font-size: clamp(42px, 7vw, 76px);
+            font-weight: 500;
+            line-height: 0.98;
+            letter-spacing: -0.055em;
+        }
+
+        .shop-description {
+            max-width: 680px;
+            margin: 17px 0 0;
+            color: #736963;
+            font-size: 17px;
+            line-height: 1.65;
+        }
+
+        .shop-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .group-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-bottom: 24px;
+        }
+
+        .group-tab {
+            padding: 10px 17px;
+            color: #211b18;
+            text-decoration: none;
+            border: 1px solid #d8cdc6;
+            border-radius: 50px;
+            transition: 0.2s ease;
+        }
+
+        .group-tab:hover,
+        .group-tab.active {
+            color: #fff;
+            background: #211b18;
+            border-color: #211b18;
+        }
+
+        .professional-notice {
+            padding: 18px 20px;
+            margin-bottom: 24px;
+            color: #e9dfd9;
+            background: #2b2421;
+            border-radius: 16px;
+        }
+
+        .professional-notice strong {
+            color: #fff;
+        }
+
+        .professional-notice.pending {
+            color: #655137;
+            background: #fff4df;
+            border: 1px solid #ead5b3;
+        }
+
+        .professional-notice.pending strong {
+            color: #513d25;
+        }
+
+        .filter-card {
+            padding: 20px;
+            margin-bottom: 36px;
+            background: #f7f3f0;
+            border: 1px solid #e9e1dc;
+            border-radius: 18px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+        }
+
+        .filter-label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .product-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: #211b18;
+            background: #fff;
+            border: 1px solid #e7dfda;
+            border-radius: 21px;
+            transition: 0.25s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 18px 42px rgba(54, 39, 32, 0.09);
+        }
+
+        .product-image {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 290px;
+            overflow: hidden;
+            color: #8b7165;
+            font-family: Georgia, serif;
+            font-size: 42px;
+            font-style: italic;
+            background: #eee6e0;
+        }
+
+        .professional-card .product-image {
+            color: #d9cbc3;
+            background: linear-gradient(
+                    145deg,
+                    #58443d,
+                    #261f1c
+            );
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-group-badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            z-index: 1;
+            padding: 7px 11px;
+            color: #3e342f;
+            font-size: 11px;
+            font-weight: 750;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 50px;
+        }
+
+        .professional-badge {
+            color: #fff;
+            background: rgba(32, 26, 23, 0.92);
+        }
+
+        .product-content {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            padding: 23px;
+        }
+
+        .product-category {
+            color: #7b3f3a;
+            font-size: 11px;
+            font-weight: 750;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .product-card h2 {
+            margin: 12px 0;
+            font-size: 24px;
+            letter-spacing: -0.035em;
+        }
+
+        .product-title-link {
+            color: #211b18;
+            text-decoration: none;
+        }
+
+        .product-description {
+            color: #736963;
+            line-height: 1.6;
+        }
+
+        .product-bottom {
+            margin-top: auto;
+            padding-top: 20px;
+        }
+
+        .price-label {
+            color: #736963;
+            font-size: 12px;
+        }
+
+        .product-price {
+            margin-top: 3px;
+            font-size: 25px;
+            font-weight: 750;
+        }
+
+        .hidden-price {
+            padding: 14px;
+            color: #5e514a;
+            font-size: 14px;
+            line-height: 1.5;
+            background: #f2ece8;
+            border-radius: 12px;
+        }
+
+        .stock-status {
+            margin: 7px 0 15px;
+            font-size: 13px;
+        }
+
+        .product-buttons {
+            display: grid;
+            gap: 8px;
+        }
+
+        .product-buttons .btn {
+            border-radius: 10px;
+        }
+
+        .empty-products {
+            padding: 58px 24px;
+            text-align: center;
+            background: #f7f3f0;
+            border-radius: 20px;
+        }
+
+        @media (max-width: 991px) {
+            .product-grid {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filter-actions {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .shop-header {
+                display: block;
+            }
+
+            .shop-actions {
+                margin-top: 20px;
+            }
+
+            .product-grid,
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-actions {
+                grid-column: auto;
+            }
+        }
+    </style>
+
+    <header class="shop-header">
+        <div>
+            <div class="shop-eyebrow">
+                DR TOISTER · Shop
+            </div>
+
+            <h1 class="shop-title">
+                Магазин
+            </h1>
+
+            <p class="shop-description">
+                Засоби для домашнього догляду та
+                професійні препарати для косметологів
+                і спеціалістів індустрії краси.
+            </p>
+        </div>
+
+        <div class="shop-actions">
+            <a
+                    href="{% url 'shop:cart-detail' %}"
+                    class="btn btn-dark position-relative"
+            >
+                🛒 Кошик
+
+                {% if global_cart|length %}
+                    <span
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    >
+                        {{ global_cart|length }}
+                    </span>
+                {% endif %}
+            </a>
+
+            {% if not user.is_authenticated %}
+                <a
+                        href="{% url 'accounts:login' %}"
+                        class="btn btn-outline-dark"
+                >
+                    Увійти
+                </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <nav
+            class="group-tabs"
+            aria-label="Групи товарів"
+    >
+        <a
+                href="{% url 'shop:product-list' %}"
+                class="group-tab {% if not selected_group %}active{% endif %}"
+        >
+            Усі товари
+        </a>
+
+        <a
+                href="{% url 'shop:product-list' %}?group=public"
+                class="group-tab {% if selected_group == 'public' %}active{% endif %}"
+        >
+            Домашній догляд
+        </a>
+
+        <a
+                href="{% url 'shop:product-list' %}?group=professionals_only"
+                class="group-tab {% if selected_group == 'professionals_only' %}active{% endif %}"
+        >
+            Препарати для спеціалістів
+        </a>
+    </nav>
+
+    {% if has_professional_access %}
+        <div class="professional-notice">
+            <strong>
+                Професійний доступ активний.
+            </strong>
+
+            Для вас відображаються професійні ціни
+            та доступна купівля препаратів для
+            спеціалістів.
+        </div>
+    {% elif is_awaiting_verification %}
+        <div class="professional-notice pending">
+            <strong>
+                Ваш обліковий запис перевіряється.
+            </strong>
+
+            Професійні ціни та придбання стануть
+            доступними після підтвердження.
+            Перевірка займає до 24 годин.
+        </div>
+    {% elif user.is_authenticated %}
+        <div class="professional-notice">
+            <strong>
+                Професійні препарати доступні
+                підтвердженим косметологам.
+            </strong>
+
+            Ви можете переглядати асортимент,
+            але професійні ціни приховані.
+        </div>
+    {% else %}
+        <div class="professional-notice">
+            <strong>
+                Професійні препарати можна
+                переглядати без реєстрації.
+            </strong>
+
+            Для перегляду цін і придбання
+            зареєструйтеся як косметолог та
+            дочекайтеся підтвердження.
+        </div>
+    {% endif %}
+
+    <form method="get" class="filter-card">
+        {% if selected_group %}
+            <input
+                    type="hidden"
+                    name="group"
+                    value="{{ selected_group }}"
+            >
+        {% endif %}
+
+        <div class="filter-grid">
+            <div>
+                <label
+                        for="search"
+                        class="filter-label"
+                >
+                    Пошук
+                </label>
+
+                <input
+                        type="search"
+                        id="search"
+                        name="q"
+                        value="{{ search_query }}"
+                        class="form-control"
+                        placeholder="Назва, категорія або артикул"
+                >
+            </div>
+
+            <div>
+                <label
+                        for="category"
+                        class="filter-label"
+                >
+                    Категорія
+                </label>
+
+                <select
+                        id="category"
+                        name="category"
+                        class="form-select"
+                >
+                    <option value="">
+                        Усі категорії
+                    </option>
+
+                    {% for category in categories %}
+                        <option
+                                value="{{ category.pk }}"
+                                {% if selected_category == category.pk|stringformat:"s" %}
+                                selected
+                                {% endif %}
+                        >
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-actions d-flex gap-2">
+                <button
+                        type="submit"
+                        class="btn btn-dark"
+                >
+                    Знайти
+                </button>
+
+                <a
+                        href="
+                                {% url 'shop:product-list' %}{% if selected_group %}?group={{ selected_group }}{% endif %}"
+                        class="btn btn-outline-secondary"
+                >
+                    Очистити
+                </a>
+            </div>
+        </div>
+    </form>
+
+    {% if page_obj %}
+        <div class="product-grid">
+            {% for product in page_obj %}
+                <article
+                        class="product-card {% if product.is_professional_product %}professional-card{% endif %}"
+                >
+                    <a
+                            href="{% url 'shop:product-detail' product.pk %}"
+                            class="product-image text-decoration-none"
+                    >
+                        {% if product.is_professional_product %}
+                            <span class="product-group-badge professional-badge">
+                                Для спеціалістів
+                            </span>
+                        {% else %}
+                            <span class="product-group-badge">
+                                Домашній догляд
+                            </span>
+                        {% endif %}
+
+                        {% if product.image %}
+                            <img
+                                    src="{{ product.image.url }}"
+                                    alt="{{ product.name }}"
+                            >
+                        {% elif product.is_professional_product %}
+                            Pro
+                        {% else %}
+                            Care
+                        {% endif %}
+                    </a>
+
+                    <div class="product-content">
+                        <div class="product-category">
+                            {{ product.category.name }}
+                        </div>
+
+                        <h2>
+                            <a
+                                    href="{% url 'shop:product-detail' product.pk %}"
+                                    class="product-title-link"
+                            >
+                                {{ product.name }}
+                            </a>
+                        </h2>
+
+                        {% if product.description %}
+                            <p class="product-description">
+                                {{ product.description|truncatewords:22 }}
+                            </p>
+                        {% endif %}
+
+                        <div class="product-bottom">
+                            {% if product.can_view_price %}
+                                {% if has_professional_access %}
+                                    <div class="price-label">
+                                        Професійна ціна
+                                    </div>
+                                {% else %}
+                                    <div class="price-label">
+                                        Роздрібна ціна
+                                    </div>
+                                {% endif %}
+
+                                <div class="product-price">
+                                    {{ product.display_price|floatformat:2 }}
+                                    грн
+                                </div>
+
+                                {% if product.stock_quantity > 0 %}
+                                    <div class="stock-status text-success">
+                                        Є в наявності
+                                    </div>
+                                {% else %}
+                                    <div class="stock-status text-danger">
+                                        Немає в наявності
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="hidden-price">
+                                    <strong>
+                                        Професійна ціна прихована
+                                    </strong>
+
+                                    <div class="mt-1">
+                                        {% if is_awaiting_verification %}
+                                            Доступ відкриється після
+                                            підтвердження облікового запису.
+                                        {% elif user.is_authenticated %}
+                                            Доступно лише підтвердженим
+                                            косметологам.
+                                        {% else %}
+                                            Увійдіть або зареєструйтеся
+                                            як косметолог.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <div class="product-buttons mt-3">
+                                {% if product.can_purchase %}
+                                    <form
+                                            method="post"
+                                            action="{% url 'shop:cart-add' product.pk %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <input
+                                                type="hidden"
+                                                name="quantity"
+                                                value="1"
+                                        >
+
+                                        <button
+                                                type="submit"
+                                                class="btn btn-dark w-100"
+                                        >
+                                            Додати до кошика
+                                        </button>
+                                    </form>
+                                {% elif product.can_view_price and product.stock_quantity == 0 %}
+                                    <button
+                                            type="button"
+                                            class="btn btn-secondary w-100"
+                                            disabled
+                                    >
+                                        Немає в наявності
+                                    </button>
+                                {% elif is_awaiting_verification %}
+                                    <a
+                                            href="{% url 'accounts:dashboard' %}"
+                                            class="btn btn-outline-dark"
+                                    >
+                                        Очікує підтвердження
+                                    </a>
+                                {% elif user.is_authenticated %}
+                                    <button
+                                            type="button"
+                                            class="btn btn-outline-dark"
+                                            disabled
+                                    >
+                                        Доступ лише косметологам
+                                    </button>
+                                {% else %}
+                                    <a
+                                            href="{% url 'accounts:login' %}?next={% url 'shop:product-detail' product.pk %}"
+                                            class="btn btn-dark"
+                                    >
+                                        Увійти як косметолог
+                                    </a>
+                                {% endif %}
+
+                                <a
+                                        href="{% url 'shop:product-detail' product.pk %}"
+                                        class="btn btn-outline-dark"
+                                >
+                                    Детальніше
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="mt-5">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a
+                                    class="page-link"
+                                    href="?page=
+                                            {{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_group %}&group={{ selected_group }}{% endif %}"
+                            >
+                                Назад
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }}
+                            із
+                            {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a
+                                    class="page-link"
+                                    href="?page=
+                                            {{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_group %}&group={{ selected_group }}{% endif %}"
+                            >
+                                Далі
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="empty-products">
+            <h2 class="h4">
+                Товарів не знайдено
+            </h2>
+
+            <p class="mb-0 text-secondary">
+                Спробуйте змінити параметри пошуку.
+            </p>
+        </div>
+    {% endif %}
+{% endblock %}
