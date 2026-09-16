@@ -1,20 +1,1097 @@
 {% extends "base.html" %}
 
 {% block title %}
-    DR TOISTER
+    DR TOISTER — косметологія та професійний догляд
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .home-page {
+            --ink: #211b18;
+            --muted: #736963;
+            --cream: #f5f0eb;
+            --soft: #eee4dc;
+            --accent: #7b3f3a;
+            color: var(--ink);
+        }
+
+        .home-page section {
+            scroll-margin-top: 100px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns:
+            minmax(0, 1.1fr)
+            minmax(340px, 0.9fr);
+            min-height: 680px;
+            overflow: hidden;
+            background: var(--cream);
+            border-radius: 28px;
+        }
+
+        .hero-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: clamp(36px, 7vw, 88px);
+        }
+
+        .eyebrow {
+            margin-bottom: 18px;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .hero-title {
+            max-width: 760px;
+            margin: 0;
+            font-size: clamp(52px, 8vw, 104px);
+            font-weight: 500;
+            line-height: 0.91;
+            letter-spacing: -0.065em;
+        }
+
+        .hero-text {
+            max-width: 600px;
+            margin: 28px 0 0;
+            color: var(--muted);
+            font-size: clamp(17px, 2vw, 21px);
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 34px;
+        }
+
+        .home-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 11px 21px;
+            color: #fff;
+            font-weight: 650;
+            text-decoration: none;
+            background: var(--ink);
+            border: 1px solid var(--ink);
+            border-radius: 50px;
+            transition: 0.2s ease;
+        }
+
+        .home-button:hover {
+            color: #fff;
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .home-button-outline {
+            color: var(--ink);
+            background: transparent;
+        }
+
+        .home-button-outline:hover {
+            color: #fff;
+            background: var(--ink);
+            border-color: var(--ink);
+        }
+
+        .hero-visual {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 520px;
+            overflow: hidden;
+            background: radial-gradient(
+                    circle at 25% 25%,
+                    rgba(255, 255, 255, 0.8),
+                    transparent 32%
+            ),
+            linear-gradient(
+                    145deg,
+                    #cfb7aa,
+                    #8f6258 55%,
+                    #4b302c
+            );
+        }
+
+        .hero-visual::before,
+        .hero-visual::after {
+            position: absolute;
+            content: "";
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+
+        .hero-visual::before {
+            width: 390px;
+            height: 390px;
+        }
+
+        .hero-visual::after {
+            width: 520px;
+            height: 520px;
+        }
+
+        .hero-monogram {
+            position: relative;
+            z-index: 1;
+            color: #fff;
+            font-family: Georgia, serif;
+            font-size: clamp(90px, 14vw, 170px);
+            font-style: italic;
+            letter-spacing: -0.08em;
+        }
+
+        .trust-line {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            margin: 18px 0 90px;
+            overflow: hidden;
+            background: #ddd3cc;
+            border: 1px solid #ddd3cc;
+            border-radius: 18px;
+        }
+
+        .trust-item {
+            padding: 22px;
+            text-align: center;
+            background: #fff;
+        }
+
+        .trust-item strong {
+            display: block;
+            font-size: 16px;
+        }
+
+        .trust-item span {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .section-block {
+            padding: 78px 0;
+        }
+
+        .section-soft {
+            padding-right: clamp(22px, 5vw, 60px);
+            padding-left: clamp(22px, 5vw, 60px);
+            background: var(--cream);
+            border-radius: 28px;
+        }
+
+        .section-heading {
+            display: grid;
+            grid-template-columns: 0.65fr 1.35fr;
+            gap: 32px;
+            margin-bottom: 42px;
+        }
+
+        .section-number {
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .section-title {
+            max-width: 830px;
+            margin: 0;
+            font-size: clamp(36px, 6vw, 68px);
+            font-weight: 500;
+            line-height: 1;
+            letter-spacing: -0.055em;
+        }
+
+        .section-description {
+            max-width: 670px;
+            margin: 18px 0 0;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.7;
+        }
+
+        .doctor-grid {
+            display: grid;
+            grid-template-columns: 0.85fr 1.15fr;
+            gap: clamp(30px, 6vw, 80px);
+            align-items: center;
+        }
+
+        .doctor-visual {
+            display: flex;
+            align-items: flex-end;
+            min-height: 560px;
+            padding: 32px;
+            overflow: hidden;
+            color: #fff;
+            background: linear-gradient(
+                    150deg,
+                    #d8c5ba,
+                    #9d7468 58%,
+                    #4c302c
+            );
+            border-radius: 24px;
+        }
+
+        .doctor-visual-text {
+            max-width: 280px;
+            font-family: Georgia, serif;
+            font-size: 32px;
+            font-style: italic;
+            line-height: 1.15;
+        }
+
+        .doctor-copy h2 {
+            margin-bottom: 24px;
+            font-size: clamp(38px, 6vw, 70px);
+            font-weight: 500;
+            line-height: 0.98;
+            letter-spacing: -0.055em;
+        }
+
+        .doctor-copy p {
+            max-width: 650px;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.75;
+        }
+
+        .doctor-values {
+            display: grid;
+            gap: 14px;
+            margin-top: 28px;
+        }
+
+        .doctor-value {
+            padding: 17px 0;
+            border-top: 1px solid #ded5cf;
+        }
+
+        .doctor-value strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .service-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 310px;
+            padding: 24px;
+            color: var(--ink);
+            text-decoration: none;
+            background: #fff;
+            border: 1px solid #e5ddd7;
+            border-radius: 20px;
+            transition: 0.25s ease;
+        }
+
+        .service-card:hover {
+            color: var(--ink);
+            border-color: #bca89d;
+            transform: translateY(-5px);
+            box-shadow: 0 18px 42px rgba(54, 39, 32, 0.09);
+        }
+
+        .service-category {
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 750;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .service-card h3 {
+            margin: 38px 0 14px;
+            font-size: 25px;
+            font-weight: 600;
+            letter-spacing: -0.035em;
+        }
+
+        .service-card p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .service-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: auto;
+            padding-top: 24px;
+            font-weight: 650;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .result-card {
+            min-height: 330px;
+            padding: 26px;
+            color: #fff;
+            border-radius: 22px;
+        }
+
+        .result-card:nth-child(1) {
+            background: #6d433d;
+        }
+
+        .result-card:nth-child(2) {
+            color: var(--ink);
+            background: #d9c8bd;
+        }
+
+        .result-card:nth-child(3) {
+            background: #26201d;
+        }
+
+        .result-index {
+            font-size: 12px;
+            letter-spacing: 0.12em;
+        }
+
+        .result-card h3 {
+            max-width: 290px;
+            margin-top: 130px;
+            font-size: 29px;
+            line-height: 1.08;
+            letter-spacing: -0.04em;
+        }
+
+        .result-card p {
+            max-width: 320px;
+            margin-bottom: 0;
+            opacity: 0.78;
+        }
+
+        .booking-banner {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 30px;
+            align-items: end;
+            padding: clamp(32px, 7vw, 76px);
+            color: #fff;
+            background: var(--ink);
+            border-radius: 28px;
+        }
+
+        .booking-banner h2 {
+            max-width: 760px;
+            margin: 0;
+            font-size: clamp(42px, 7vw, 80px);
+            font-weight: 500;
+            line-height: 0.95;
+            letter-spacing: -0.06em;
+        }
+
+        .booking-banner p {
+            margin: 20px 0 0;
+            color: #cfc4bd;
+            font-size: 17px;
+        }
+
+        .booking-banner-action {
+            text-align: right;
+        }
+
+        .booking-banner .home-button {
+            color: var(--ink);
+            background: #fff;
+            border-color: #fff;
+        }
+
+        .booking-banner .home-button:hover {
+            color: #fff;
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .catalog-card {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: var(--ink);
+            text-decoration: none;
+            background: #fff;
+            border: 1px solid #e5ddd7;
+            border-radius: 20px;
+            transition: 0.25s ease;
+        }
+
+        .catalog-card:hover {
+            color: var(--ink);
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px rgba(54, 39, 32, 0.08);
+        }
+
+        .catalog-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 240px;
+            overflow: hidden;
+            color: #8b7165;
+            font-family: Georgia, serif;
+            font-size: 52px;
+            font-style: italic;
+            background: #eee6e0;
+        }
+
+        .catalog-image-professional {
+            color: #d8c8bf;
+            background: #342925;
+        }
+
+        .catalog-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .catalog-content {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            padding: 22px;
+        }
+
+        .catalog-meta {
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 750;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .catalog-card h3 {
+            margin: 12px 0;
+            font-size: 23px;
+            letter-spacing: -0.03em;
+        }
+
+        .catalog-card p {
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .catalog-price {
+            margin-top: auto;
+            padding-top: 18px;
+            font-weight: 750;
+        }
+
+        .section-footer {
+            margin-top: 28px;
+            text-align: center;
+        }
+
+        @media (max-width: 991px) {
+            .hero,
+            .doctor-grid,
+            .booking-banner {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-visual {
+                min-height: 420px;
+            }
+
+            .service-grid,
+            .result-grid,
+            .catalog-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .booking-banner-action {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .hero {
+                min-height: auto;
+            }
+
+            .hero-content {
+                padding: 42px 24px;
+            }
+
+            .hero-visual {
+                min-height: 330px;
+            }
+
+            .trust-line,
+            .service-grid,
+            .result-grid,
+            .catalog-grid,
+            .section-heading {
+                grid-template-columns: 1fr;
+            }
+
+            .trust-line {
+                margin-bottom: 50px;
+            }
+
+            .section-block {
+                padding: 54px 0;
+            }
+
+            .doctor-visual {
+                min-height: 410px;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-    <section class="py-5 text-center">
-        <h1>DR TOISTER</h1>
+    <div class="home-page">
+        <section class="hero" id="home">
+            <div class="hero-content">
+                <div class="eyebrow">
+                    Косметологія · Дерматологія · Догляд
+                </div>
 
-        <p class="lead">
-            Косметологія, професійний догляд та навчання
-        </p>
+                <h1 class="hero-title">
+                    Здорова шкіра починається з правильного підходу.
+                </h1>
 
-        <p class="text-secondary">
-            Повноцінну головну сторінку оформимо після завершення
-            backend-функціоналу.
-        </p>
-    </section>
+                <p class="hero-text">
+                    Персональні консультації, сучасні косметологічні
+                    процедури, професійний домашній догляд та навчання
+                    для косметологів.
+                </p>
+
+                <div class="hero-actions">
+                    <a
+                            href="{% url 'appointments:booking-create' %}"
+                            class="home-button"
+                    >
+                        Записатися онлайн
+                    </a>
+
+                    <a
+                            href="{% url 'service-list' %}"
+                            class="home-button home-button-outline"
+                    >
+                        Переглянути послуги
+                    </a>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="hero-monogram">
+                    DT
+                </div>
+            </div>
+        </section>
+
+        <div class="trust-line">
+            <div class="trust-item">
+                <strong>
+                    Індивідуальна консультація
+                </strong>
+
+                <span>
+                План процедур і домашнього догляду
+            </span>
+            </div>
+
+            <div class="trust-item">
+                <strong>
+                    Зрозумілі рекомендації
+                </strong>
+
+                <span>
+                Без зайвих і непотрібних призначень
+            </span>
+            </div>
+
+            <div class="trust-item">
+                <strong>
+                    Онлайн-запис
+                </strong>
+
+                <span>
+                Оберіть процедуру, дату та час
+            </span>
+            </div>
+        </div>
+
+        <section class="section-block" id="doctor">
+            <div class="doctor-grid">
+                <div class="doctor-visual">
+                    <div class="doctor-visual-text">
+                        Краса починається зі здоров’я шкіри.
+                    </div>
+                </div>
+
+                <div class="doctor-copy">
+                    <div class="eyebrow">
+                        Про лікаря
+                    </div>
+
+                    <h2>
+                        Світлана Тойстер
+                    </h2>
+
+                    <p>
+                        Косметолог-дерматолог, яка поєднує
+                        професійну оцінку стану шкіри,
+                        сучасні процедури та персональний
+                        підбір домашнього догляду.
+                    </p>
+
+                    <p>
+                        Головний принцип роботи — не змінювати
+                        людину, а допомагати шкірі виглядати
+                        здоровою, доглянутою та природною.
+                    </p>
+
+                    <a
+                            href="{% url 'about' %}"
+                            class="home-button home-button-outline mt-4"
+                    >
+                        Детальніше про лікаря
+                    </a>
+
+                    <div class="doctor-values">
+                        <div class="doctor-value">
+                            <strong>
+                                Персональний план
+                            </strong>
+
+                            Процедури підбираються відповідно
+                            до стану та потреб шкіри.
+                        </div>
+
+                        <div class="doctor-value">
+                            <strong>
+                                Комплексний підхід
+                            </strong>
+
+                            Кабінетні процедури доповнюються
+                            правильним домашнім доглядом.
+                        </div>
+
+                        <div class="doctor-value">
+                            <strong>
+                                Комфортна комунікація
+                            </strong>
+
+                            Кожен етап і рекомендація пояснюються
+                            зрозумілою мовою.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section
+                class="section-block section-soft"
+                id="services"
+        >
+            <div class="section-heading">
+                <div class="section-number">
+                    01 · Послуги
+                </div>
+
+                <div>
+                    <h2 class="section-title">
+                        Процедури для здоров’я та краси шкіри
+                    </h2>
+
+                    <p class="section-description">
+                        Оберіть потрібну послугу — процедура
+                        автоматично підставиться у форму запису.
+                    </p>
+                </div>
+            </div>
+
+            <div class="service-grid">
+                {% for procedure in procedures %}
+                    <a
+                            href="{% url 'appointments:booking-create' %}?procedure={{ procedure.pk }}"
+                            class="service-card"
+                    >
+                        <div class="service-category">
+                            {{ procedure.category.name }}
+                        </div>
+
+                        <h3>
+                            {{ procedure.name }}
+                        </h3>
+
+                        <p>
+                            {{ procedure.description|truncatewords:20 }}
+                        </p>
+
+                        <div class="service-footer">
+                        <span>
+                            {{ procedure.duration_minutes }} хв
+                        </span>
+
+                            <span>
+                            {{ procedure.price|floatformat:0 }} ₴ →
+                        </span>
+                        </div>
+                    </a>
+                {% empty %}
+                    <p>
+                        Послуги скоро з’являться.
+                    </p>
+                {% endfor %}
+            </div>
+
+            <div class="section-footer">
+                <a
+                        href="{% url 'service-list' %}"
+                        class="home-button"
+                >
+                    Переглянути всі послуги
+                </a>
+            </div>
+        </section>
+
+        <section class="section-block" id="results">
+            <div class="section-heading">
+                <div class="section-number">
+                    02 · Результат
+                </div>
+
+                <div>
+                    <h2 class="section-title">
+                        Не маскувати проблему, а працювати
+                        з її причиною
+                    </h2>
+                </div>
+            </div>
+
+            <div class="result-grid">
+                <article class="result-card">
+                    <div class="result-index">
+                        01
+                    </div>
+
+                    <h3>
+                        Чиста та доглянута шкіра
+                    </h3>
+
+                    <p>
+                        Делікатне очищення з урахуванням
+                        типу та чутливості шкіри.
+                    </p>
+                </article>
+
+                <article class="result-card">
+                    <div class="result-index">
+                        02
+                    </div>
+
+                    <h3>
+                        Рівний тон і текстура
+                    </h3>
+
+                    <p>
+                        Послідовний план процедур замість
+                        випадкового набору послуг.
+                    </p>
+                </article>
+
+                <article class="result-card">
+                    <div class="result-index">
+                        03
+                    </div>
+
+                    <h3>
+                        Домашній догляд, який зрозумілий
+                    </h3>
+
+                    <p>
+                        Конкретні рекомендації, що легко
+                        виконувати щодня.
+                    </p>
+                </article>
+            </div>
+
+            <div class="section-footer">
+                <a
+                        href="{% url 'results' %}"
+                        class="home-button home-button-outline"
+                >
+                    Детальніше про результати
+                </a>
+            </div>
+        </section>
+
+        <section class="booking-banner" id="booking">
+            <div>
+                <h2>
+                    Готові почати турботу про шкіру?
+                </h2>
+
+                <p>
+                    Оберіть процедуру, зручну дату й доступний
+                    час. Реєстрація для запису не обов’язкова.
+                </p>
+            </div>
+
+            <div class="booking-banner-action">
+                <a
+                        href="{% url 'appointments:booking-create' %}"
+                        class="home-button"
+                >
+                    Записатися онлайн
+                </a>
+            </div>
+        </section>
+
+        <section class="section-block" id="courses">
+            <div class="section-heading">
+                <div class="section-number">
+                    03 · Школа догляду
+                </div>
+
+                <div>
+                    <h2 class="section-title">
+                        Про здорову шкіру
+                    </h2>
+
+                    <p class="section-description">
+                        Практичні програми для тих, хто хоче
+                        розуміти потреби своєї шкіри, правильно
+                        обирати косметику та будувати домашній
+                        догляд.
+                    </p>
+                </div>
+            </div>
+
+            <div class="catalog-grid">
+                {% for course in public_courses %}
+                    <a
+                            href="{% url 'academy:course-detail' course.pk %}"
+                            class="catalog-card"
+                    >
+                        <div class="catalog-image">
+                            {% if course.image %}
+                                <img
+                                        src="{{ course.image.url }}"
+                                        alt="{{ course.title }}"
+                                >
+                            {% else %}
+                                Care
+                            {% endif %}
+                        </div>
+
+                        <div class="catalog-content">
+                            <div class="catalog-meta">
+                                {{ course.get_format_display }}
+                                ·
+                                {{ course.duration_hours }} год
+                            </div>
+
+                            <h3>
+                                {{ course.title }}
+                            </h3>
+
+                            <p>
+                                {{ course.description|truncatewords:18 }}
+                            </p>
+
+                            <div class="catalog-price">
+                                {{ course.price|floatformat:0 }} ₴
+                            </div>
+                        </div>
+                    </a>
+                {% empty %}
+                    <p>
+                        Програми Школи догляду скоро з’являться.
+                    </p>
+                {% endfor %}
+            </div>
+
+            <div class="section-footer">
+                <a
+                        href="{% url 'academy:course-list' %}?audience=everyone"
+                        class="home-button home-button-outline"
+                >
+                    Усі програми Школи догляду
+                </a>
+            </div>
+        </section>
+
+        <section
+                class="section-block section-soft"
+                id="professional-learning"
+        >
+            <div class="section-heading">
+                <div class="section-number">
+                    04 · Для косметологів
+                </div>
+
+                <div>
+                    <h2 class="section-title">
+                        Підвищення кваліфікації
+                    </h2>
+
+                    <p class="section-description">
+                        Професійні програми, практичні техніки
+                        та поглиблення знань для косметологів.
+                    </p>
+                </div>
+            </div>
+
+            <div class="catalog-grid">
+                {% for course in professional_courses %}
+                    <a
+                            href="{% url 'academy:course-detail' course.pk %}"
+                            class="catalog-card"
+                    >
+                        <div
+                                class="catalog-image catalog-image-professional"
+                        >
+                            {% if course.image %}
+                                <img
+                                        src="{{ course.image.url }}"
+                                        alt="{{ course.title }}"
+                                >
+                            {% else %}
+                                Pro
+                            {% endif %}
+                        </div>
+
+                        <div class="catalog-content">
+                            <div class="catalog-meta">
+                                {{ course.get_format_display }}
+                                ·
+                                {{ course.duration_hours }} год
+                            </div>
+
+                            <h3>
+                                {{ course.title }}
+                            </h3>
+
+                            <p>
+                                {{ course.description|truncatewords:18 }}
+                            </p>
+
+                            <div class="catalog-price">
+                                {{ course.price|floatformat:0 }} ₴
+                            </div>
+                        </div>
+                    </a>
+                {% empty %}
+                    <p>
+                        Професійні програми скоро з’являться.
+                    </p>
+                {% endfor %}
+            </div>
+
+            <div class="section-footer">
+                <a
+                        href="{% url 'academy:course-list' %}?audience=cosmetologists"
+                        class="home-button"
+                >
+                    Усі програми підвищення кваліфікації
+                </a>
+            </div>
+        </section>
+
+        <section
+                class="section-block"
+                id="shop"
+        >
+            <div class="section-heading">
+                <div class="section-number">
+                    05 · Магазин
+                </div>
+
+                <div>
+                    <h2 class="section-title">
+                        Професійний догляд для дому
+                    </h2>
+
+                    <p class="section-description">
+                        Засоби для очищення, зволоження,
+                        відновлення та щоденного захисту шкіри.
+                    </p>
+                </div>
+            </div>
+
+            <div class="catalog-grid">
+                {% for product in products %}
+                    <a
+                            href="{% url 'shop:product-detail' product.pk %}"
+                            class="catalog-card"
+                    >
+                        <div class="catalog-image">
+                            {% if product.image %}
+                                <img
+                                        src="{{ product.image.url }}"
+                                        alt="{{ product.name }}"
+                                >
+                            {% else %}
+                                Care
+                            {% endif %}
+                        </div>
+
+                        <div class="catalog-content">
+                            <div class="catalog-meta">
+                                {{ product.category.name }}
+                            </div>
+
+                            <h3>
+                                {{ product.name }}
+                            </h3>
+
+                            <p>
+                                {{ product.description|truncatewords:18 }}
+                            </p>
+
+                            <div class="catalog-price">
+                                {{ product.retail_price|floatformat:0 }} ₴
+                            </div>
+                        </div>
+                    </a>
+                {% empty %}
+                    <p>
+                        Товари скоро з’являться.
+                    </p>
+                {% endfor %}
+            </div>
+
+            <div class="section-footer">
+                <a
+                        href="{% url 'shop:product-list' %}"
+                        class="home-button"
+                >
+                    Перейти до магазину
+                </a>
+            </div>
+        </section>
+    </div>
 {% endblock %}

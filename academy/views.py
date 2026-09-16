@@ -11,6 +11,19 @@ from .models import Course, CourseEnrollment
 
 
 def course_list(request):
+    selected_audience = request.GET.get(
+        "audience",
+        "",
+    )
+
+    valid_audiences = {
+        Course.Audience.EVERYONE,
+        Course.Audience.COSMETOLOGISTS,
+    }
+
+    if selected_audience not in valid_audiences:
+        selected_audience = ""
+
     courses = Course.objects.filter(
         is_published=True,
     ).order_by(
@@ -26,9 +39,35 @@ def course_list(request):
         audience=Course.Audience.COSMETOLOGISTS,
     )
 
+    if selected_audience == Course.Audience.EVERYONE:
+        page_title = "Школа догляду"
+        page_description = (
+            "Зрозумілі програми для тих, хто хоче "
+            "краще розуміти свою шкіру, косметичні "
+            "засоби та домашній догляд."
+        )
+    elif (
+            selected_audience
+            == Course.Audience.COSMETOLOGISTS
+    ):
+        page_title = "Підвищення кваліфікації"
+        page_description = (
+            "Професійні програми для практикуючих "
+            "косметологів і спеціалістів індустрії краси."
+        )
+    else:
+        page_title = "Навчання"
+        page_description = (
+            "Школа догляду для клієнтів і професійне "
+            "підвищення кваліфікації для косметологів."
+        )
+
     context = {
         "public_courses": public_courses,
         "professional_courses": professional_courses,
+        "selected_audience": selected_audience,
+        "page_title": page_title,
+        "page_description": page_description,
     }
 
     return render(
@@ -50,7 +89,10 @@ def course_detail(request, pk):
         user=request.user,
     )
 
-    if request.method == "POST" and form.is_valid():
+    if (
+            request.method == "POST"
+            and form.is_valid()
+    ):
         existing_application = None
 
         if request.user.is_authenticated:
@@ -72,7 +114,7 @@ def course_detail(request, pk):
                 request,
                 (
                     "Ви вже залишали заявку "
-                    "на цей курс."
+                    "на цю програму."
                 ),
             )
 
@@ -82,7 +124,9 @@ def course_detail(request, pk):
 
             return redirect(
                 "academy:application-success",
-                application_id=existing_application.pk,
+                application_id=(
+                    existing_application.pk
+                ),
             )
 
         application = CourseEnrollment.objects.create(
@@ -118,15 +162,13 @@ def course_detail(request, pk):
             application_id=application.pk,
         )
 
-    context = {
-        "course": course,
-        "form": form,
-    }
-
     return render(
         request,
         "academy/course_detail.html",
-        context,
+        {
+            "course": course,
+            "form": form,
+        },
     )
 
 

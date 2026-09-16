@@ -31,9 +31,18 @@ from .models import Booking, VisitComment
 
 
 def booking_create(request):
+    initial = {}
+
+    if request.method == "GET":
+        procedure_id = request.GET.get("procedure")
+
+        if procedure_id:
+            initial["procedure"] = procedure_id
+
     form = BookingForm(
         request.POST or None,
         user=request.user,
+        initial=initial,
     )
 
     if (

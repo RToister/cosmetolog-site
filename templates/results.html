@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Результати | DR TOISTER
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .results-page {
+            --ink: #211b18;
+            --muted: #736963;
+            --cream: #f5f0eb;
+            --accent: #7b3f3a;
+            color: var(--ink);
+        }
+
+        .results-header {
+            padding: clamp(38px, 8vw, 90px);
+            background: var(--ink);
+            border-radius: 28px;
+        }
+
+        .results-eyebrow {
+            margin-bottom: 18px;
+            color: #d9bdb3;
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .results-title {
+            max-width: 900px;
+            margin: 0;
+            color: #fff;
+            font-size: clamp(46px, 8vw, 92px);
+            font-weight: 500;
+            line-height: 0.94;
+            letter-spacing: -0.06em;
+        }
+
+        .results-lead {
+            max-width: 690px;
+            margin: 26px 0 0;
+            color: #cfc4bd;
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        .result-principles {
+            display: grid;
+            grid-template-columns:
+                repeat(3, 1fr);
+            gap: 16px;
+            padding: 75px 0;
+        }
+
+        .result-card {
+            min-height: 360px;
+            padding: 28px;
+            border-radius: 22px;
+        }
+
+        .result-card:nth-child(1) {
+            color: #fff;
+            background: #6d433d;
+        }
+
+        .result-card:nth-child(2) {
+            background: #d9c8bd;
+        }
+
+        .result-card:nth-child(3) {
+            color: #fff;
+            background: #26201d;
+        }
+
+        .result-number {
+            font-size: 12px;
+            letter-spacing: 0.13em;
+        }
+
+        .result-card h2 {
+            max-width: 300px;
+            margin: 145px 0 16px;
+            font-size: 30px;
+            line-height: 1.08;
+            letter-spacing: -0.04em;
+        }
+
+        .result-card p {
+            margin: 0;
+            line-height: 1.65;
+            opacity: 0.8;
+        }
+
+        .results-note {
+            display: grid;
+            grid-template-columns:
+                0.7fr 1.3fr;
+            gap: 32px;
+            padding: clamp(30px, 6vw, 65px);
+            background: var(--cream);
+            border-radius: 25px;
+        }
+
+        .results-note h2 {
+            margin: 0;
+            font-size: clamp(35px, 5vw, 58px);
+            letter-spacing: -0.05em;
+        }
+
+        .results-note-content {
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.75;
+        }
+
+        .results-action {
+            display: inline-flex;
+            padding: 12px 21px;
+            margin-top: 15px;
+            color: #fff;
+            font-weight: 700;
+            text-decoration: none;
+            background: var(--ink);
+            border-radius: 50px;
+        }
+
+        .results-action:hover {
+            color: #fff;
+            background: var(--accent);
+        }
+
+        @media (max-width: 850px) {
+            .result-principles {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .results-note {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .result-principles {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="results-page">
+        <header class="results-header">
+            <div class="results-eyebrow">
+                Результати роботи
+            </div>
+
+            <h1 class="results-title">
+                Не маскувати проблему, а працювати з її причиною
+            </h1>
+
+            <p class="results-lead">
+                Результат залежить від початкового стану
+                шкіри, регулярності процедур і дотримання
+                рекомендацій щодо домашнього догляду.
+            </p>
+        </header>
+
+        <section class="result-principles">
+            <article class="result-card">
+                <div class="result-number">
+                    01
+                </div>
+
+                <h2>
+                    Чиста та доглянута шкіра
+                </h2>
+
+                <p>
+                    Делікатне очищення з урахуванням
+                    типу та чутливості шкіри.
+                </p>
+            </article>
+
+            <article class="result-card">
+                <div class="result-number">
+                    02
+                </div>
+
+                <h2>
+                    Рівний тон і текстура
+                </h2>
+
+                <p>
+                    Послідовний план процедур замість
+                    випадкового набору послуг.
+                </p>
+            </article>
+
+            <article class="result-card">
+                <div class="result-number">
+                    03
+                </div>
+
+                <h2>
+                    Зрозумілий домашній догляд
+                </h2>
+
+                <p>
+                    Конкретні рекомендації, які легко
+                    виконувати щодня.
+                </p>
+            </article>
+        </section>
+
+        <section class="results-note">
+            <div>
+                <h2>
+                    Кожна шкіра реагує індивідуально
+                </h2>
+            </div>
+
+            <div class="results-note-content">
+                <p>
+                    На консультації визначається поточний
+                    стан шкіри та формується реалістичний
+                    план роботи. Обсяг процедур і термін
+                    отримання результату можуть відрізнятися.
+                </p>
+
+                <p>
+                    Фотографії результатів можна буде
+                    додавати на цю сторінку лише за згодою
+                    клієнтів.
+                </p>
+
+                <a
+                        href="{% url 'appointments:booking-create' %}"
+                        class="results-action"
+                >
+                    Записатися на консультацію
+                </a>
+            </div>
+        </section>
+    </div>
+{% endblock %}
