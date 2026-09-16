@@ -33,12 +33,24 @@ MONEY_FIELD = DecimalField(
 )
 
 
+def pending_cosmetologists_queryset():
+    return Customer.objects.filter(
+        customer_type=(
+            Customer.CustomerType.COSMETOLOGIST
+        ),
+        user__isnull=False,
+        user__user_type="cosmetologist",
+        user__is_cosmetologist_verified=False,
+    )
+
+
 @staff_member_required
 def customer_list(request):
     customer_type = request.GET.get(
         "type",
         "all",
     )
+
     search_query = request.GET.get(
         "q",
         "",
@@ -46,6 +58,7 @@ def customer_list(request):
 
     customers = Customer.objects.select_related(
         "user",
+        "user__cosmetologist_verified_by",
     ).annotate(
         booking_count=Count(
             "bookings",
@@ -100,7 +113,9 @@ def customer_list(request):
 
     if customer_type == "clients":
         customers = customers.filter(
-            customer_type=Customer.CustomerType.CLIENT,
+            customer_type=(
+                Customer.CustomerType.CLIENT
+            ),
         )
     elif customer_type == "cosmetologists":
         customers = customers.filter(
@@ -108,14 +123,32 @@ def customer_list(request):
                 Customer.CustomerType.COSMETOLOGIST
             ),
         )
+    elif customer_type == "pending":
+        customers = customers.filter(
+            customer_type=(
+                Customer.CustomerType.COSMETOLOGIST
+            ),
+            user__isnull=False,
+            user__user_type="cosmetologist",
+            user__is_cosmetologist_verified=False,
+        )
     else:
         customer_type = "all"
 
     if search_query:
         customers = customers.filter(
-            Q(full_name__icontains=search_query)
-            | Q(phone_number__icontains=search_query)
-            | Q(user__email__icontains=search_query)
+            Q(
+                full_name__icontains=search_query
+            )
+            | Q(
+                phone_number__icontains=search_query
+            )
+            | Q(
+                user__email__icontains=search_query
+            )
+            | Q(
+                user__username__icontains=search_query
+            )
         )
 
     customers = customers.order_by(
@@ -135,7 +168,9 @@ def customer_list(request):
     total_customers = Customer.objects.count()
 
     regular_clients = Customer.objects.filter(
-        customer_type=Customer.CustomerType.CLIENT,
+        customer_type=(
+            Customer.CustomerType.CLIENT
+        ),
     ).count()
 
     cosmetologists = Customer.objects.filter(
@@ -144,6 +179,10 @@ def customer_list(request):
         ),
     ).count()
 
+    pending_cosmetologists = (
+        pending_cosmetologists_queryset().count()
+    )
+
     context = {
         "page_obj": page_obj,
         "customer_type": customer_type,
@@ -151,6 +190,9 @@ def customer_list(request):
         "total_customers": total_customers,
         "regular_clients": regular_clients,
         "cosmetologists": cosmetologists,
+        "pending_cosmetologists": (
+            pending_cosmetologists
+        ),
     }
 
     return render(
@@ -230,7 +272,9 @@ def customer_update(request, pk):
         {
             "form": form,
             "customer": customer,
-            "page_title": "Редагування клієнта",
+            "page_title": (
+                "Редагування клієнта"
+            ),
             "submit_text": "Зберегти зміни",
             "cancel_url": reverse(
                 "crm:customer-detail",
@@ -250,7 +294,9 @@ def customer_toggle_active(request, pk):
         pk=pk,
     )
 
-    customer.is_active = not customer.is_active
+    customer.is_active = (
+        not customer.is_active
+    )
 
     customer.save(
         update_fields=(
@@ -281,9 +327,160 @@ def customer_toggle_active(request, pk):
 
 
 @staff_member_required
+@require_POST
+def verify_cosmetologist(request, pk):
+    customer = get_object_or_404(
+        Customer.objects.select_related(
+            "user"
+        ),
+        pk=pk,
+    )
+
+    next_url = request.POST.get("next")
+
+    if customer.user_id is None:
+        messages.error(
+            request,
+            (
+                "Підтвердити косметолога неможливо: "
+                "клієнт не має пов’язаного "
+                "облікового запису."
+            ),
+        )
+
+        if next_url:
+            return HttpResponseRedirect(next_url)
+
+        return redirect(
+            "crm:customer-detail",
+            pk=customer.pk,
+        )
+
+    if (
+            customer.customer_type
+            != Customer.CustomerType.COSMETOLOGIST
+            or not customer.user.is_cosmetologist
+    ):
+        messages.error(
+            request,
+            (
+                "Підтвердити можна лише клієнта "
+                "з типом «Косметолог»."
+            ),
+        )
+
+        if next_url:
+            return HttpResponseRedirect(next_url)
+
+        return redirect(
+            "crm:customer-detail",
+            pk=customer.pk,
+        )
+
+    if customer.user.is_cosmetologist_verified:
+        messages.info(
+            request,
+            (
+                "Цього косметолога вже "
+                "підтверджено."
+            ),
+        )
+
+        if next_url:
+            return HttpResponseRedirect(next_url)
+
+        return redirect(
+            "crm:customer-detail",
+            pk=customer.pk,
+        )
+
+    customer.user.verify_cosmetologist(
+        verified_by=request.user,
+    )
+
+    messages.success(
+        request,
+        (
+            "Косметолога підтверджено. "
+            "Тепер йому доступні професійні "
+            "ціни та препарати."
+        ),
+    )
+
+    if next_url:
+        return HttpResponseRedirect(next_url)
+
+    return redirect(
+        "crm:customer-detail",
+        pk=customer.pk,
+    )
+
+
+@staff_member_required
+@require_POST
+def revoke_cosmetologist_verification(
+        request,
+        pk,
+):
+    customer = get_object_or_404(
+        Customer.objects.select_related(
+            "user"
+        ),
+        pk=pk,
+    )
+
+    if customer.user_id is None:
+        messages.error(
+            request,
+            (
+                "Клієнт не має пов’язаного "
+                "облікового запису."
+            ),
+        )
+
+        return redirect(
+            "crm:customer-detail",
+            pk=customer.pk,
+        )
+
+    if not customer.user.is_cosmetologist_verified:
+        messages.info(
+            request,
+            (
+                "Цей косметолог не має "
+                "активного підтвердження."
+            ),
+        )
+
+        return redirect(
+            "crm:customer-detail",
+            pk=customer.pk,
+        )
+
+    customer.user.revoke_cosmetologist_verification()
+
+    messages.success(
+        request,
+        (
+            "Підтвердження косметолога "
+            "скасовано. Професійні ціни "
+            "та придбання препаратів закрито."
+        ),
+    )
+
+    return redirect(
+        "crm:customer-detail",
+        pk=customer.pk,
+    )
+
+
+@staff_member_required
 def customer_detail(request, pk):
     customer = get_object_or_404(
-        Customer.objects.select_related("user"),
+        Customer.objects.select_related(
+            "user",
+            "user__cosmetologist_verified_by",
+        ),
         pk=pk,
     )
 
@@ -303,12 +500,12 @@ def customer_detail(request, pk):
     )
 
     course_applications = (
-        customer.course_applications.select_related(
+        customer.course_applications
+        .select_related(
             "course",
             "created_by",
-        ).order_by(
-            "-enrolled_at",
         )
+        .order_by("-enrolled_at")
     )
 
     booking_statistics = bookings.aggregate(
@@ -351,28 +548,32 @@ def customer_detail(request, pk):
         ),
     )
 
-    course_statistics = course_applications.aggregate(
-        total=Count("id"),
-        completed=Count(
-            "id",
-            filter=Q(
-                status=(
-                    CourseEnrollment.Status.COMPLETED
-                ),
-            ),
-        ),
-        spending=Coalesce(
-            Sum(
-                "price_at_enrollment",
+    course_statistics = (
+        course_applications.aggregate(
+            total=Count("id"),
+            completed=Count(
+                "id",
                 filter=Q(
                     status=(
-                        CourseEnrollment.Status.COMPLETED
+                        CourseEnrollment
+                        .Status.COMPLETED
                     ),
                 ),
             ),
-            Decimal("0.00"),
-            output_field=MONEY_FIELD,
-        ),
+            spending=Coalesce(
+                Sum(
+                    "price_at_enrollment",
+                    filter=Q(
+                        status=(
+                            CourseEnrollment
+                            .Status.COMPLETED
+                        ),
+                    ),
+                ),
+                Decimal("0.00"),
+                output_field=MONEY_FIELD,
+            ),
+        )
     )
 
     total_spending = (
@@ -397,12 +598,20 @@ def customer_detail(request, pk):
         "customer": customer,
         "bookings": bookings,
         "orders": orders,
-        "course_applications": course_applications,
-        "booking_statistics": booking_statistics,
+        "course_applications": (
+            course_applications
+        ),
+        "booking_statistics": (
+            booking_statistics
+        ),
         "order_statistics": order_statistics,
-        "course_statistics": course_statistics,
+        "course_statistics": (
+            course_statistics
+        ),
         "total_spending": total_spending,
-        "total_interactions": total_interactions,
+        "total_interactions": (
+            total_interactions
+        ),
         "contact_digits": contact_digits,
     }
 

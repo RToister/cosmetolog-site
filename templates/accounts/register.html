@@ -1,36 +1,134 @@
 {% extends "base.html" %}
 
 {% block title %}
-    Реєстрація | DR TOISTER
+    Реєстрація косметолога | DR TOISTER
 {% endblock %}
 
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-lg-7">
-            <h1 class="mb-4">Створення облікового запису</h1>
+    <style>
+        .registration-wrapper {
+            max-width: 720px;
+            margin: 0 auto;
+        }
 
-            <p class="text-secondary">
-                Реєстрація призначена для косметологів.
-                Професійний доступ відкривається одразу після
-                створення облікового запису.
+        .registration-card {
+            padding: clamp(24px, 5vw, 48px);
+            background: #f8f5f2;
+            border: 1px solid #ebe3de;
+            border-radius: 24px;
+        }
+
+        .registration-eyebrow {
+            margin-bottom: 10px;
+            color: #7b665d;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .registration-title {
+            margin-bottom: 16px;
+            font-size: clamp(32px, 6vw, 52px);
+            letter-spacing: -0.04em;
+        }
+
+        .registration-description {
+            margin-bottom: 24px;
+            color: #6c625d;
+            font-size: 17px;
+        }
+
+        .verification-notice {
+            padding: 18px;
+            margin-bottom: 28px;
+            background: #fff;
+            border: 1px solid #e6ddd7;
+            border-radius: 16px;
+        }
+
+        .verification-notice strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .registration-card form p {
+            margin-bottom: 18px;
+        }
+
+        .registration-card form label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 600;
+        }
+
+        .registration-card form input {
+            display: block;
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d8d0cb;
+            border-radius: 10px;
+        }
+
+        .registration-card .helptext {
+            display: block;
+            margin-top: 6px;
+            color: #746b66;
+            font-size: 13px;
+        }
+
+        .registration-card ul.errorlist {
+            padding-left: 0;
+            color: #a33c3c;
+            list-style: none;
+        }
+    </style>
+
+    <div class="registration-wrapper">
+        <section class="registration-card">
+            <div class="registration-eyebrow">
+                Професійний кабінет
+            </div>
+
+            <h1 class="registration-title">
+                Реєстрація косметолога
+            </h1>
+
+            <p class="registration-description">
+                Створіть обліковий запис для доступу
+                до професійного асортименту та
+                спеціальних цін.
             </p>
+
+            <div class="verification-notice">
+                <strong>
+                    Доступ потребує підтвердження
+                </strong>
+
+                Після реєстрації лікар або адміністратор
+                перевірить обліковий запис. Зазвичай
+                підтвердження займає до 24 годин.
+            </div>
 
             <form method="post">
                 {% csrf_token %}
                 {{ form.as_p }}
 
-                <button class="btn btn-dark w-100" type="submit">
-                    Зареєструватися
+                <button
+                        class="btn btn-dark w-100"
+                        type="submit"
+                >
+                    Подати заявку на реєстрацію
                 </button>
             </form>
 
-            <p class="mt-4">
+            <p class="mt-4 mb-0 text-center">
                 Уже маєте обліковий запис?
 
                 <a href="{% url 'accounts:login' %}">
                     Увійти
                 </a>
             </p>
-        </div>
+        </section>
     </div>
 {% endblock %}

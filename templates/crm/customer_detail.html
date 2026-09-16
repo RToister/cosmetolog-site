@@ -66,7 +66,9 @@
             border-radius: 50px;
         }
 
-        .badge-client {
+        .badge-client,
+        .badge-active,
+        .badge-verified {
             color: #315b43;
             background: #dceee3;
         }
@@ -76,12 +78,13 @@
             background: #f2dfc5;
         }
 
-        .badge-active {
-            color: #315b43;
-            background: #dceee3;
+        .badge-pending {
+            color: #765326;
+            background: #fff0d8;
         }
 
-        .badge-inactive {
+        .badge-inactive,
+        .badge-rejected {
             color: #7d3434;
             background: #f8e1e1;
         }
@@ -97,9 +100,53 @@
             margin: 0;
         }
 
+        .verification-card {
+            display: grid;
+            grid-template-columns:
+                minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 24px;
+            padding: 22px;
+            margin-bottom: 28px;
+            border: 1px solid #e8e2de;
+            border-radius: 18px;
+        }
+
+        .verification-card.is-verified {
+            background: #f1f8f3;
+            border-color: #cfe4d5;
+        }
+
+        .verification-card.is-pending {
+            background: #fffaf1;
+            border-color: #eddfc5;
+        }
+
+        .verification-card.is-unlinked {
+            background: #faf8f7;
+        }
+
+        .verification-title {
+            margin: 0 0 6px;
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        .verification-description {
+            margin: 0;
+            color: #6d645f;
+        }
+
+        .verification-meta {
+            margin-top: 10px;
+            color: #6d645f;
+            font-size: 14px;
+        }
+
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
             gap: 14px;
             margin-bottom: 32px;
         }
@@ -152,7 +199,8 @@
 
         .history-card {
             display: grid;
-            grid-template-columns: 1.4fr 0.8fr 0.8fr;
+            grid-template-columns:
+                1.4fr 0.8fr 0.8fr;
             gap: 16px;
             padding: 18px;
             border: 1px solid #ebe6e2;
@@ -198,10 +246,17 @@
 
         @media (max-width: 900px) {
             .summary-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
             }
 
             .history-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .verification-card {
                 grid-template-columns: 1fr;
             }
         }
@@ -268,39 +323,143 @@
                 {% endif %}
 
                 <span>
-                Перше звернення:
-                {{ customer.first_contact_at|date:"d.m.Y" }}
-            </span>
+                    Перше звернення:
+                    {{ customer.first_contact_at|date:"d.m.Y" }}
+                </span>
 
                 <span>
-                Остання активність:
-                {{ customer.last_activity_at|date:"d.m.Y H:i" }}
-            </span>
+                    Остання активність:
+                    {{ customer.last_activity_at|date:"d.m.Y H:i" }}
+                </span>
             </div>
         </div>
 
         <div class="customer-badges">
             {% if customer.customer_type == "cosmetologist" %}
                 <span class="customer-badge badge-cosmetologist">
-                Косметолог
-            </span>
+                    Косметолог
+                </span>
+
+                {% if customer.user %}
+                    {% if customer.user.is_cosmetologist_verified %}
+                        <span class="customer-badge badge-verified">
+                            Підтверджено
+                        </span>
+                    {% else %}
+                        <span class="customer-badge badge-pending">
+                            Очікує підтвердження
+                        </span>
+                    {% endif %}
+                {% else %}
+                    <span class="customer-badge badge-rejected">
+                        Немає облікового запису
+                    </span>
+                {% endif %}
             {% else %}
                 <span class="customer-badge badge-client">
-                Звичайний клієнт
-            </span>
+                    Звичайний клієнт
+                </span>
             {% endif %}
 
             {% if customer.is_active %}
                 <span class="customer-badge badge-active">
-                Активний
-            </span>
+                    Активний
+                </span>
             {% else %}
                 <span class="customer-badge badge-inactive">
-                Неактивний
-            </span>
+                    Неактивний
+                </span>
             {% endif %}
         </div>
     </section>
+
+    {% if customer.customer_type == "cosmetologist" %}
+        {% if customer.user %}
+            {% if customer.user.is_cosmetologist_verified %}
+                <section class="verification-card is-verified">
+                    <div>
+                        <h2 class="verification-title">
+                            Косметолога підтверджено
+                        </h2>
+
+                        <p class="verification-description">
+                            Користувач бачить професійні ціни
+                            та може купувати препарати для
+                            спеціалістів.
+                        </p>
+
+                        <div class="verification-meta">
+                            {% if customer.user.cosmetologist_verified_at %}
+                                Дата:
+                                {{ customer.user.cosmetologist_verified_at|date:"d.m.Y H:i" }}
+                            {% endif %}
+
+                            {% if customer.user.cosmetologist_verified_by %}
+                                · Підтвердив:
+                                {{ customer.user.cosmetologist_verified_by.get_full_name|default:customer.user.cosmetologist_verified_by.username }}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <form
+                            method="post"
+                            action="{% url 'crm:revoke-cosmetologist-verification' customer.pk %}"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                                type="submit"
+                                class="btn btn-outline-danger"
+                        >
+                            Скасувати підтвердження
+                        </button>
+                    </form>
+                </section>
+            {% else %}
+                <section class="verification-card is-pending">
+                    <div>
+                        <h2 class="verification-title">
+                            Очікує підтвердження
+                        </h2>
+
+                        <p class="verification-description">
+                            До підтвердження професійні ціни
+                            та придбання препаратів для
+                            спеціалістів недоступні.
+                        </p>
+                    </div>
+
+                    <form
+                            method="post"
+                            action="{% url 'crm:verify-cosmetologist' customer.pk %}"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                                type="submit"
+                                class="btn btn-dark"
+                        >
+                            Підтвердити косметолога
+                        </button>
+                    </form>
+                </section>
+            {% endif %}
+        {% else %}
+            <section class="verification-card is-unlinked">
+                <div>
+                    <h2 class="verification-title">
+                        Немає облікового запису
+                    </h2>
+
+                    <p class="verification-description">
+                        Для підтвердження косметолог повинен
+                        мати пов’язаний обліковий запис
+                        користувача.
+                    </p>
+                </div>
+            </section>
+        {% endif %}
+    {% endif %}
 
     <div class="customer-actions">
         <a

@@ -5,6 +5,67 @@
 {% endblock %}
 
 {% block content %}
+    <style>
+        .verification-banner {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 22px;
+            margin-bottom: 32px;
+            border-radius: 18px;
+        }
+
+        .verification-banner.pending {
+            background: #fff8eb;
+            border: 1px solid #eeddbd;
+        }
+
+        .verification-banner.verified {
+            background: #edf8f0;
+            border: 1px solid #cae5d1;
+        }
+
+        .verification-banner h2 {
+            margin-bottom: 6px;
+            font-size: 20px;
+        }
+
+        .verification-banner p {
+            margin: 0;
+            color: #695f59;
+        }
+
+        .verification-label {
+            flex: 0 0 auto;
+            align-self: flex-start;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 50px;
+        }
+
+        .pending .verification-label {
+            color: #765326;
+            background: #f2dfc5;
+        }
+
+        .verified .verification-label {
+            color: #315b43;
+            background: #dceee3;
+        }
+
+        @media (max-width: 600px) {
+            .verification-banner {
+                display: block;
+            }
+
+            .verification-label {
+                display: inline-flex;
+                margin-top: 14px;
+            }
+        }
+    </style>
+
     <header class="mb-5">
         <h1>
             Вітаємо,
@@ -15,15 +76,67 @@
             {{ user.phone_number }}
         </p>
 
-        {% if user.user_type == "cosmetologist" %}
+        {% if user.is_cosmetologist %}
             <p>
-                <strong>Професійний кабінет косметолога</strong>
+                <strong>
+                    Професійний кабінет косметолога
+                </strong>
             </p>
         {% endif %}
+
+        <a
+                href="{% url 'accounts:profile-update' %}"
+                class="btn btn-sm btn-outline-dark"
+        >
+            Редагувати профіль
+        </a>
     </header>
 
+    {% if user.is_cosmetologist %}
+        {% if user.is_cosmetologist_verified %}
+            <section class="verification-banner verified">
+                <div>
+                    <h2>
+                        Професійний доступ підтверджено
+                    </h2>
+
+                    <p>
+                        Вам доступні професійні ціни
+                        та придбання препаратів для
+                        спеціалістів.
+                    </p>
+                </div>
+
+                <span class="verification-label">
+                    Підтверджено
+                </span>
+            </section>
+        {% else %}
+            <section class="verification-banner pending">
+                <div>
+                    <h2>
+                        Обліковий запис перевіряється
+                    </h2>
+
+                    <p>
+                        Підтвердження косметолога займає
+                        до 24 годин. Професійні ціни стануть
+                        доступними після перевірки лікарем
+                        або адміністратором.
+                    </p>
+                </div>
+
+                <span class="verification-label">
+                    Очікує підтвердження
+                </span>
+            </section>
+        {% endif %}
+    {% endif %}
+
     <section class="mb-5">
-        <h2 class="mb-3">Майбутні записи</h2>
+        <h2 class="mb-3">
+            Майбутні записи
+        </h2>
 
         {% for booking in upcoming_bookings %}
             <article class="card mb-3">
@@ -34,17 +147,21 @@
 
                     <p class="mb-1">
                         {{ booking.date }}
-                        · {{ booking.start_time|time:"H:i" }}
-                        – {{ booking.end_time|time:"H:i" }}
+                        ·
+                        {{ booking.start_time|time:"H:i" }}
+                        –
+                        {{ booking.end_time|time:"H:i" }}
                     </p>
 
                     <p class="mb-1">
-                        Статус: {{ booking.get_status_display }}
+                        Статус:
+                        {{ booking.get_status_display }}
                     </p>
 
                     <p class="mb-0">
                         Вартість:
-                        {{ booking.price_at_booking|floatformat:2 }} грн
+                        {{ booking.price_at_booking|floatformat:2 }}
+                        грн
                     </p>
                 </div>
             </article>
@@ -56,7 +173,9 @@
     </section>
 
     <section class="mb-5">
-        <h2 class="mb-3">Історія візитів</h2>
+        <h2 class="mb-3">
+            Історія візитів
+        </h2>
 
         {% for booking in booking_history %}
             <article class="card mb-3">
@@ -67,17 +186,32 @@
 
                     <p>
                         {{ booking.date }}
-                        · {{ booking.start_time|time:"H:i" }}
+                        ·
+                        {{ booking.start_time|time:"H:i" }}
                     </p>
 
                     <p>
-                        Статус: {{ booking.get_status_display }}
+                        Статус:
+                        {{ booking.get_status_display }}
                     </p>
 
                     {% if booking.visit_comment %}
                         <div class="alert alert-light mb-0">
-                            <strong>Коментар лікаря:</strong>
-                            {{ booking.visit_comment.text }}
+                            <strong>
+                                Коментар лікаря:
+                            </strong>
+
+                            {{ booking.visit_comment.comment }}
+
+                            {% if booking.visit_comment.recommendations %}
+                                <hr>
+
+                                <strong>
+                                    Рекомендації:
+                                </strong>
+
+                                {{ booking.visit_comment.recommendations }}
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>
@@ -90,7 +224,9 @@
     </section>
 
     <section class="mb-5">
-        <h2 class="mb-3">Мої замовлення</h2>
+        <h2 class="mb-3">
+            Мої замовлення
+        </h2>
 
         {% for order in orders %}
             <article class="card mb-3">
@@ -100,7 +236,8 @@
                     </h3>
 
                     <p>
-                        Статус: {{ order.get_status_display }}
+                        Статус:
+                        {{ order.get_status_display }}
                     </p>
 
                     <ul>
@@ -108,14 +245,17 @@
                             <li>
                                 {{ item.product.name }}
                                 × {{ item.quantity }}
-                                — {{ item.subtotal|floatformat:2 }} грн
+                                —
+                                {{ item.subtotal|floatformat:2 }}
+                                грн
                             </li>
                         {% endfor %}
                     </ul>
 
                     <strong>
                         Разом:
-                        {{ order.total_price|floatformat:2 }} грн
+                        {{ order.total_price|floatformat:2 }}
+                        грн
                     </strong>
                 </div>
             </article>
@@ -126,9 +266,11 @@
         {% endfor %}
     </section>
 
-    {% if user.user_type == "cosmetologist" %}
+    {% if user.is_cosmetologist %}
         <section>
-            <h2 class="mb-3">Моє навчання</h2>
+            <h2 class="mb-3">
+                Моє навчання
+            </h2>
 
             {% for enrollment in course_enrollments %}
                 <article class="card mb-3">
@@ -156,7 +298,7 @@
                 </article>
             {% empty %}
                 <p class="text-secondary">
-                    Ви ще не записані на курси.
+                    Ви ще не записані на навчання.
                 </p>
             {% endfor %}
         </section>

@@ -1,5 +1,7 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import (
+    UserCreationForm,
+)
 
 from .models import User
 
@@ -10,6 +12,7 @@ class UserRegistrationForm(UserCreationForm):
         required=True,
         label="Ім’я",
     )
+
     phone_number = forms.CharField(
         max_length=20,
         required=True,
@@ -30,20 +33,30 @@ class UserRegistrationForm(UserCreationForm):
         }
 
     def clean_phone_number(self):
-        phone_number = self.cleaned_data["phone_number"]
+        phone_number = (
+            self.cleaned_data["phone_number"]
+            .strip()
+        )
 
         if User.objects.filter(
-                phone_number=phone_number
+                phone_number=phone_number,
         ).exists():
             raise forms.ValidationError(
-                "Користувач із таким номером уже існує."
+                "Користувач із таким номером "
+                "уже існує."
             )
 
         return phone_number
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.user_type = User.UserType.COSMETOLOGIST
+
+        user.user_type = (
+            User.UserType.COSMETOLOGIST
+        )
+        user.is_cosmetologist_verified = False
+        user.cosmetologist_verified_at = None
+        user.cosmetologist_verified_by = None
 
         if commit:
             user.save()
@@ -66,15 +79,19 @@ class UserProfileForm(forms.ModelForm):
         }
 
     def clean_phone_number(self):
-        phone_number = self.cleaned_data["phone_number"]
+        phone_number = (
+            self.cleaned_data["phone_number"]
+            .strip()
+        )
 
         if User.objects.filter(
-                phone_number=phone_number
+                phone_number=phone_number,
         ).exclude(
-            pk=self.instance.pk
+            pk=self.instance.pk,
         ).exists():
             raise forms.ValidationError(
-                "Користувач із таким номером уже існує."
+                "Користувач із таким номером "
+                "уже існує."
             )
 
         return phone_number

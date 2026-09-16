@@ -30,4 +30,22 @@ urlpatterns = [
         views.customer_toggle_active,
         name="customer-toggle-active",
     ),
+    path(
+        (
+            "customers/<int:pk>/"
+            "verify-cosmetologist/"
+        ),
+        views.verify_cosmetologist,
+        name="verify-cosmetologist",
+    ),
+    path(
+        (
+            "customers/<int:pk>/"
+            "revoke-cosmetologist/"
+        ),
+        views.revoke_cosmetologist_verification,
+        name=(
+            "revoke-cosmetologist-verification"
+        ),
+    ),
 ]

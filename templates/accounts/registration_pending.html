@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Заявку отримано | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <style>
+        .pending-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 65vh;
+        }
+
+        .pending-card {
+            width: min(100%, 760px);
+            padding: clamp(28px, 6vw, 64px);
+            text-align: center;
+            background: #f8f5f2;
+            border: 1px solid #ebe3de;
+            border-radius: 28px;
+        }
+
+        .pending-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            margin-bottom: 24px;
+            color: #765326;
+            font-size: 32px;
+            background: #f2dfc5;
+            border-radius: 50%;
+        }
+
+        .pending-eyebrow {
+            margin-bottom: 10px;
+            color: #7b665d;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .pending-title {
+            margin-bottom: 18px;
+            font-size: clamp(34px, 7vw, 58px);
+            letter-spacing: -0.04em;
+        }
+
+        .pending-description {
+            max-width: 570px;
+            margin: 0 auto;
+            color: #675e59;
+            font-size: 18px;
+            line-height: 1.65;
+        }
+
+        .pending-time {
+            display: inline-block;
+            padding: 10px 18px;
+            margin-top: 24px;
+            color: #654c2c;
+            font-weight: 700;
+            background: #fff0d8;
+            border-radius: 50px;
+        }
+
+        .pending-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 32px;
+        }
+    </style>
+
+    <div class="pending-wrapper">
+        <section class="pending-card">
+            <div class="pending-icon">
+                ✓
+            </div>
+
+            <div class="pending-eyebrow">
+                Заявку отримано
+            </div>
+
+            <h1 class="pending-title">
+                Очікуйте підтвердження
+            </h1>
+
+            <p class="pending-description">
+                Ваш обліковий запис косметолога успішно
+                створено. Лікар або адміністратор перевірить
+                дані та відкриє доступ до професійних цін
+                і препаратів для спеціалістів.
+            </p>
+
+            <div class="pending-time">
+                Підтвердження займає до 24 годин
+            </div>
+
+            <div class="pending-actions">
+                <a
+                        href="{% url 'home' %}"
+                        class="btn btn-dark px-4"
+                >
+                    Повернутися на сайт
+                </a>
+
+                <a
+                        href="{% url 'accounts:dashboard' %}"
+                        class="btn btn-outline-dark px-4"
+                >
+                    Особистий кабінет
+                </a>
+            </div>
+        </section>
+    </div>
+{% endblock %}

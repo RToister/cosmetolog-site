@@ -12,6 +12,11 @@ urlpatterns = [
         name="register",
     ),
     path(
+        "registration/pending/",
+        views.registration_pending,
+        name="registration-pending",
+    ),
+    path(
         "login/",
         auth_views.LoginView.as_view(
             template_name="accounts/login.html",
