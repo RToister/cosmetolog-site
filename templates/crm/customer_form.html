@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ page_title }} | CRM
+{% endblock %}
+
+{% block content %}
+    <style>
+        .customer-form-page {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .form-back {
+            display: inline-flex;
+            margin-bottom: 22px;
+            color: #625a55;
+            text-decoration: none;
+        }
+
+        .form-back:hover {
+            color: #000;
+        }
+
+        .form-card {
+            padding: clamp(24px, 5vw, 44px);
+            background: #f8f5f2;
+            border: 1px solid #ebe3de;
+            border-radius: 24px;
+        }
+
+        .form-eyebrow {
+            margin-bottom: 8px;
+            color: #806e64;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .form-title {
+            margin-bottom: 30px;
+            font-size: clamp(30px, 5vw, 46px);
+            letter-spacing: -0.04em;
+        }
+
+        .form-field {
+            margin-bottom: 22px;
+        }
+
+        .form-label {
+            margin-bottom: 8px;
+            font-weight: 650;
+        }
+
+        .form-help {
+            margin-top: 6px;
+            color: #746c67;
+            font-size: 13px;
+        }
+
+        .field-errors {
+            padding: 0;
+            margin: 8px 0 0;
+            color: #b42318;
+            font-size: 14px;
+            list-style: none;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .form-actions .btn {
+            padding: 11px 20px;
+            border-radius: 50px;
+        }
+    </style>
+
+    <section class="customer-form-page">
+        <a
+                href="{{ cancel_url }}"
+                class="form-back"
+        >
+            ← Повернутися
+        </a>
+
+        <div class="form-card">
+            <div class="form-eyebrow">
+                CRM
+            </div>
+
+            <h1 class="form-title">
+                {{ page_title }}
+            </h1>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-field">
+                    <label
+                            for="{{ form.full_name.id_for_label }}"
+                            class="form-label"
+                    >
+                        {{ form.full_name.label }}
+                    </label>
+
+                    {{ form.full_name }}
+
+                    {% if form.full_name.errors %}
+                        <ul class="field-errors">
+                            {% for error in form.full_name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label
+                            for="{{ form.phone_number.id_for_label }}"
+                            class="form-label"
+                    >
+                        {{ form.phone_number.label }}
+                    </label>
+
+                    {{ form.phone_number }}
+
+                    <div class="form-help">
+                        Наприклад: +380958360185
+                    </div>
+
+                    {% if form.phone_number.errors %}
+                        <ul class="field-errors">
+                            {% for error in form.phone_number.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label
+                            for="{{ form.customer_type.id_for_label }}"
+                            class="form-label"
+                    >
+                        {{ form.customer_type.label }}
+                    </label>
+
+                    {{ form.customer_type }}
+
+                    {% if form.customer_type.errors %}
+                        <ul class="field-errors">
+                            {% for error in form.customer_type.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label
+                            for="{{ form.notes.id_for_label }}"
+                            class="form-label"
+                    >
+                        {{ form.notes.label }}
+                    </label>
+
+                    {{ form.notes }}
+
+                    {% if form.notes.errors %}
+                        <ul class="field-errors">
+                            {% for error in form.notes.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-check form-switch">
+                    {{ form.is_active }}
+
+                    <label
+                            for="{{ form.is_active.id_for_label }}"
+                            class="form-check-label"
+                    >
+                        Активний клієнт
+                    </label>
+
+                    {% if form.is_active.errors %}
+                        <ul class="field-errors">
+                            {% for error in form.is_active.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <button
+                            type="submit"
+                            class="btn btn-dark"
+                    >
+                        {{ submit_text }}
+                    </button>
+
+                    <a
+                            href="{{ cancel_url }}"
+                            class="btn btn-outline-dark"
+                    >
+                        Скасувати
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}

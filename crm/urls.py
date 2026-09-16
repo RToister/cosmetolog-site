@@ -11,8 +11,23 @@ urlpatterns = [
         name="customer-list",
     ),
     path(
+        "customers/create/",
+        views.customer_create,
+        name="customer-create",
+    ),
+    path(
         "customers/<int:pk>/",
         views.customer_detail,
         name="customer-detail",
+    ),
+    path(
+        "customers/<int:pk>/edit/",
+        views.customer_update,
+        name="customer-update",
+    ),
+    path(
+        "customers/<int:pk>/toggle-active/",
+        views.customer_toggle_active,
+        name="customer-toggle-active",
     ),
 ]

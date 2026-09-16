@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.contrib import messages
 from django.contrib.admin.views.decorators import (
     staff_member_required,
 )
@@ -11,12 +12,20 @@ from django.db.models import (
     Sum,
 )
 from django.db.models.functions import Coalesce
-from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponseRedirect
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 
+from academy.models import CourseEnrollment
 from appointments.models import Booking
+from crm.forms import CustomerForm
 from crm.models import Customer
 from shop.models import Order
-from academy.models import CourseEnrollment
 
 MONEY_FIELD = DecimalField(
     max_digits=12,
@@ -58,6 +67,7 @@ def customer_list(request):
                         Booking.Status.COMPLETED
                     ),
                 ),
+                distinct=True,
             ),
             Decimal("0.00"),
             output_field=MONEY_FIELD,
@@ -68,6 +78,7 @@ def customer_list(request):
                 filter=Q(
                     orders__status=Order.Status.PAID,
                 ),
+                distinct=True,
             ),
             Decimal("0.00"),
             output_field=MONEY_FIELD,
@@ -80,6 +91,7 @@ def customer_list(request):
                         CourseEnrollment.Status.COMPLETED
                     ),
                 ),
+                distinct=True,
             ),
             Decimal("0.00"),
             output_field=MONEY_FIELD,
@@ -145,6 +157,126 @@ def customer_list(request):
         request,
         "crm/customer_list.html",
         context,
+    )
+
+
+@staff_member_required
+def customer_create(request):
+    if request.method == "POST":
+        form = CustomerForm(request.POST)
+
+        if form.is_valid():
+            customer = form.save()
+
+            messages.success(
+                request,
+                "Клієнта успішно додано до CRM.",
+            )
+
+            return redirect(
+                "crm:customer-detail",
+                pk=customer.pk,
+            )
+    else:
+        form = CustomerForm()
+
+    return render(
+        request,
+        "crm/customer_form.html",
+        {
+            "form": form,
+            "page_title": "Новий клієнт",
+            "submit_text": "Створити клієнта",
+            "cancel_url": reverse(
+                "crm:customer-list"
+            ),
+        },
+    )
+
+
+@staff_member_required
+def customer_update(request, pk):
+    customer = get_object_or_404(
+        Customer,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        form = CustomerForm(
+            request.POST,
+            instance=customer,
+        )
+
+        if form.is_valid():
+            customer = form.save()
+
+            messages.success(
+                request,
+                "Дані клієнта успішно оновлено.",
+            )
+
+            return redirect(
+                "crm:customer-detail",
+                pk=customer.pk,
+            )
+    else:
+        form = CustomerForm(
+            instance=customer,
+        )
+
+    return render(
+        request,
+        "crm/customer_form.html",
+        {
+            "form": form,
+            "customer": customer,
+            "page_title": "Редагування клієнта",
+            "submit_text": "Зберегти зміни",
+            "cancel_url": reverse(
+                "crm:customer-detail",
+                kwargs={
+                    "pk": customer.pk,
+                },
+            ),
+        },
+    )
+
+
+@staff_member_required
+@require_POST
+def customer_toggle_active(request, pk):
+    customer = get_object_or_404(
+        Customer,
+        pk=pk,
+    )
+
+    customer.is_active = not customer.is_active
+
+    customer.save(
+        update_fields=(
+            "is_active",
+            "updated_at",
+        )
+    )
+
+    if customer.is_active:
+        message = "Клієнта активовано."
+    else:
+        message = "Клієнта деактивовано."
+
+    messages.success(
+        request,
+        message,
+    )
+
+    next_url = request.POST.get("next")
+
+    if next_url:
+        return HttpResponseRedirect(next_url)
+
+    return redirect(
+        "crm:customer-detail",
+        pk=customer.pk,
     )
 
 
@@ -255,6 +387,12 @@ def customer_detail(request, pk):
             + course_statistics["total"]
     )
 
+    contact_digits = "".join(
+        character
+        for character in customer.phone_number
+        if character.isdigit()
+    )
+
     context = {
         "customer": customer,
         "bookings": bookings,
@@ -265,6 +403,7 @@ def customer_detail(request, pk):
         "course_statistics": course_statistics,
         "total_spending": total_spending,
         "total_interactions": total_interactions,
+        "contact_digits": contact_digits,
     }
 
     return render(

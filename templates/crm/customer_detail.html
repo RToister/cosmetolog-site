@@ -6,9 +6,15 @@
 
 {% block content %}
     <style>
-        .detail-back {
-            display: inline-flex;
+        .detail-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
             margin-bottom: 24px;
+        }
+
+        .detail-back {
             color: #59514d;
             text-decoration: none;
         }
@@ -46,22 +52,49 @@
             color: inherit;
         }
 
-        .customer-type {
-            align-self: flex-start;
+        .customer-badges {
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .customer-badge {
             padding: 8px 13px;
             font-size: 13px;
             font-weight: 700;
             border-radius: 50px;
         }
 
-        .customer-type-client {
+        .badge-client {
             color: #315b43;
             background: #dceee3;
         }
 
-        .customer-type-cosmetologist {
+        .badge-cosmetologist {
             color: #765326;
             background: #f2dfc5;
+        }
+
+        .badge-active {
+            color: #315b43;
+            background: #dceee3;
+        }
+
+        .badge-inactive {
+            color: #7d3434;
+            background: #f8e1e1;
+        }
+
+        .customer-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .customer-actions form {
+            margin: 0;
         }
 
         .summary-grid {
@@ -174,27 +207,48 @@
         }
 
         @media (max-width: 576px) {
+            .detail-navigation,
             .customer-hero {
                 display: block;
             }
 
-            .customer-type {
-                display: inline-flex;
+            .detail-navigation .btn {
+                margin-top: 14px;
+            }
+
+            .customer-badges {
                 margin-top: 20px;
             }
 
             .summary-grid {
                 grid-template-columns: 1fr;
             }
+
+            .section-heading {
+                display: block;
+            }
+
+            .section-meta {
+                margin-top: 6px;
+            }
         }
     </style>
 
-    <a
-            href="{% url 'crm:customer-list' %}"
-            class="detail-back"
-    >
-        ← Повернутися до клієнтів
-    </a>
+    <div class="detail-navigation">
+        <a
+                href="{% url 'crm:customer-list' %}"
+                class="detail-back"
+        >
+            ← Повернутися до клієнтів
+        </a>
+
+        <a
+                href="{% url 'crm:customer-update' customer.pk %}"
+                class="btn btn-outline-dark"
+        >
+            Редагувати
+        </a>
+    </div>
 
     <section class="customer-hero">
         <div>
@@ -217,19 +271,81 @@
                 Перше звернення:
                 {{ customer.first_contact_at|date:"d.m.Y" }}
             </span>
+
+                <span>
+                Остання активність:
+                {{ customer.last_activity_at|date:"d.m.Y H:i" }}
+            </span>
             </div>
         </div>
 
-        {% if customer.customer_type == "cosmetologist" %}
-            <span class="customer-type customer-type-cosmetologist">
-            Косметолог
-        </span>
-        {% else %}
-            <span class="customer-type customer-type-client">
-            Звичайний клієнт
-        </span>
-        {% endif %}
+        <div class="customer-badges">
+            {% if customer.customer_type == "cosmetologist" %}
+                <span class="customer-badge badge-cosmetologist">
+                Косметолог
+            </span>
+            {% else %}
+                <span class="customer-badge badge-client">
+                Звичайний клієнт
+            </span>
+            {% endif %}
+
+            {% if customer.is_active %}
+                <span class="customer-badge badge-active">
+                Активний
+            </span>
+            {% else %}
+                <span class="customer-badge badge-inactive">
+                Неактивний
+            </span>
+            {% endif %}
+        </div>
     </section>
+
+    <div class="customer-actions">
+        <a
+                href="tel:{{ customer.phone_number }}"
+                class="btn btn-dark"
+        >
+            Зателефонувати
+        </a>
+
+        <a
+                href="{% url 'crm:customer-update' customer.pk %}"
+                class="btn btn-outline-dark"
+        >
+            Редагувати дані
+        </a>
+
+        <form
+                method="post"
+                action="{% url 'crm:customer-toggle-active' customer.pk %}"
+        >
+            {% csrf_token %}
+
+            <input
+                    type="hidden"
+                    name="next"
+                    value="{% url 'crm:customer-detail' customer.pk %}"
+            >
+
+            {% if customer.is_active %}
+                <button
+                        type="submit"
+                        class="btn btn-outline-danger"
+                >
+                    Деактивувати
+                </button>
+            {% else %}
+                <button
+                        type="submit"
+                        class="btn btn-outline-success"
+                >
+                    Активувати
+                </button>
+            {% endif %}
+        </form>
+    </div>
 
     <div class="summary-grid">
         <article class="summary-card">
@@ -273,17 +389,21 @@
         </article>
     </div>
 
-    {% if customer.notes %}
-        <section class="notes-card">
-            <h2 class="h5">
-                Внутрішні нотатки
-            </h2>
+    <section class="notes-card">
+        <h2 class="h5">
+            Внутрішні нотатки
+        </h2>
 
+        {% if customer.notes %}
             <div class="mt-3">
                 {{ customer.notes|linebreaks }}
             </div>
-        </section>
-    {% endif %}
+        {% else %}
+            <p class="mt-3 mb-0 text-secondary">
+                Нотаток про клієнта поки немає.
+            </p>
+        {% endif %}
+    </section>
 
     <section class="crm-section">
         <div class="section-heading">
@@ -310,7 +430,7 @@
 
                             {% if booking.client_note %}
                                 <div class="history-description mt-2">
-                                    Коментар клієнта:
+                                    Коментар:
                                     {{ booking.client_note }}
                                 </div>
                             {% endif %}

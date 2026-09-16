@@ -14,6 +14,12 @@
             margin-bottom: 32px;
         }
 
+        .crm-header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
         .crm-eyebrow {
             margin-bottom: 8px;
             color: #7b665d;
@@ -53,8 +59,8 @@
         .statistic-label {
             color: #766860;
             font-size: 13px;
-            text-transform: uppercase;
             letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
         .statistic-value {
@@ -118,7 +124,7 @@
         }
 
         .customer-table {
-            min-width: 900px;
+            min-width: 980px;
             margin: 0;
         }
 
@@ -150,11 +156,13 @@
         }
 
         .customer-phone {
+            margin-top: 3px;
             color: #6c757d;
             font-size: 14px;
         }
 
-        .customer-type {
+        .customer-type,
+        .customer-status {
             display: inline-flex;
             padding: 6px 10px;
             font-size: 12px;
@@ -172,8 +180,19 @@
             background: #f6ead8;
         }
 
+        .customer-status-active {
+            color: #315b43;
+            background: #e5f3ea;
+        }
+
+        .customer-status-inactive {
+            color: #7d3434;
+            background: #f8e1e1;
+        }
+
         .activity-counts {
             display: flex;
+            flex-wrap: wrap;
             gap: 6px;
         }
 
@@ -190,13 +209,13 @@
             text-align: center;
         }
 
-        .pagination {
-            margin-top: 24px;
-        }
-
         @media (max-width: 767px) {
             .crm-header {
                 display: block;
+            }
+
+            .crm-header-actions {
+                margin-top: 20px;
             }
 
             .statistics-grid {
@@ -230,12 +249,21 @@
                 </p>
             </div>
 
-            <a
-                    href="{% url 'analytics:dashboard' %}"
-                    class="btn btn-outline-dark"
-            >
-                Перейти до аналітики
-            </a>
+            <div class="crm-header-actions">
+                <a
+                        href="{% url 'analytics:dashboard' %}"
+                        class="btn btn-outline-dark"
+                >
+                    Аналітика
+                </a>
+
+                <a
+                        href="{% url 'crm:customer-create' %}"
+                        class="btn btn-dark"
+                >
+                    + Додати клієнта
+                </a>
+            </div>
         </header>
 
         <div class="statistics-grid">
@@ -295,10 +323,7 @@
                 </a>
             </nav>
 
-            <form
-                    method="get"
-                    class="crm-search"
-            >
+            <form method="get" class="crm-search">
                 {% if customer_type != "all" %}
                     <input
                             type="hidden"
@@ -316,10 +341,7 @@
                         aria-label="Пошук клієнта"
                 >
 
-                <button
-                        type="submit"
-                        class="btn btn-dark px-4"
-                >
+                <button type="submit" class="btn btn-dark px-4">
                     Знайти
                 </button>
             </form>
@@ -332,6 +354,7 @@
                     <tr>
                         <th>Клієнт</th>
                         <th>Тип</th>
+                        <th>Статус</th>
                         <th>Активність</th>
                         <th>Витрати</th>
                         <th>Остання активність</th>
@@ -368,27 +391,30 @@
                             </td>
 
                             <td>
+                                {% if customer.is_active %}
+                                    <span class="customer-status customer-status-active">
+                                        Активний
+                                    </span>
+                                {% else %}
+                                    <span class="customer-status customer-status-inactive">
+                                        Неактивний
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
                                 <div class="activity-counts">
-                                    <span
-                                            class="activity-badge"
-                                            title="Записи"
-                                    >
+                                    <span class="activity-badge">
                                         Процедури:
                                         {{ customer.booking_count }}
                                     </span>
 
-                                    <span
-                                            class="activity-badge"
-                                            title="Замовлення"
-                                    >
+                                    <span class="activity-badge">
                                         Товари:
                                         {{ customer.order_count }}
                                     </span>
 
-                                    <span
-                                            class="activity-badge"
-                                            title="Навчання"
-                                    >
+                                    <span class="activity-badge">
                                         Курси:
                                         {{ customer.course_count }}
                                     </span>
@@ -422,19 +448,26 @@
                         Клієнтів не знайдено
                     </h2>
 
-                    <p class="mb-0 text-secondary">
+                    <p class="mb-3 text-secondary">
                         Спробуй змінити пошуковий запит або фільтр.
                     </p>
+
+                    <a
+                            href="{% url 'crm:customer-create' %}"
+                            class="btn btn-dark"
+                    >
+                        Додати клієнта
+                    </a>
                 </div>
             {% endif %}
         </div>
 
         {% if page_obj.paginator.num_pages > 1 %}
             <nav
-                    class="pagination justify-content-center"
+                    class="mt-4"
                     aria-label="Навігація сторінками"
             >
-                <ul class="pagination">
+                <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                         <li class="page-item">
                             <a
