@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "shop",
     "academy",
     "analytics",
+    "crm.apps.CrmConfig",
 ]
 
 MIDDLEWARE = [

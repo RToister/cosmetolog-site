@@ -131,7 +131,8 @@ class Product(models.Model):
                 self.availability == self.Availability.PUBLIC
                 and self.retail_price is not None
                 and self.professional_price is not None
-                and self.professional_price >= self.retail_price
+                and self.professional_price
+                >= self.retail_price
         ):
             raise ValidationError(
                 {
@@ -175,6 +176,14 @@ class Order(models.Model):
         on_delete=models.SET_NULL,
         related_name="orders",
         verbose_name="Зареєстрований клієнт",
+        null=True,
+        blank=True,
+    )
+    customer = models.ForeignKey(
+        "crm.Customer",
+        on_delete=models.SET_NULL,
+        related_name="orders",
+        verbose_name="Клієнт CRM",
         null=True,
         blank=True,
     )
@@ -336,10 +345,7 @@ class Order(models.Model):
             )
 
         for item in items:
-            if (
-                    item.quantity
-                    > item.product.stock_quantity
-            ):
+            if item.quantity > item.product.stock_quantity:
                 raise ValidationError(
                     (
                         f"Недостатньо товару "
@@ -352,8 +358,7 @@ class Order(models.Model):
                 pk=item.product_id,
             ).update(
                 stock_quantity=(
-                        F("stock_quantity")
-                        - item.quantity
+                        F("stock_quantity") - item.quantity
                 )
             )
 
@@ -495,10 +500,7 @@ class OrderItem(models.Model):
                 }
             )
 
-        if (
-                self.quantity
-                > self.product.stock_quantity
-        ):
+        if self.quantity > self.product.stock_quantity:
             raise ValidationError(
                 {
                     "quantity": (
@@ -522,7 +524,6 @@ class OrderItem(models.Model):
         self.full_clean()
 
         result = super().save(*args, **kwargs)
-
         self.order.recalculate_total()
 
         return result
@@ -531,7 +532,6 @@ class OrderItem(models.Model):
         order = self.order
 
         result = super().delete(*args, **kwargs)
-
         order.recalculate_total()
 
         return result

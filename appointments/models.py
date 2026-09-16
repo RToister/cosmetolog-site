@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Q
+from django.utils import timezone
 
 from schedule.models import BlockedDate, WorkingHour
 from services.models import Procedure
@@ -11,14 +12,14 @@ from services.models import Procedure
 
 class Booking(models.Model):
     class Status(models.TextChoices):
-        PENDING = "pending", "Pending"
-        CONFIRMED = "confirmed", "Confirmed"
-        COMPLETED = "completed", "Completed"
-        CANCELLED = "cancelled", "Cancelled"
+        PENDING = "pending", "Очікує підтвердження"
+        CONFIRMED = "confirmed", "Підтверджено"
+        COMPLETED = "completed", "Завершено"
+        CANCELLED = "cancelled", "Скасовано"
 
     class Source(models.TextChoices):
-        ONLINE = "online", "Online"
-        CLINIC = "clinic", "Clinic"
+        ONLINE = "online", "Сайт"
+        ADMIN = "admin", "Адміністратор"
         TELEGRAM = "telegram", "Telegram"
 
     client = models.ForeignKey(
@@ -27,19 +28,62 @@ class Booking(models.Model):
         related_name="bookings",
         null=True,
         blank=True,
+        verbose_name="Обліковий запис клієнта",
     )
-    client_name = models.CharField(
-        max_length=150,
+    customer = models.ForeignKey(
+        "crm.Customer",
+        on_delete=models.SET_NULL,
+        related_name="bookings",
+        null=True,
         blank=True,
-    )
-    client_phone = models.CharField(
-        max_length=20,
-        blank=True,
+        verbose_name="Клієнт CRM",
     )
     procedure = models.ForeignKey(
         Procedure,
         on_delete=models.PROTECT,
         related_name="bookings",
+        verbose_name="Процедура",
+    )
+    client_name = models.CharField(
+        max_length=150,
+        verbose_name="Ім’я клієнта",
+    )
+    client_phone = models.CharField(
+        max_length=30,
+        verbose_name="Номер телефону",
+    )
+    date = models.DateField(
+        verbose_name="Дата",
+    )
+    start_time = models.TimeField(
+        verbose_name="Час початку",
+    )
+    end_time = models.TimeField(
+        editable=False,
+        verbose_name="Час завершення",
+    )
+    price_at_booking = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        editable=False,
+        verbose_name="Ціна під час запису",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+        verbose_name="Статус",
+    )
+    source = models.CharField(
+        max_length=20,
+        choices=Source.choices,
+        default=Source.ONLINE,
+        verbose_name="Джерело",
+    )
+    client_note = models.TextField(
+        blank=True,
+        verbose_name="Коментар клієнта",
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -47,50 +91,44 @@ class Booking(models.Model):
         related_name="created_bookings",
         null=True,
         blank=True,
+        verbose_name="Хто створив запис",
     )
-
-    date = models.DateField()
-    start_time = models.TimeField()
-    end_time = models.TimeField(editable=False)
-
-    price_at_booking = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        editable=False,
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Створено",
     )
-
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.PENDING,
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Оновлено",
     )
-    source = models.CharField(
-        max_length=20,
-        choices=Source.choices,
-        default=Source.ONLINE,
-    )
-
-    client_note = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ("-date", "-start_time")
+        verbose_name = "Запис"
+        verbose_name_plural = "Записи"
         constraints = [
             models.UniqueConstraint(
                 fields=("date", "start_time"),
-                condition=~Q(status="cancelled"),
+                condition=~models.Q(status="cancelled"),
                 name="unique_active_booking_start",
             ),
         ]
 
     def calculate_end_time(self):
+        if (
+                not self.date
+                or not self.start_time
+                or not self.procedure_id
+        ):
+            return None
+
         start_datetime = datetime.combine(
             self.date,
             self.start_time,
         )
+
         end_datetime = start_datetime + timedelta(
-            minutes=self.procedure.duration_minutes
+            minutes=self.procedure.duration_minutes,
         )
 
         return end_datetime.time()
@@ -98,103 +136,115 @@ class Booking(models.Model):
     def clean(self):
         super().clean()
 
-        errors = {}
-
-        if not self.client_id and not self.client_name:
-            errors["client_name"] = "Enter the client name."
-
-        if not self.client_id and not self.client_phone:
-            errors["client_phone"] = "Enter the phone number."
-
-        if errors:
-            raise ValidationError(errors)
-
-        if not self.procedure_id or not self.date or not self.start_time:
+        if (
+                not self.date
+                or not self.start_time
+                or not self.procedure_id
+        ):
             return
 
         calculated_end_time = self.calculate_end_time()
+
+        if calculated_end_time is None:
+            return
+
         self.end_time = calculated_end_time
 
-        if BlockedDate.objects.filter(date=self.date).exists():
+        if self.date < timezone.localdate():
             raise ValidationError(
                 {
                     "date": (
-                        "The clinic is unavailable on this date."
+                        "Неможливо створити запис "
+                        "на минулу дату."
                     )
                 }
             )
 
-        working_hour = WorkingHour.objects.filter(
-            day_of_week=self.date.weekday(),
-            is_active=True,
-        ).first()
-
-        if working_hour is None:
+        if BlockedDate.objects.filter(
+                date=self.date,
+        ).exists():
             raise ValidationError(
                 {
                     "date": (
-                        "The clinic does not work on this day."
+                        "Обраний день недоступний "
+                        "для запису."
+                    )
+                }
+            )
+
+        try:
+            working_hours = WorkingHour.objects.get(
+                day_of_week=self.date.weekday(),
+                is_active=True,
+            )
+        except WorkingHour.DoesNotExist:
+            raise ValidationError(
+                {
+                    "date": (
+                        "У цей день лікар не працює."
                     )
                 }
             )
 
         if (
-                self.start_time < working_hour.start_time
-                or calculated_end_time > working_hour.end_time
+                self.start_time < working_hours.start_time
+                or calculated_end_time > working_hours.end_time
         ):
             raise ValidationError(
                 {
                     "start_time": (
-                        "The appointment must fit within "
-                        "clinic working hours."
+                        "Час запису виходить за межі "
+                        "робочого графіка."
                     )
                 }
             )
 
-        if self.status != self.Status.CANCELLED:
-            overlapping_bookings = Booking.objects.filter(
-                date=self.date,
-                start_time__lt=calculated_end_time,
-                end_time__gt=self.start_time,
-            ).exclude(
-                status=self.Status.CANCELLED,
-            ).exclude(
-                pk=self.pk,
+        overlapping_bookings = Booking.objects.filter(
+            date=self.date,
+            start_time__lt=calculated_end_time,
+            end_time__gt=self.start_time,
+        ).exclude(
+            status=self.Status.CANCELLED,
+        )
+
+        if self.pk:
+            overlapping_bookings = (
+                overlapping_bookings.exclude(pk=self.pk)
             )
 
-            if overlapping_bookings.exists():
-                raise ValidationError(
-                    {
-                        "start_time": (
-                            "This time overlaps another "
-                            "appointment."
-                        )
-                    }
-                )
+        if overlapping_bookings.exists():
+            raise ValidationError(
+                {
+                    "start_time": (
+                        "Обраний час перетинається "
+                        "з іншим записом."
+                    )
+                }
+            )
 
     def save(self, *args, **kwargs):
-        if self.client_id:
-            if not self.client_name:
-                self.client_name = (
-                        self.client.get_full_name()
-                        or self.client.username
-                )
+        calculated_end_time = self.calculate_end_time()
 
-            if not self.client_phone:
-                self.client_phone = self.client.phone_number
+        if calculated_end_time is not None:
+            self.end_time = calculated_end_time
 
-        if self._state.adding:
+        if (
+                self._state.adding
+                and self.procedure_id
+                and self.price_at_booking
+                == Decimal("0.00")
+        ):
             self.price_at_booking = self.procedure.price
 
-        self.end_time = self.calculate_end_time()
         self.full_clean()
-
         super().save(*args, **kwargs)
 
     def __str__(self):
         return (
-            f"{self.client_name} — {self.procedure} — "
-            f"{self.date} {self.start_time:%H:%M}"
+            f"{self.client_name} — "
+            f"{self.procedure} — "
+            f"{self.date:%d.%m.%Y} "
+            f"{self.start_time:%H:%M}"
         )
 
 
@@ -203,18 +253,39 @@ class VisitComment(models.Model):
         Booking,
         on_delete=models.CASCADE,
         related_name="visit_comment",
+        verbose_name="Запис",
     )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="visit_comments",
+        on_delete=models.SET_NULL,
+        related_name="authored_visit_comments",
+        null=True,
+        blank=True,
+        verbose_name="Автор",
     )
-    text = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    comment = models.TextField(
+        verbose_name="Коментар лікаря",
+    )
+    recommendations = models.TextField(
+        blank=True,
+        verbose_name="Рекомендації",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Створено",
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Оновлено",
+    )
 
     class Meta:
         ordering = ("-created_at",)
+        verbose_name = "Коментар до візиту"
+        verbose_name_plural = "Коментарі до візитів"
 
     def __str__(self):
-        return f"Comment for booking #{self.booking_id}"
+        return (
+            f"Коментар до запису #{self.booking_id} — "
+            f"{self.booking.client_name}"
+        )

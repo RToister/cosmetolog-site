@@ -25,10 +25,7 @@ class Course(models.Model):
             "individual",
             "Індивідуальне",
         )
-        GROUP = (
-            "group",
-            "Групове",
-        )
+        GROUP = "group", "Групове"
         BOTH = (
             "both",
             "Індивідуальне або групове",
@@ -142,6 +139,14 @@ class CourseEnrollment(models.Model):
         on_delete=models.SET_NULL,
         related_name="course_enrollments",
         verbose_name="Зареєстрований користувач",
+        null=True,
+        blank=True,
+    )
+    customer = models.ForeignKey(
+        "crm.Customer",
+        on_delete=models.SET_NULL,
+        related_name="course_applications",
+        verbose_name="Клієнт CRM",
         null=True,
         blank=True,
     )
