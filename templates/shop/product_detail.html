@@ -5,101 +5,344 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container py-5">
-        <div class="mb-4">
-            <a
-                    href="{% url 'shop:product-list' %}"
-                    class="text-decoration-none text-dark"
-            >
-                ← Повернутися до магазину
-            </a>
+    <style>
+        .product-back {
+            display: inline-flex;
+            margin-bottom: 26px;
+            color: #5f5752;
+            text-decoration: none;
+        }
+
+        .product-back:hover {
+            color: #000;
+        }
+
+        .product-layout {
+            display: grid;
+            grid-template-columns:
+                minmax(0, 1fr)
+                minmax(360px, 0.85fr);
+            gap: clamp(35px, 7vw, 90px);
+            align-items: start;
+        }
+
+        .product-visual {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 570px;
+            overflow: hidden;
+            color: #8b7165;
+            font-family: Georgia, serif;
+            font-size: 70px;
+            font-style: italic;
+            background: #eee6e0;
+            border-radius: 24px;
+        }
+
+        .product-visual-professional {
+            color: #d9cbc3;
+            background: linear-gradient(
+                    145deg,
+                    #58443d,
+                    #261f1c
+            );
+        }
+
+        .product-visual img {
+            width: 100%;
+            height: 100%;
+            min-height: 570px;
+            object-fit: cover;
+        }
+
+        .group-badge {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            z-index: 1;
+            padding: 8px 13px;
+            color: #3e342f;
+            font-family: inherit;
+            font-size: 11px;
+            font-style: normal;
+            font-weight: 750;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.93);
+            border-radius: 50px;
+        }
+
+        .group-badge-professional {
+            color: #fff;
+            background: rgba(31, 25, 22, 0.92);
+        }
+
+        .product-category {
+            margin-bottom: 10px;
+            color: #7b3f3a;
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+
+        .product-title {
+            margin: 0 0 13px;
+            font-size: clamp(40px, 6vw, 68px);
+            font-weight: 500;
+            line-height: 0.98;
+            letter-spacing: -0.055em;
+        }
+
+        .product-sku {
+            color: #80756e;
+            font-size: 13px;
+        }
+
+        .product-section {
+            padding: 23px 0;
+            border-bottom: 1px solid #e6ded9;
+        }
+
+        .product-section h2 {
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .product-section-content {
+            color: #736963;
+            line-height: 1.7;
+        }
+
+        .recommendation-card {
+            padding: 20px;
+            margin-top: 20px;
+            background: #f5f0ec;
+            border-radius: 15px;
+        }
+
+        .price-panel {
+            padding: 24px 0;
+        }
+
+        .price-label {
+            color: #736963;
+            font-size: 13px;
+        }
+
+        .product-price {
+            margin-top: 4px;
+            font-size: 39px;
+            font-weight: 750;
+            letter-spacing: -0.04em;
+        }
+
+        .hidden-price-panel {
+            padding: 20px;
+            margin: 22px 0;
+            background: #f3ece8;
+            border: 1px solid #e3d7d0;
+            border-radius: 16px;
+        }
+
+        .hidden-price-panel.pending {
+            background: #fff8eb;
+            border-color: #eeddbd;
+        }
+
+        .hidden-price-panel h2 {
+            margin-bottom: 9px;
+            font-size: 20px;
+        }
+
+        .hidden-price-panel p {
+            margin-bottom: 16px;
+            color: #6c6059;
+        }
+
+        .purchase-form {
+            padding-top: 10px;
+        }
+
+        .related-section {
+            margin-top: 90px;
+            padding-top: 60px;
+            border-top: 1px solid #e4dcd7;
+        }
+
+        .related-title {
+            margin-bottom: 28px;
+            font-size: clamp(32px, 5vw, 52px);
+            letter-spacing: -0.045em;
+        }
+
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 17px;
+        }
+
+        .related-card {
+            overflow: hidden;
+            color: #211b18;
+            text-decoration: none;
+            border: 1px solid #e7dfda;
+            border-radius: 18px;
+        }
+
+        .related-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 220px;
+            overflow: hidden;
+            color: #8b7165;
+            font-family: Georgia, serif;
+            font-size: 38px;
+            font-style: italic;
+            background: #eee6e0;
+        }
+
+        .related-professional .related-image {
+            color: #d9cbc3;
+            background: #342925;
+        }
+
+        .related-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .related-content {
+            padding: 19px;
+        }
+
+        .related-content h3 {
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+
+        .related-hidden-price {
+            color: #736963;
+            font-size: 13px;
+        }
+
+        @media (max-width: 900px) {
+            .product-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .related-grid {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .product-visual,
+            .product-visual img {
+                min-height: 390px;
+            }
+
+            .related-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <a
+            href="{% url 'shop:product-list' %}"
+            class="product-back"
+    >
+        ← Повернутися до магазину
+    </a>
+
+    <div class="product-layout">
+        <div
+                class="product-visual {% if product.is_professional_product %}product-visual-professional{% endif %}"
+        >
+            {% if product.is_professional_product %}
+                <span class="group-badge group-badge-professional">
+                    Препарат для спеціалістів
+                </span>
+            {% else %}
+                <span class="group-badge">
+                    Домашній догляд
+                </span>
+            {% endif %}
+
+            {% if product.image %}
+                <img
+                        src="{{ product.image.url }}"
+                        alt="{{ product.name }}"
+                >
+            {% elif product.is_professional_product %}
+                Pro
+            {% else %}
+                Care
+            {% endif %}
         </div>
 
-        <div class="row g-5">
-            <div class="col-lg-6">
-                {% if product.image %}
-                    <img
-                            src="{{ product.image.url }}"
-                            alt="{{ product.name }}"
-                            class="img-fluid rounded shadow-sm w-100"
-                            style="max-height: 600px; object-fit: cover;"
-                    >
-                {% else %}
-                    <div
-                            class="bg-light rounded d-flex align-items-center justify-content-center text-muted"
-                            style="height: 500px;"
-                    >
-                        Зображення буде додано
-                    </div>
-                {% endif %}
+        <div>
+            <div class="product-category">
+                {{ product.category.name }}
             </div>
 
-            <div class="col-lg-6">
-                <div class="mb-3">
-        <span class="badge text-bg-light">
-          {{ product.category.name }}
-        </span>
+            <h1 class="product-title">
+                {{ product.name }}
+            </h1>
 
-                    {% if product.availability == "professionals_only" %}
-                        <span class="badge text-bg-dark">
-            Лише для косметологів
-          </span>
-                    {% endif %}
-                </div>
+            <div class="product-sku">
+                Артикул: {{ product.sku }}
+            </div>
 
-                <h1 class="display-5 mb-3">
-                    {{ product.name }}
-                </h1>
+            {% if product.description %}
+                <section class="product-section">
+                    <h2>Опис</h2>
 
-                <p class="text-muted">
-                    Артикул: {{ product.sku }}
-                </p>
-
-                {% if product.description %}
-                    <div class="mb-4">
-                        <h2 class="h5">
-                            Опис
-                        </h2>
-
-                        <div class="text-muted">
-                            {{ product.description|linebreaks }}
-                        </div>
+                    <div class="product-section-content">
+                        {{ product.description|linebreaks }}
                     </div>
-                {% endif %}
+                </section>
+            {% endif %}
 
-                {% if product.usage_recommendations %}
-                    <div class="card border-0 bg-light mb-4">
-                        <div class="card-body p-4">
-                            <h2 class="h5">
-                                Рекомендації щодо застосування
-                            </h2>
+            {% if product.usage_recommendations %}
+                <section class="recommendation-card">
+                    <h2 class="h5">
+                        Рекомендації щодо застосування
+                    </h2>
 
-                            <div>
-                                {{ product.usage_recommendations|linebreaks }}
-                            </div>
-                        </div>
+                    <div class="product-section-content">
+                        {{ product.usage_recommendations|linebreaks }}
                     </div>
-                {% endif %}
+                </section>
+            {% endif %}
 
-                <div class="border-top border-bottom py-4 mb-4">
-                    {% if is_cosmetologist %}
-                        <div class="small text-muted">
+            {% if product.can_view_price %}
+                <div class="price-panel">
+                    {% if has_professional_access %}
+                        <div class="price-label">
                             Професійна ціна
                         </div>
                     {% else %}
-                        <div class="small text-muted">
+                        <div class="price-label">
                             Роздрібна ціна
                         </div>
                     {% endif %}
 
-                    <div class="display-6 fw-semibold">
-                        {{ product.display_price|floatformat:2 }} грн
+                    <div class="product-price">
+                        {{ product.display_price|floatformat:2 }}
+                        грн
                     </div>
 
                     {% if product.stock_quantity > 0 %}
                         <div class="text-success mt-2">
                             Є в наявності:
-                            {{ product.stock_quantity }} шт.
+                            {{ product.stock_quantity }}
+                            шт.
                         </div>
                     {% else %}
                         <div class="text-danger mt-2">
@@ -108,10 +351,11 @@
                     {% endif %}
                 </div>
 
-                {% if product.stock_quantity > 0 %}
+                {% if product.can_purchase %}
                     <form
                             method="post"
                             action="{% url 'shop:cart-add' product.pk %}"
+                            class="purchase-form"
                     >
                         {% csrf_token %}
 
@@ -146,76 +390,123 @@
                         Немає в наявності
                     </button>
                 {% endif %}
+            {% else %}
+                <section
+                        class="hidden-price-panel {% if is_awaiting_verification %}pending{% endif %}"
+                >
+                    <h2>
+                        Професійна ціна
+                    </h2>
 
-                {% if not user.is_authenticated %}
-                    <div class="mt-4 text-center">
+                    {% if is_awaiting_verification %}
+                        <p>
+                            Ваш обліковий запис косметолога
+                            очікує підтвердження. Професійна
+                            ціна та придбання стануть
+                            доступними після перевірки,
+                            яка займає до 24 годин.
+                        </p>
+
                         <a
-                                href="{% url 'accounts:login' %}"
-                                class="text-decoration-none"
+                                href="{% url 'accounts:dashboard' %}"
+                                class="btn btn-outline-dark"
                         >
-                            Увійти як косметолог
+                            Перейти в особистий кабінет
                         </a>
+                    {% elif user.is_authenticated %}
+                        <p>
+                            Ціна та придбання цього препарату
+                            доступні лише підтвердженим
+                            косметологам.
+                        </p>
+                    {% else %}
+                        <p>
+                            Зареєструйтеся як косметолог.
+                            Після підтвердження облікового
+                            запису вам стануть доступні
+                            професійні ціни та придбання.
+                        </p>
 
-                        <span class="text-muted">
-            для перегляду професійних цін
-          </span>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a
+                                    href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}"
+                                    class="btn btn-dark"
+                            >
+                                Увійти
+                            </a>
 
-        {% if related_products %}
-            <section class="mt-5 pt-5">
-                <h2 class="mb-4">
-                    Схожі товари
-                </h2>
-
-                <div class="row g-4">
-                    {% for related_product in related_products %}
-                        <div class="col-md-6 col-lg-4">
-                            <article class="card h-100 border-0 shadow-sm">
-                                {% if related_product.image %}
-                                    <img
-                                            src="{{ related_product.image.url }}"
-                                            alt="{{ related_product.name }}"
-                                            class="card-img-top"
-                                            style="height: 240px; object-fit: cover;"
-                                    >
-                                {% else %}
-                                    <div
-                                            class="bg-light d-flex align-items-center justify-content-center text-muted"
-                                            style="height: 240px;"
-                                    >
-                                        Зображення буде додано
-                                    </div>
-                                {% endif %}
-
-                                <div class="card-body p-4">
-                                    <div class="small text-muted mb-2">
-                                        {{ related_product.category.name }}
-                                    </div>
-
-                                    <h3 class="h5">
-                                        {{ related_product.name }}
-                                    </h3>
-
-                                    <div class="fw-semibold mb-3">
-                                        {{ related_product.display_price|floatformat:2 }}
-                                        грн
-                                    </div>
-
-                                    <a
-                                            href="{% url 'shop:product-detail' related_product.pk %}"
-                                            class="btn btn-outline-dark w-100"
-                                    >
-                                        Переглянути
-                                    </a>
-                                </div>
-                            </article>
+                            <a
+                                    href="{% url 'accounts:register' %}"
+                                    class="btn btn-outline-dark"
+                            >
+                                Зареєструватися
+                            </a>
                         </div>
-                    {% endfor %}
-                </div>
-            </section>
-        {% endif %}
+                    {% endif %}
+                </section>
+            {% endif %}
+        </div>
     </div>
+
+    {% if related_products %}
+        <section class="related-section">
+            <h2 class="related-title">
+                Схожі товари
+            </h2>
+
+            <div class="related-grid">
+                {% for related_product in related_products %}
+                    <a
+                            href="{% url 'shop:product-detail' related_product.pk %}"
+                            class="related-card {% if related_product.is_professional_product %}related-professional{% endif %}"
+                    >
+                        <div class="related-image">
+                            {% if related_product.image %}
+                                <img
+                                        src="{{ related_product.image.url }}"
+                                        alt="{{ related_product.name }}"
+                                >
+                            {% elif related_product.is_professional_product %}
+                                Pro
+                            {% else %}
+                                Care
+                            {% endif %}
+                        </div>
+
+                        <div class="related-content">
+                            {% if related_product.is_professional_product %}
+                                <div class="small text-uppercase text-secondary mb-2">
+                                    Для спеціалістів
+                                </div>
+                            {% else %}
+                                <div class="small text-uppercase text-secondary mb-2">
+                                    Домашній догляд
+                                </div>
+                            {% endif %}
+
+                            <h3>
+                                {{ related_product.name }}
+                            </h3>
+
+                            {% if related_product.can_view_price %}
+                                <div class="fw-semibold">
+                                    {{ related_product.display_price|floatformat:2 }}
+                                    грн
+                                </div>
+                            {% else %}
+                                <div class="related-hidden-price">
+                                    {% if is_awaiting_verification %}
+                                        Очікує підтвердження
+                                    {% else %}
+                                        Ціна доступна підтвердженим
+                                        косметологам
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
 {% endblock %}
