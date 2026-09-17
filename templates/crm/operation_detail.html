@@ -1,0 +1,828 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if operation_type == "booking" %}
+        Запис №{{ booking.pk }}
+    {% elif operation_type == "order" %}
+        Замовлення №{{ order.pk }}
+    {% else %}
+        Заявка №{{ application.pk }}
+    {% endif %}
+    | CRM | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <style>
+        .crm-detail-head {
+            margin-bottom: 28px;
+        }
+
+        .crm-detail-back {
+            display: inline-block;
+            margin-bottom: 14px;
+            color: #6f645e;
+            text-decoration: none;
+        }
+
+        .crm-detail-title {
+            margin: 0;
+            font-size: clamp(30px, 5vw, 50px);
+            font-weight: 650;
+            letter-spacing: -0.04em;
+        }
+
+        .crm-detail-subtitle {
+            margin: 10px 0 0;
+            color: #716760;
+        }
+
+        .crm-detail-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .crm-detail-layout {
+            display: grid;
+            grid-template-columns:
+                minmax(0, 2fr)
+                minmax(280px, 0.8fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .crm-detail-card {
+            padding: 24px;
+            background: #fff;
+            border: 1px solid #e7e1dd;
+            border-radius: 18px;
+            box-shadow: 0 12px 35px rgba(35, 27, 22, 0.04);
+        }
+
+        .crm-detail-card + .crm-detail-card {
+            margin-top: 18px;
+        }
+
+        .crm-detail-card h2 {
+            margin: 0 0 20px;
+            font-size: 21px;
+        }
+
+        .crm-detail-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .crm-detail-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .crm-detail-label {
+            margin-bottom: 5px;
+            color: #786e68;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .crm-detail-value {
+            color: #27211e;
+            font-size: 16px;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .crm-detail-muted {
+            margin-top: 5px;
+            color: #756b65;
+            font-size: 14px;
+        }
+
+        .crm-detail-link {
+            color: #27211e;
+            text-decoration: underline;
+            text-decoration-color: #cec2bb;
+            text-underline-offset: 3px;
+        }
+
+        .crm-detail-note {
+            padding: 17px;
+            color: #554b46;
+            line-height: 1.65;
+            background: #f8f5f3;
+            border-radius: 13px;
+        }
+
+        .crm-status {
+            display: inline-flex;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 999px;
+        }
+
+        .status-pending {
+            color: #7a571d;
+            background: #fff1d5;
+        }
+
+        .status-confirmed,
+        .status-paid,
+        .status-completed {
+            color: #24633f;
+            background: #e1f3e8;
+        }
+
+        .status-contacted {
+            color: #285d78;
+            background: #e3f2fa;
+        }
+
+        .status-cancelled {
+            color: #8c3333;
+            background: #f8e1e1;
+        }
+
+        .crm-status-form {
+            display: grid;
+            gap: 16px;
+        }
+
+        .crm-status-form label {
+            display: block;
+            margin-bottom: 7px;
+            color: #695e58;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .crm-status-form select {
+            width: 100%;
+            min-height: 46px;
+            padding: 10px 13px;
+            background: #fff;
+            border: 1px solid #dcd4cf;
+            border-radius: 11px;
+        }
+
+        .crm-status-button {
+            min-height: 46px;
+            padding: 11px 18px;
+            color: #fff;
+            font-weight: 700;
+            background: #211b18;
+            border: 0;
+            border-radius: 11px;
+        }
+
+        .crm-warning {
+            padding: 14px;
+            color: #78551b;
+            font-size: 13px;
+            background: #fff6e4;
+            border: 1px solid #f0dfba;
+            border-radius: 11px;
+        }
+
+        .crm-items-wrap {
+            overflow-x: auto;
+        }
+
+        .crm-items {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+        }
+
+        .crm-items th,
+        .crm-items td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid #eee8e4;
+        }
+
+        .crm-items th {
+            color: #746963;
+            font-size: 12px;
+            text-transform: uppercase;
+            background: #f8f5f3;
+        }
+
+        .crm-total {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 18px;
+            padding-top: 18px;
+            font-size: 19px;
+            font-weight: 700;
+            border-top: 1px solid #e7e1dd;
+        }
+
+        @media (max-width: 900px) {
+            .crm-detail-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .crm-detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .crm-detail-field.full {
+                grid-column: auto;
+            }
+        }
+    </style>
+
+    {% include "crm/includes/navigation.html" %}
+
+    <header class="crm-detail-head">
+        {% if operation_type == "booking" %}
+            <a
+                    href="{% url 'crm:booking-list' %}"
+                    class="crm-detail-back"
+            >
+                ← До всіх записів
+            </a>
+
+            <h1 class="crm-detail-title">
+                Запис №{{ booking.pk }}
+            </h1>
+
+            <p class="crm-detail-subtitle">
+                {{ booking.client_name }}
+                ·
+                {{ booking.procedure.name }}
+            </p>
+
+            <div class="crm-detail-actions">
+                <a
+                        href="{% url 'crm:booking-update' booking.pk %}"
+                        class="btn btn-dark"
+                >
+                    Редагувати запис
+                </a>
+
+                <a
+                        href="{% url 'crm:booking-comment-update' booking.pk %}"
+                        class="btn btn-outline-dark"
+                >
+                    {% if visit_comment %}
+                        Редагувати коментар лікаря
+                    {% else %}
+                        Додати коментар лікаря
+                    {% endif %}
+                </a>
+            </div>
+        {% elif operation_type == "order" %}
+            <a
+                    href="{% url 'crm:order-list' %}"
+                    class="crm-detail-back"
+            >
+                ← До всіх замовлень
+            </a>
+
+            <h1 class="crm-detail-title">
+                Замовлення №{{ order.pk }}
+            </h1>
+
+            <p class="crm-detail-subtitle">
+                {{ order.client_name }}
+                ·
+                {{ order.created_at|date:"d.m.Y H:i" }}
+            </p>
+        {% else %}
+            <a
+                    href="{% url 'crm:course-application-list' %}"
+                    class="crm-detail-back"
+            >
+                ← До всіх заявок
+            </a>
+
+            <h1 class="crm-detail-title">
+                Заявка №{{ application.pk }}
+            </h1>
+
+            <p class="crm-detail-subtitle">
+                {{ application.applicant_name }}
+                ·
+                {{ application.course.title }}
+            </p>
+        {% endif %}
+    </header>
+
+    <div class="crm-detail-layout">
+        <main>
+            {% if operation_type == "booking" %}
+                <section class="crm-detail-card">
+                    <h2>Дані запису</h2>
+
+                    <div class="crm-detail-grid">
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Клієнт
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {% if booking.customer %}
+                                    <a
+                                            href="{% url 'crm:customer-detail' booking.customer.pk %}"
+                                            class="crm-detail-link"
+                                    >
+                                        {{ booking.client_name }}
+                                    </a>
+                                {% else %}
+                                    {{ booking.client_name }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Телефон
+                            </div>
+
+                            <div class="crm-detail-value">
+                                <a
+                                        href="tel:{{ booking.client_phone }}"
+                                        class="crm-detail-link"
+                                >
+                                    {{ booking.client_phone }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Процедура
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ booking.procedure.name }}
+                            </div>
+
+                            <div class="crm-detail-muted">
+                                {{ booking.procedure.category.name }}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Дата і час
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ booking.date|date:"d.m.Y" }}
+                                ·
+                                {{ booking.start_time|time:"H:i" }}
+                                –
+                                {{ booking.end_time|time:"H:i" }}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Вартість
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ booking.price_at_booking|floatformat:2 }}
+                                ₴
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Джерело
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ booking.get_source_display }}
+                            </div>
+                        </div>
+
+                        {% if booking.client_note %}
+                            <div class="crm-detail-field full">
+                                <div class="crm-detail-label">
+                                    Коментар клієнта
+                                </div>
+
+                                <div class="crm-detail-note">
+                                    {{ booking.client_note|linebreaksbr }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <section class="crm-detail-card">
+                    <h2>Коментар лікаря</h2>
+
+                    <div class="mb-3">
+                        <a
+                                href="{% url 'crm:booking-comment-update' booking.pk %}"
+                                class="btn btn-outline-dark"
+                        >
+                            {% if visit_comment %}
+                                Редагувати коментар
+                            {% else %}
+                                Додати коментар
+                            {% endif %}
+                        </a>
+                    </div>
+
+                    {% if visit_comment %}
+                        <div class="crm-detail-label">
+                            Коментар
+                        </div>
+
+                        <div class="crm-detail-note">
+                            {{ visit_comment.comment|linebreaksbr }}
+                        </div>
+
+                        {% if visit_comment.recommendations %}
+                            <div class="crm-detail-label mt-4">
+                                Рекомендації
+                            </div>
+
+                            <div class="crm-detail-note">
+                                {{ visit_comment.recommendations|linebreaksbr }}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="mb-0 text-secondary">
+                            Коментар ще не додано.
+                        </p>
+                    {% endif %}
+                </section>
+            {% elif operation_type == "order" %}
+                <section class="crm-detail-card">
+                    <h2>Дані покупця</h2>
+
+                    <div class="crm-detail-grid">
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Покупець
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {% if order.customer %}
+                                    <a
+                                            href="{% url 'crm:customer-detail' order.customer.pk %}"
+                                            class="crm-detail-link"
+                                    >
+                                        {{ order.client_name }}
+                                    </a>
+                                {% else %}
+                                    {{ order.client_name }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Телефон
+                            </div>
+
+                            <div class="crm-detail-value">
+                                <a
+                                        href="tel:{{ order.client_phone }}"
+                                        class="crm-detail-link"
+                                >
+                                    {{ order.client_phone }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Дата
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ order.created_at|date:"d.m.Y H:i" }}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Джерело
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ order.get_source_display }}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Оплата
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {% if order.payment_method %}
+                                    {{ order.get_payment_method_display }}
+                                {% else %}
+                                    Не вибрано
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="crm-detail-card">
+                    <h2>Товари</h2>
+
+                    <div class="crm-items-wrap">
+                        <table class="crm-items">
+                            <thead>
+                            <tr>
+                                <th>Товар</th>
+                                <th>Кількість</th>
+                                <th>Ціна</th>
+                                <th>Сума</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            {% for item in order.items.all %}
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            {{ item.product.name }}
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        {{ item.quantity }}
+                                    </td>
+
+                                    <td>
+                                        {{ item.price_at_purchase|floatformat:2 }}
+                                        ₴
+                                    </td>
+
+                                    <td>
+                                        {{ item.subtotal|floatformat:2 }}
+                                        ₴
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4">
+                                        Товарів немає.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="crm-total">
+                        <span>Загальна сума</span>
+
+                        <span>
+                            {{ order.total_price|floatformat:2 }}
+                            ₴
+                        </span>
+                    </div>
+                </section>
+            {% else %}
+                <section class="crm-detail-card">
+                    <h2>Дані заявки</h2>
+
+                    <div class="crm-detail-grid">
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Заявник
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {% if application.customer %}
+                                    <a
+                                            href="{% url 'crm:customer-detail' application.customer.pk %}"
+                                            class="crm-detail-link"
+                                    >
+                                        {{ application.applicant_name }}
+                                    </a>
+                                {% else %}
+                                    {{ application.applicant_name }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Телефон
+                            </div>
+
+                            <div class="crm-detail-value">
+                                <a
+                                        href="tel:{{ application.applicant_phone }}"
+                                        class="crm-detail-link"
+                                >
+                                    {{ application.applicant_phone }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Програма
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ application.course.title }}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Розділ
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {% if application.course.audience == "cosmetologists" %}
+                                    Підвищення кваліфікації
+                                {% else %}
+                                    Школа догляду
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Формат
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ application.course.get_format_display }}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Дата
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ application.enrolled_at|date:"d.m.Y H:i" }}
+                            </div>
+                        </div>
+
+                        <div class="crm-detail-field">
+                            <div class="crm-detail-label">
+                                Вартість
+                            </div>
+
+                            <div class="crm-detail-value">
+                                {{ application.price_at_enrollment|floatformat:2 }}
+                                ₴
+                            </div>
+                        </div>
+
+                        {% if application.applicant_comment %}
+                            <div class="crm-detail-field full">
+                                <div class="crm-detail-label">
+                                    Коментар
+                                </div>
+
+                                <div class="crm-detail-note">
+                                    {{ application.applicant_comment|linebreaksbr }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
+            {% endif %}
+        </main>
+
+        <aside>
+            <section class="crm-detail-card">
+                <h2>Поточний статус</h2>
+
+                {% if operation_type == "booking" %}
+                    <span
+                            class="crm-status status-{{ booking.status }}"
+                    >
+                        {{ booking.get_status_display }}
+                    </span>
+                {% elif operation_type == "order" %}
+                    <span
+                            class="crm-status status-{{ order.status }}"
+                    >
+                        {{ order.get_status_display }}
+                    </span>
+                {% else %}
+                    <span
+                            class="crm-status status-{{ application.status }}"
+                    >
+                        {{ application.get_status_display }}
+                    </span>
+                {% endif %}
+            </section>
+
+            <section class="crm-detail-card">
+                <h2>Змінити статус</h2>
+
+                {% if operation_type == "booking" %}
+                    <form
+                            method="post"
+                            action="{% url 'crm:booking-status-update' booking.pk %}"
+                            class="crm-status-form"
+                    >
+                        {% csrf_token %}
+
+                        <div>
+                            {{ status_form.status.label_tag }}
+                            {{ status_form.status }}
+
+                            {% for error in status_form.status.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <button
+                                type="submit"
+                                class="crm-status-button"
+                        >
+                            Зберегти статус
+                        </button>
+                    </form>
+                {% elif operation_type == "order" %}
+                    <form
+                            method="post"
+                            action="{% url 'crm:order-status-update' order.pk %}"
+                            class="crm-status-form"
+                    >
+                        {% csrf_token %}
+
+                        <div>
+                            {{ status_form.status.label_tag }}
+                            {{ status_form.status }}
+                        </div>
+
+                        <div>
+                            {{ status_form.payment_method.label_tag }}
+                            {{ status_form.payment_method }}
+
+                            {% for error in status_form.payment_method.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="crm-warning">
+                            Під час оплати товар списується зі
+                            складу. Під час скасування оплаченого
+                            замовлення товар повертається.
+                        </div>
+
+                        <button
+                                type="submit"
+                                class="crm-status-button"
+                        >
+                            Зберегти статус
+                        </button>
+                    </form>
+                {% else %}
+                    <form
+                            method="post"
+                            action="{% url 'crm:course-application-status-update' application.pk %}"
+                            class="crm-status-form"
+                    >
+                        {% csrf_token %}
+
+                        <div>
+                            {{ status_form.status.label_tag }}
+                            {{ status_form.status }}
+
+                            {% for error in status_form.status.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <button
+                                type="submit"
+                                class="crm-status-button"
+                        >
+                            Зберегти статус
+                        </button>
+                    </form>
+                {% endif %}
+            </section>
+        </aside>
+    </div>
+{% endblock %}

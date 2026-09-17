@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Коментар до запису №{{ booking.pk }} | CRM{% endblock %}
+
+{% block content %}
+    {% include "crm/includes/navigation.html" %}
+
+    <div class="mx-auto" style="max-width: 760px;">
+        <a href="{% url 'crm:booking-detail' booking.pk %}" class="text-decoration-none text-secondary">← Повернутися до
+            запису</a>
+
+        <header class="my-4">
+            <div class="text-uppercase small text-secondary fw-bold mb-2">CRM · Картка візиту</div>
+            <h1 class="display-5">Коментар до запису №{{ booking.pk }}</h1>
+            <p class="text-secondary mb-0">{{ booking.client_name }} · {{ booking.procedure.name }}
+                · {{ booking.date|date:"d.m.Y" }}</p>
+        </header>
+
+        <form method="post" class="p-4 bg-white border rounded-4 shadow-sm" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+
+            <div class="mb-4">
+                {{ form.comment.label_tag }}
+                {{ form.comment }}
+                {% for error in form.comment.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-4">
+                {{ form.recommendations.label_tag }}
+                {{ form.recommendations }}
+                {% for error in form.recommendations.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-dark px-4">Зберегти</button>
+                <a href="{% url 'crm:booking-detail' booking.pk %}" class="btn btn-outline-dark">Скасувати</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

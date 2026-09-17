@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block content %}
+    {% include "crm/includes/navigation.html" %}
     <style>
         .crm-header {
             display: flex;
@@ -375,6 +376,7 @@
             >
                 <a
                         href="
+
                                 {% url 'crm:customer-list' %}{% if search_query %}?q={{ search_query|urlencode }}{% endif %}"
                         class="crm-tab {% if customer_type == 'all' %}active{% endif %}"
                 >
@@ -608,6 +610,7 @@
                             <a
                                     class="page-link"
                                     href="?page={{ page_obj.previous_page_number }}&type=
+
                                             {{ customer_type }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
                             >
                                 Назад
@@ -628,6 +631,7 @@
                             <a
                                     class="page-link"
                                     href="?page={{ page_obj.next_page_number }}&type=
+
                                             {{ customer_type }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
                             >
                                 Далі

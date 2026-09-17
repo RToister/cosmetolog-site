@@ -1,6 +1,12 @@
 from django.urls import path
 
-from . import views
+from . import (
+    booking_views,
+    operation_detail_views,
+    operation_views,
+    verification_views,
+    views,
+)
 
 app_name = "crm"
 
@@ -9,6 +15,77 @@ urlpatterns = [
         "",
         views.customer_list,
         name="customer-list",
+    ),
+    path(
+        "bookings/",
+        operation_views.booking_list,
+        name="booking-list",
+    ),
+    path(
+        "bookings/create/",
+        booking_views.booking_create,
+        name="booking-create",
+    ),
+    path(
+        "bookings/<int:pk>/",
+        operation_detail_views.booking_detail,
+        name="booking-detail",
+    ),
+    path(
+        "bookings/<int:pk>/edit/",
+        booking_views.booking_update,
+        name="booking-update",
+    ),
+    path(
+        "bookings/<int:pk>/status/",
+        operation_detail_views.booking_status_update,
+        name="booking-status-update",
+    ),
+    path(
+        "bookings/<int:pk>/comment/",
+        booking_views.booking_comment_update,
+        name="booking-comment-update",
+    ),
+    path(
+        "orders/",
+        operation_views.order_list,
+        name="order-list",
+    ),
+    path(
+        "orders/<int:pk>/",
+        operation_detail_views.order_detail,
+        name="order-detail",
+    ),
+    path(
+        "orders/<int:pk>/status/",
+        operation_detail_views.order_status_update,
+        name="order-status-update",
+    ),
+    path(
+        "course-applications/",
+        operation_views.course_application_list,
+        name="course-application-list",
+    ),
+    path(
+        "course-applications/<int:pk>/",
+        (
+            operation_detail_views
+            .course_application_detail
+        ),
+        name="course-application-detail",
+    ),
+    path(
+        (
+            "course-applications/<int:pk>/"
+            "status/"
+        ),
+        (
+            operation_detail_views
+            .course_application_status_update
+        ),
+        name=(
+            "course-application-status-update"
+        ),
     ),
     path(
         "customers/create/",
@@ -35,7 +112,7 @@ urlpatterns = [
             "customers/<int:pk>/"
             "verify-cosmetologist/"
         ),
-        views.verify_cosmetologist,
+        verification_views.verify_cosmetologist,
         name="verify-cosmetologist",
     ),
     path(
@@ -43,7 +120,10 @@ urlpatterns = [
             "customers/<int:pk>/"
             "revoke-cosmetologist/"
         ),
-        views.revoke_cosmetologist_verification,
+        (
+            verification_views
+            .revoke_cosmetologist_verification
+        ),
         name=(
             "revoke-cosmetologist-verification"
         ),

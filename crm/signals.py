@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -7,19 +8,82 @@ from shop.models import Order
 
 from .models import Customer
 
+User = get_user_model()
 
-def get_customer_type(user=None, professional=False):
+
+def get_customer_type(
+        user=None,
+        professional=False,
+):
     if professional:
         return Customer.CustomerType.COSMETOLOGIST
 
     if (
             user
             and user.is_authenticated
-            and getattr(user, "user_type", None) == "cosmetologist"
+            and getattr(
+        user,
+        "user_type",
+        None,
+    )
+            == "cosmetologist"
     ):
         return Customer.CustomerType.COSMETOLOGIST
 
     return Customer.CustomerType.CLIENT
+
+
+@receiver(post_save, sender=User)
+def create_customer_from_user(
+        sender,
+        instance,
+        **kwargs,
+):
+    if not instance.phone_number:
+        return
+
+    full_name = (
+            instance.get_full_name().strip()
+            or instance.username
+    )
+
+    customer, _ = (
+        Customer.objects.get_or_create_by_phone(
+            full_name=full_name,
+            phone_number=instance.phone_number,
+            user=instance,
+            customer_type=get_customer_type(
+                user=instance,
+            ),
+        )
+    )
+
+    fields_to_update = []
+
+    if customer.user_id != instance.pk:
+        customer.user = instance
+        fields_to_update.append("user")
+
+    if (
+            instance.is_cosmetologist
+            and customer.customer_type
+            != Customer.CustomerType.COSMETOLOGIST
+    ):
+        customer.customer_type = (
+            Customer.CustomerType.COSMETOLOGIST
+        )
+        fields_to_update.append(
+            "customer_type"
+        )
+
+    if fields_to_update:
+        fields_to_update.append(
+            "updated_at"
+        )
+
+        customer.save(
+            update_fields=fields_to_update,
+        )
 
 
 @receiver(post_save, sender=Booking)
@@ -31,13 +95,21 @@ def create_customer_from_booking(
     if not instance.client_phone:
         return
 
-    user = instance.client if instance.client_id else None
+    user = (
+        instance.client
+        if instance.client_id
+        else None
+    )
 
-    customer, _ = Customer.objects.get_or_create_by_phone(
-        full_name=instance.client_name,
-        phone_number=instance.client_phone,
-        user=user,
-        customer_type=get_customer_type(user=user),
+    customer, _ = (
+        Customer.objects.get_or_create_by_phone(
+            full_name=instance.client_name,
+            phone_number=instance.client_phone,
+            user=user,
+            customer_type=get_customer_type(
+                user=user,
+            ),
+        )
     )
 
     if instance.customer_id != customer.pk:
@@ -57,9 +129,15 @@ def create_customer_from_order(
     if not instance.client_phone:
         return
 
-    user = instance.client if instance.client_id else None
+    user = (
+        instance.client
+        if instance.client_id
+        else None
+    )
 
-    professional = instance.client_is_cosmetologist
+    professional = (
+        instance.client_is_cosmetologist
+    )
 
     if (
             instance.customer_id
@@ -68,14 +146,16 @@ def create_customer_from_order(
     ):
         professional = True
 
-    customer, _ = Customer.objects.get_or_create_by_phone(
-        full_name=instance.client_name,
-        phone_number=instance.client_phone,
-        user=user,
-        customer_type=get_customer_type(
+    customer, _ = (
+        Customer.objects.get_or_create_by_phone(
+            full_name=instance.client_name,
+            phone_number=instance.client_phone,
             user=user,
-            professional=professional,
-        ),
+            customer_type=get_customer_type(
+                user=user,
+                professional=professional,
+            ),
+        )
     )
 
     if instance.customer_id != customer.pk:
@@ -95,21 +175,27 @@ def create_customer_from_course_application(
     if not instance.applicant_phone:
         return
 
-    user = instance.student if instance.student_id else None
+    user = (
+        instance.student
+        if instance.student_id
+        else None
+    )
 
     professional_course = (
             instance.course.audience
             == Course.Audience.COSMETOLOGISTS
     )
 
-    customer, _ = Customer.objects.get_or_create_by_phone(
-        full_name=instance.applicant_name,
-        phone_number=instance.applicant_phone,
-        user=user,
-        customer_type=get_customer_type(
+    customer, _ = (
+        Customer.objects.get_or_create_by_phone(
+            full_name=instance.applicant_name,
+            phone_number=instance.applicant_phone,
             user=user,
-            professional=professional_course,
-        ),
+            customer_type=get_customer_type(
+                user=user,
+                professional=professional_course,
+            ),
+        )
     )
 
     if instance.customer_id != customer.pk:

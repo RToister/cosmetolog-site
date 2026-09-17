@@ -1,0 +1,110 @@
+<style>
+    .crm-section-navigation {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 32px;
+        padding: 8px;
+        background: #f5f1ee;
+        border: 1px solid #e9e1dc;
+        border-radius: 18px;
+    }
+
+    .crm-section-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 10px 17px;
+        color: #39312d;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 12px;
+        transition: color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .crm-section-link:hover {
+        color: #211b18;
+        background: #fff;
+        transform: translateY(-1px);
+    }
+
+    .crm-section-link.active {
+        color: #fff;
+        background: #211b18;
+    }
+
+    @media (max-width: 767px) {
+        .crm-section-navigation {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .crm-section-link {
+            padding: 10px 8px;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 430px) {
+        .crm-section-navigation {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<nav
+        class="crm-section-navigation"
+        aria-label="Навігація CRM"
+>
+    <a
+            href="{% url 'crm:customer-list' %}"
+            class="
+            crm-section-link
+            {% if not active_crm_section or active_crm_section == 'customers' %}
+                active
+            {% endif %}
+        "
+    >
+        Клієнти
+    </a>
+
+    <a
+            href="{% url 'crm:booking-list' %}"
+            class="
+            crm-section-link
+            {% if active_crm_section == 'bookings' %}
+                active
+            {% endif %}
+        "
+    >
+        Записи на послуги
+    </a>
+
+    <a
+            href="{% url 'crm:order-list' %}"
+            class="
+            crm-section-link
+            {% if active_crm_section == 'orders' %}
+                active
+            {% endif %}
+        "
+    >
+        Замовлення товарів
+    </a>
+
+    <a
+            href="{% url 'crm:course-application-list' %}"
+            class="
+            crm-section-link
+            {% if active_crm_section == 'courses' %}
+                active
+            {% endif %}
+        "
+    >
+        Заявки на навчання
+    </a>
+</nav>

@@ -1,0 +1,921 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ page_title }} | CRM | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <style>
+        .operation-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .operation-eyebrow {
+            margin-bottom: 8px;
+            color: #7b665d;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .operation-title {
+            margin: 0;
+            font-size: clamp(30px, 5vw, 52px);
+            font-weight: 600;
+            letter-spacing: -0.04em;
+        }
+
+        .operation-description {
+            max-width: 680px;
+            margin: 12px 0 0;
+            color: #6c757d;
+        }
+
+        .operation-statistics {
+            display: grid;
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 26px;
+        }
+
+        .operation-statistic {
+            padding: 20px;
+            background: #f6f2ef;
+            border: 1px solid #ebe2dc;
+            border-radius: 17px;
+        }
+
+        .operation-statistic-label {
+            color: #766860;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .operation-statistic-value {
+            margin-top: 8px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .operation-filters {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #e7e1dd;
+            border-radius: 18px;
+            box-shadow: 0 10px 35px rgba(
+                    35,
+                    27,
+                    22,
+                    0.04
+            );
+        }
+
+        .operation-filter-grid {
+            display: grid;
+            grid-template-columns:
+                minmax(230px, 2fr)
+                minmax(150px, 1fr)
+                minmax(145px, 1fr)
+                minmax(145px, 1fr)
+                minmax(150px, 1fr);
+            gap: 12px;
+            align-items: end;
+        }
+
+        .operation-filter-grid.with-audience {
+            grid-template-columns:
+                minmax(220px, 2fr)
+                repeat(5, minmax(135px, 1fr));
+        }
+
+        .filter-field label {
+            display: block;
+            margin-bottom: 7px;
+            color: #695e58;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .filter-field input,
+        .filter-field select {
+            width: 100%;
+            min-height: 44px;
+            padding: 10px 13px;
+            color: #292321;
+            background: #fff;
+            border: 1px solid #dcd4cf;
+            border-radius: 11px;
+        }
+
+        .filter-field input:focus,
+        .filter-field select:focus {
+            border-color: #8e7569;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(
+                    142,
+                    117,
+                    105,
+                    0.12
+            );
+        }
+
+        .filter-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .filter-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 43px;
+            padding: 10px 18px;
+            color: #fff;
+            font-weight: 600;
+            text-decoration: none;
+            background: #211b18;
+            border: 1px solid #211b18;
+            border-radius: 11px;
+        }
+
+        .filter-button.secondary {
+            color: #39312d;
+            background: #fff;
+            border-color: #d9d0cb;
+        }
+
+        .operation-result-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+            color: #706660;
+            font-size: 14px;
+        }
+
+        .operation-table-wrapper {
+            overflow-x: auto;
+            background: #fff;
+            border: 1px solid #e7e1dd;
+            border-radius: 18px;
+        }
+
+        .operation-table {
+            width: 100%;
+            min-width: 1050px;
+            border-collapse: collapse;
+        }
+
+        .operation-table th {
+            padding: 16px;
+            color: #746963;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-align: left;
+            text-transform: uppercase;
+            background: #f8f5f3;
+            border-bottom: 1px solid #e7e1dd;
+        }
+
+        .operation-table td {
+            padding: 17px 16px;
+            vertical-align: top;
+            border-bottom: 1px solid #eee8e4;
+        }
+
+        .operation-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .operation-table tbody tr:hover {
+            background: #fcfaf9;
+        }
+
+        .operation-primary {
+            color: #25201d;
+            font-weight: 700;
+        }
+
+        .operation-secondary {
+            margin-top: 4px;
+            color: #786e68;
+            font-size: 13px;
+        }
+
+        .operation-link {
+            color: #25201d;
+            font-weight: 600;
+            text-decoration: underline;
+            text-decoration-color: #cfc3bc;
+            text-underline-offset: 3px;
+        }
+
+        .operation-link:hover {
+            color: #7b5f52;
+        }
+
+        .operation-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #eeeae7;
+            border-radius: 999px;
+        }
+
+        .status-pending {
+            color: #7a571d;
+            background: #fff1d5;
+        }
+
+        .status-confirmed,
+        .status-paid,
+        .status-completed {
+            color: #24633f;
+            background: #e1f3e8;
+        }
+
+        .status-contacted {
+            color: #285d78;
+            background: #e3f2fa;
+        }
+
+        .status-cancelled {
+            color: #8c3333;
+            background: #f8e1e1;
+        }
+
+        .product-list {
+            display: grid;
+            gap: 5px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .product-list li {
+            color: #504742;
+            font-size: 13px;
+        }
+
+        .empty-operations {
+            padding: 55px 24px;
+            color: #776d67;
+            text-align: center;
+            background: #fff;
+            border: 1px solid #e7e1dd;
+            border-radius: 18px;
+        }
+
+        .operation-pagination {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 25px;
+        }
+
+        .pagination-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 42px;
+            min-height: 42px;
+            padding: 8px 12px;
+            color: #332c28;
+            text-decoration: none;
+            background: #fff;
+            border: 1px solid #ddd5d0;
+            border-radius: 10px;
+        }
+
+        .pagination-link.current {
+            color: #fff;
+            background: #211b18;
+            border-color: #211b18;
+        }
+
+        @media (max-width: 1199px) {
+            .operation-filter-grid,
+            .operation-filter-grid.with-audience {
+                grid-template-columns:
+                    repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 767px) {
+            .operation-header {
+                display: block;
+            }
+
+            .operation-statistics {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .operation-filter-grid,
+            .operation-filter-grid.with-audience {
+                grid-template-columns: 1fr;
+            }
+
+            .operation-result-summary {
+                display: block;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .operation-statistics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    {% include "crm/includes/navigation.html" %}
+
+    <header class="operation-header">
+        <div>
+            <div class="operation-eyebrow">
+                CRM · Журнал операцій
+            </div>
+
+            <h1 class="operation-title">
+                {{ page_title }}
+            </h1>
+
+            <p class="operation-description">
+                {{ page_description }}
+            </p>
+        </div>
+    </header>
+
+    <section class="operation-statistics">
+        <article class="operation-statistic">
+            <div class="operation-statistic-label">
+                Знайдено
+            </div>
+
+            <div class="operation-statistic-value">
+                {{ statistics.total }}
+            </div>
+        </article>
+
+        <article class="operation-statistic">
+            <div class="operation-statistic-label">
+                {% if operation_type == "orders" %}
+                    Оплачено
+                {% else %}
+                    Завершено
+                {% endif %}
+            </div>
+
+            <div class="operation-statistic-value">
+                {% if operation_type == "orders" %}
+                    {{ statistics.paid }}
+                {% else %}
+                    {{ statistics.completed }}
+                {% endif %}
+            </div>
+        </article>
+
+        <article class="operation-statistic">
+            <div class="operation-statistic-label">
+                Очікують
+            </div>
+
+            <div class="operation-statistic-value">
+                {{ statistics.pending }}
+            </div>
+        </article>
+
+        <article class="operation-statistic">
+            <div class="operation-statistic-label">
+                Загальна сума
+            </div>
+
+            <div class="operation-statistic-value">
+                {{ statistics.total_value|floatformat:2 }} ₴
+            </div>
+        </article>
+    </section>
+
+    <form
+            method="get"
+            class="operation-filters"
+    >
+        <div
+                class="
+                operation-filter-grid
+                {% if operation_type == 'courses' %}
+                    with-audience
+                {% endif %}
+            "
+        >
+            <div class="filter-field">
+                <label for="id_q">
+                    Пошук
+                </label>
+
+                <input
+                        type="search"
+                        id="id_q"
+                        name="q"
+                        value="{{ search_query }}"
+                        placeholder="Ім’я, телефон або назва"
+                >
+            </div>
+
+            <div class="filter-field">
+                <label for="id_status">
+                    Статус
+                </label>
+
+                <select
+                        id="id_status"
+                        name="status"
+                >
+                    <option value="">
+                        Усі статуси
+                    </option>
+
+                    {% for value, label in status_choices %}
+                        <option
+                                value="{{ value }}"
+                                {% if status == value %}
+                                selected
+                                {% endif %}
+                        >
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if operation_type == "courses" %}
+                <div class="filter-field">
+                    <label for="id_audience">
+                        Розділ
+                    </label>
+
+                    <select
+                            id="id_audience"
+                            name="audience"
+                    >
+                        <option value="">
+                            Усе навчання
+                        </option>
+
+                        {% for value, label in audience_choices %}
+                            <option
+                                    value="{{ value }}"
+                                    {% if selected_audience == value %}
+                                    selected
+                                    {% endif %}
+                            >
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+
+            <div class="filter-field">
+                <label for="id_date_from">
+                    Дата від
+                </label>
+
+                <input
+                        type="date"
+                        id="id_date_from"
+                        name="date_from"
+                        value="{{ date_from_value }}"
+                >
+            </div>
+
+            <div class="filter-field">
+                <label for="id_date_to">
+                    Дата до
+                </label>
+
+                <input
+                        type="date"
+                        id="id_date_to"
+                        name="date_to"
+                        value="{{ date_to_value }}"
+                >
+            </div>
+
+            <div class="filter-field">
+                <label for="id_sort">
+                    Сортування
+                </label>
+
+                <select
+                        id="id_sort"
+                        name="sort"
+                >
+                    <option
+                            value="newest"
+                            {% if sort == "newest" %}
+                            selected
+                            {% endif %}
+                    >
+                        Спочатку нові
+                    </option>
+
+                    <option
+                            value="oldest"
+                            {% if sort == "oldest" %}
+                            selected
+                            {% endif %}
+                    >
+                        Спочатку старі
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-actions">
+            <button
+                    type="submit"
+                    class="filter-button"
+            >
+                Застосувати
+            </button>
+
+            {% if operation_type == "bookings" %}
+                <a
+                        href="{% url 'crm:booking-list' %}"
+                        class="filter-button secondary"
+                >
+                    Очистити
+                </a>
+            {% elif operation_type == "orders" %}
+                <a
+                        href="{% url 'crm:order-list' %}"
+                        class="filter-button secondary"
+                >
+                    Очистити
+                </a>
+            {% else %}
+                <a
+                        href="{% url 'crm:course-application-list' %}"
+                        class="filter-button secondary"
+                >
+                    Очистити
+                </a>
+            {% endif %}
+        </div>
+    </form>
+
+    <div class="operation-result-summary">
+        <div>
+            Результатів:
+            <strong>{{ page_obj.paginator.count }}</strong>
+        </div>
+
+        {% if date_from_value or date_to_value %}
+            <div>
+                Період:
+                {{ date_from_value|default:"початок" }}
+                —
+                {{ date_to_value|default:"сьогодні" }}
+            </div>
+        {% endif %}
+    </div>
+
+    {% if page_obj %}
+        <div class="operation-table-wrapper">
+            <table class="operation-table">
+                {% if operation_type == "bookings" %}
+                    <thead>
+                    <tr>
+                        <th>Дата і час</th>
+                        <th>Клієнт</th>
+                        <th>Процедура</th>
+                        <th>Статус</th>
+                        <th>Джерело</th>
+                        <th>Вартість</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for booking in page_obj %}
+                        <tr>
+                            <td>
+                                <div class="operation-primary">
+                                    {{ booking.date|date:"d.m.Y" }}
+                                </div>
+
+                                <div class="operation-secondary">
+                                    {{ booking.start_time|time:"H:i" }}
+                                    –
+                                    {{ booking.end_time|time:"H:i" }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if booking.customer %}
+                                    <a
+                                            href="{% url 'crm:customer-detail' booking.customer.pk %}"
+                                            class="operation-link"
+                                    >
+                                        {{ booking.client_name }}
+                                    </a>
+                                {% else %}
+                                    <div class="operation-primary">
+                                        {{ booking.client_name }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="operation-secondary">
+                                    {{ booking.client_phone }}
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="operation-primary">
+                                    {{ booking.procedure.name }}
+                                </div>
+
+                                {% if booking.client_note %}
+                                    <div class="operation-secondary">
+                                        {{ booking.client_note|truncatewords:10 }}
+                                    </div>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                    <span
+                                            class="
+                                            operation-badge
+                                            status-{{ booking.status }}
+                                        "
+                                    >
+                                        {{ booking.get_status_display }}
+                                    </span>
+                            </td>
+
+                            <td>
+                                {{ booking.get_source_display }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ booking.price_at_booking|floatformat:2 }}
+                                    ₴
+                                </strong>
+                            </td>
+
+                            <td>
+                                <a
+                                        href="{% url 'crm:booking-detail' booking.pk %}"
+                                        class="filter-button secondary"
+                                >
+                                    Відкрити
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                {% elif operation_type == "orders" %}
+                    <thead>
+                    <tr>
+                        <th>Замовлення</th>
+                        <th>Покупець</th>
+                        <th>Товари</th>
+                        <th>Статус</th>
+                        <th>Джерело</th>
+                        <th>Сума</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for order in page_obj %}
+                        <tr>
+                            <td>
+                                <div class="operation-primary">
+                                    №{{ order.pk }}
+                                </div>
+
+                                <div class="operation-secondary">
+                                    {{ order.created_at|date:"d.m.Y H:i" }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if order.customer %}
+                                    <a
+                                            href="{% url 'crm:customer-detail' order.customer.pk %}"
+                                            class="operation-link"
+                                    >
+                                        {{ order.client_name }}
+                                    </a>
+                                {% else %}
+                                    <div class="operation-primary">
+                                        {{ order.client_name }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="operation-secondary">
+                                    {{ order.client_phone }}
+                                </div>
+                            </td>
+
+                            <td>
+                                <ul class="product-list">
+                                    {% for item in order.items.all %}
+                                        <li>
+                                            {{ item.product.name }}
+                                            × {{ item.quantity }}
+                                        </li>
+                                    {% empty %}
+                                        <li>Товарів немає</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+
+                            <td>
+                                    <span
+                                            class="
+                                            operation-badge
+                                            status-{{ order.status }}
+                                        "
+                                    >
+                                        {{ order.get_status_display }}
+                                    </span>
+                            </td>
+
+                            <td>
+                                {{ order.get_source_display }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ order.total_price|floatformat:2 }}
+                                    ₴
+                                </strong>
+                            </td>
+
+                            <td>
+                                <a
+                                        href="{% url 'crm:order-detail' order.pk %}"
+                                        class="filter-button secondary"
+                                >
+                                    Відкрити
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                {% else %}
+                    <thead>
+                    <tr>
+                        <th>Дата заявки</th>
+                        <th>Заявник</th>
+                        <th>Програма</th>
+                        <th>Розділ</th>
+                        <th>Статус</th>
+                        <th>Вартість</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for application in page_obj %}
+                        <tr>
+                            <td>
+                                <div class="operation-primary">
+                                    {{ application.enrolled_at|date:"d.m.Y" }}
+                                </div>
+
+                                <div class="operation-secondary">
+                                    {{ application.enrolled_at|time:"H:i" }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if application.customer %}
+                                    <a
+                                            href="{% url 'crm:customer-detail' application.customer.pk %}"
+                                            class="operation-link"
+                                    >
+                                        {{ application.applicant_name }}
+                                    </a>
+                                {% else %}
+                                    <div class="operation-primary">
+                                        {{ application.applicant_name }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="operation-secondary">
+                                    {{ application.applicant_phone }}
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="operation-primary">
+                                    {{ application.course.title }}
+                                </div>
+
+                                <div class="operation-secondary">
+                                    {{ application.course.get_format_display }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if application.course.audience == "cosmetologists" %}
+                                    Підвищення кваліфікації
+                                {% else %}
+                                    Школа догляду
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                    <span
+                                            class="
+                                            operation-badge
+                                            status-{{ application.status }}
+                                        "
+                                    >
+                                        {{ application.get_status_display }}
+                                    </span>
+                            </td>
+
+                            <td>
+                                <strong>
+                                    {{ application.price_at_enrollment|floatformat:2 }}
+                                    ₴
+                                </strong>
+                            </td>
+
+                            <td>
+                                <a
+                                        href="{% url 'crm:course-application-detail' application.pk %}"
+                                        class="filter-button secondary"
+                                >
+                                    Відкрити
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                {% endif %}
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-operations">
+            За вибраними параметрами нічого не знайдено.
+        </div>
+    {% endif %}
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <nav
+                class="operation-pagination"
+                aria-label="Сторінки результатів"
+        >
+            {% if page_obj.has_previous %}
+                <a
+                        href="?
+                                {% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                        class="pagination-link"
+                >
+                    Назад
+                </a>
+            {% endif %}
+
+            <span class="pagination-link current">
+                {{ page_obj.number }}
+                /
+                {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a
+                        href="?
+                                {% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.next_page_number }}"
+                        class="pagination-link"
+                >
+                    Далі
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | CRM | DR TOISTER{% endblock %}
+
+{% block content %}
+    <style>
+        .crm-booking-form-wrap {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        .crm-booking-form-head {
+            margin-bottom: 28px;
+        }
+
+        .crm-booking-form-head h1 {
+            margin: 0;
+            font-size: clamp(30px, 5vw, 48px);
+            letter-spacing: -0.04em;
+        }
+
+        .crm-booking-form-card {
+            padding: 28px;
+            background: #fff;
+            border: 1px solid #e7e1dd;
+            border-radius: 20px;
+            box-shadow: 0 14px 40px rgba(35, 27, 22, 0.05);
+        }
+
+        .crm-booking-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .crm-booking-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .crm-booking-field label {
+            display: block;
+            margin-bottom: 7px;
+            color: #5e534d;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .crm-booking-field input,
+        .crm-booking-field select,
+        .crm-booking-field textarea {
+            width: 100%;
+        }
+
+        .crm-booking-error {
+            margin-top: 7px;
+            color: #a33131;
+            font-size: 13px;
+        }
+
+        .crm-booking-errors {
+            margin-bottom: 22px;
+            padding: 16px;
+            color: #8c3333;
+            background: #fbe8e8;
+            border: 1px solid #efcece;
+            border-radius: 12px;
+        }
+
+        .crm-booking-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 26px;
+            padding-top: 22px;
+            border-top: 1px solid #ece5e1;
+        }
+
+        @media (max-width: 650px) {
+            .crm-booking-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .crm-booking-field.full {
+                grid-column: auto;
+            }
+        }
+    </style>
+
+    {% include "crm/includes/navigation.html" %}
+
+    <div class="crm-booking-form-wrap">
+        <a href="{{ cancel_url }}" class="text-decoration-none text-secondary">← Повернутися</a>
+
+        <header class="crm-booking-form-head mt-3">
+            <div class="text-uppercase small text-secondary fw-bold mb-2">CRM · Записи на послуги</div>
+            <h1>{{ page_title }}</h1>
+            <p class="text-secondary mt-2 mb-0">Вкажіть клієнта, процедуру, дату та час.</p>
+        </header>
+
+        <form method="post" class="crm-booking-form-card" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="crm-booking-errors">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>{% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="crm-booking-form-grid">
+                <div class="crm-booking-field">
+                    {{ form.client_name.label_tag }}{{ form.client_name }}
+                    {% for error in form.client_name.errors %}
+                        <div class="crm-booking-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="crm-booking-field">
+                    {{ form.client_phone.label_tag }}{{ form.client_phone }}
+                    {% for error in form.client_phone.errors %}
+                        <div class="crm-booking-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="crm-booking-field full">
+                    {{ form.procedure.label_tag }}{{ form.procedure }}
+                    {% for error in form.procedure.errors %}
+                        <div class="crm-booking-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="crm-booking-field">
+                    {{ form.date.label_tag }}{{ form.date }}
+                    {% for error in form.date.errors %}
+                        <div class="crm-booking-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="crm-booking-field">
+                    {{ form.start_time.label_tag }}{{ form.start_time }}
+                    <div class="small text-secondary mt-1">Крок часу — 30 хвилин.</div>
+                    {% for error in form.start_time.errors %}
+                        <div class="crm-booking-error">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="crm-booking-field full">
+                    {{ form.client_note.label_tag }}{{ form.client_note }}
+                    {% for error in form.client_note.errors %}
+                        <div class="crm-booking-error">{{ error }}</div>{% endfor %}
+                </div>
+            </div>
+
+            <div class="crm-booking-actions">
+                <button type="submit" class="btn btn-dark px-4">{{ submit_text }}</button>
+                <a href="{{ cancel_url }}" class="btn btn-outline-dark">Скасувати</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
