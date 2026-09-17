@@ -7,8 +7,7 @@ from django.core.management.base import CommandError
 from django.test import SimpleTestCase, override_settings
 
 COMMAND_MODULE = (
-    "appointments.management.commands."
-    "send_daily_booking_reminder"
+    "appointments.management.commands." "send_daily_booking_reminder"
 )
 
 
@@ -16,9 +15,7 @@ COMMAND_MODULE = (
     TELEGRAM_NOTIFICATIONS_ENABLED=True,
     TELEGRAM_BOOKINGS_CHAT_ID="-1001234567890",
 )
-class DailyBookingReminderCommandTests(
-    SimpleTestCase
-):
+class DailyBookingReminderCommandTests(SimpleTestCase):
     def create_queryset_mock(self, bookings):
         queryset = MagicMock()
 
@@ -27,37 +24,26 @@ class DailyBookingReminderCommandTests(
 
         return queryset
 
-    @patch(
-        f"{COMMAND_MODULE}.send_telegram_message"
-    )
-    @patch(
-        f"{COMMAND_MODULE}."
-        "format_daily_bookings_message"
-    )
-    @patch(
-        f"{COMMAND_MODULE}.Booking.objects.filter"
-    )
+    @patch(f"{COMMAND_MODULE}.send_telegram_message")
+    @patch(f"{COMMAND_MODULE}." "format_daily_bookings_message")
+    @patch(f"{COMMAND_MODULE}.Booking.objects.filter")
     def test_command_sends_daily_reminder(
-            self,
-            filter_mock,
-            format_message_mock,
-            send_message_mock,
+        self,
+        filter_mock,
+        format_message_mock,
+        send_message_mock,
     ):
         first_booking = MagicMock()
         second_booking = MagicMock()
 
-        filter_mock.return_value = (
-            self.create_queryset_mock(
-                [
-                    first_booking,
-                    second_booking,
-                ]
-            )
+        filter_mock.return_value = self.create_queryset_mock(
+            [
+                first_booking,
+                second_booking,
+            ]
         )
 
-        format_message_mock.return_value = (
-            "Записи на день"
-        )
+        format_message_mock.return_value = "Записи на день"
         send_message_mock.return_value = True
 
         output = StringIO()
@@ -71,9 +57,7 @@ class DailyBookingReminderCommandTests(
 
         filter_mock.assert_called_once()
 
-        filter_arguments = (
-            filter_mock.call_args.kwargs
-        )
+        filter_arguments = filter_mock.call_args.kwargs
 
         self.assertEqual(
             filter_arguments["date"],
@@ -98,29 +82,18 @@ class DailyBookingReminderCommandTests(
             output.getvalue(),
         )
 
-    @patch(
-        f"{COMMAND_MODULE}.send_telegram_message"
-    )
-    @patch(
-        f"{COMMAND_MODULE}."
-        "format_daily_bookings_message"
-    )
-    @patch(
-        f"{COMMAND_MODULE}.Booking.objects.filter"
-    )
+    @patch(f"{COMMAND_MODULE}.send_telegram_message")
+    @patch(f"{COMMAND_MODULE}." "format_daily_bookings_message")
+    @patch(f"{COMMAND_MODULE}.Booking.objects.filter")
     def test_command_sends_message_without_bookings(
-            self,
-            filter_mock,
-            format_message_mock,
-            send_message_mock,
+        self,
+        filter_mock,
+        format_message_mock,
+        send_message_mock,
     ):
-        filter_mock.return_value = (
-            self.create_queryset_mock([])
-        )
+        filter_mock.return_value = self.create_queryset_mock([])
 
-        format_message_mock.return_value = (
-            "На сьогодні записів немає."
-        )
+        format_message_mock.return_value = "На сьогодні записів немає."
         send_message_mock.return_value = True
 
         output = StringIO()
@@ -142,29 +115,18 @@ class DailyBookingReminderCommandTests(
             output.getvalue(),
         )
 
-    @patch(
-        f"{COMMAND_MODULE}.send_telegram_message"
-    )
-    @patch(
-        f"{COMMAND_MODULE}."
-        "format_daily_bookings_message"
-    )
-    @patch(
-        f"{COMMAND_MODULE}.Booking.objects.filter"
-    )
+    @patch(f"{COMMAND_MODULE}.send_telegram_message")
+    @patch(f"{COMMAND_MODULE}." "format_daily_bookings_message")
+    @patch(f"{COMMAND_MODULE}.Booking.objects.filter")
     def test_command_does_not_crash_when_sending_fails(
-            self,
-            filter_mock,
-            format_message_mock,
-            send_message_mock,
+        self,
+        filter_mock,
+        format_message_mock,
+        send_message_mock,
     ):
-        filter_mock.return_value = (
-            self.create_queryset_mock([])
-        )
+        filter_mock.return_value = self.create_queryset_mock([])
 
-        format_message_mock.return_value = (
-            "Записи на день"
-        )
+        format_message_mock.return_value = "Записи на день"
         send_message_mock.return_value = False
 
         output = StringIO()
@@ -188,8 +150,8 @@ class DailyBookingReminderCommandTests(
 
     def test_command_rejects_invalid_date(self):
         with self.assertRaisesMessage(
-                CommandError,
-                "Дата повинна мати формат YYYY-MM-DD.",
+            CommandError,
+            "Дата повинна мати формат YYYY-MM-DD.",
         ):
             call_command(
                 "send_daily_booking_reminder",
@@ -202,24 +164,15 @@ class DailyBookingReminderCommandTests(
     TELEGRAM_NOTIFICATIONS_ENABLED=True,
     TELEGRAM_BOOKINGS_CHAT_ID="",
 )
-class DailyBookingReminderWithoutChatTests(
-    SimpleTestCase
-):
-    @patch(
-        f"{COMMAND_MODULE}.send_telegram_message"
-    )
-    @patch(
-        f"{COMMAND_MODULE}."
-        "format_daily_bookings_message"
-    )
-    @patch(
-        f"{COMMAND_MODULE}.Booking.objects.filter"
-    )
+class DailyBookingReminderWithoutChatTests(SimpleTestCase):
+    @patch(f"{COMMAND_MODULE}.send_telegram_message")
+    @patch(f"{COMMAND_MODULE}." "format_daily_bookings_message")
+    @patch(f"{COMMAND_MODULE}.Booking.objects.filter")
     def test_command_skips_sending_without_chat_id(
-            self,
-            filter_mock,
-            format_message_mock,
-            send_message_mock,
+        self,
+        filter_mock,
+        format_message_mock,
+        send_message_mock,
     ):
         queryset = MagicMock()
 
@@ -228,9 +181,7 @@ class DailyBookingReminderWithoutChatTests(
 
         filter_mock.return_value = queryset
 
-        format_message_mock.return_value = (
-            "Записи на день"
-        )
+        format_message_mock.return_value = "Записи на день"
 
         output = StringIO()
 

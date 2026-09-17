@@ -19,51 +19,36 @@ class ShopModelTests(TestCase):
     def setUpTestData(cls):
         cls.category = ProductCategory.objects.create(
             name="Домашній догляд",
-            description=(
-                "Засоби для домашнього догляду"
-            ),
+            description=("Засоби для домашнього догляду"),
         )
 
         cls.public_product = Product.objects.create(
             category=cls.category,
             name="Зволожувальний крем",
             sku="CREAM-001",
-            description=(
-                "Крем для щоденного догляду"
-            ),
+            description=("Крем для щоденного догляду"),
             retail_price=Decimal("1000.00"),
             professional_price=Decimal("800.00"),
-            availability=(
-                Product.Availability.PUBLIC
-            ),
+            availability=(Product.Availability.PUBLIC),
             stock_quantity=10,
             is_active=True,
         )
 
-        cls.professional_product = (
-            Product.objects.create(
-                category=cls.category,
-                name="Професійний препарат",
-                sku="PRO-001",
-                description=(
-                    "Препарат лише для косметологів"
-                ),
-                retail_price=None,
-                professional_price=Decimal(
-                    "1500.00"
-                ),
-                availability=(
-                    Product.Availability
-                    .PROFESSIONALS_ONLY
-                ),
-                stock_quantity=5,
-                is_active=True,
-            )
+        cls.professional_product = Product.objects.create(
+            category=cls.category,
+            name="Професійний препарат",
+            sku="PRO-001",
+            description=("Препарат лише для косметологів"),
+            retail_price=None,
+            professional_price=Decimal("1500.00"),
+            availability=(Product.Availability.PROFESSIONALS_ONLY),
+            stock_quantity=5,
+            is_active=True,
         )
 
     def create_guest_order(
-            self,
-            **extra_fields,
+        self,
+        **extra_fields,
     ):
         order_data = {
             "client_name": "Марія",
@@ -73,9 +58,7 @@ class ShopModelTests(TestCase):
 
         order_data.update(extra_fields)
 
-        return Order.objects.create(
-            **order_data
-        )
+        return Order.objects.create(**order_data)
 
     def test_guest_receives_retail_price(self):
         order = self.create_guest_order()
@@ -104,16 +87,14 @@ class ShopModelTests(TestCase):
         )
 
     def test_cosmetologist_receives_professional_price(
-            self,
+        self,
     ):
         cosmetologist = User.objects.create_user(
             username="cosmetologist",
             password="test-password-123",
             first_name="Анна",
             phone_number="+380991112244",
-            user_type=(
-                User.UserType.COSMETOLOGIST
-            ),
+            user_type=(User.UserType.COSMETOLOGIST),
             is_cosmetologist_verified=True,
         )
 
@@ -142,16 +123,14 @@ class ShopModelTests(TestCase):
         )
 
     def test_unverified_cosmetologist_receives_retail_price(
-            self,
+        self,
     ):
         cosmetologist = User.objects.create_user(
             username="unverified-shop-user",
             password="test-password-123",
             first_name="Ірина",
             phone_number="+380991112245",
-            user_type=(
-                User.UserType.COSMETOLOGIST
-            ),
+            user_type=(User.UserType.COSMETOLOGIST),
             is_cosmetologist_verified=False,
         )
 
@@ -173,41 +152,33 @@ class ShopModelTests(TestCase):
         )
 
     def test_guest_cannot_buy_professional_product(
-            self,
+        self,
     ):
         order = self.create_guest_order()
 
-        with self.assertRaises(
-                ValidationError
-        ):
+        with self.assertRaises(ValidationError):
             OrderItem.objects.create(
                 order=order,
-                product=(
-                    self.professional_product
-                ),
+                product=(self.professional_product),
                 quantity=1,
             )
 
         self.assertFalse(
             OrderItem.objects.filter(
                 order=order,
-                product=(
-                    self.professional_product
-                ),
+                product=(self.professional_product),
             ).exists()
         )
 
     def test_unverified_cosmetologist_cannot_buy_professional_product(
-            self,
+        self,
     ):
         cosmetologist = User.objects.create_user(
             username="unverified-professional",
             password="test-password-123",
             first_name="Марина",
             phone_number="+380991112254",
-            user_type=(
-                User.UserType.COSMETOLOGIST
-            ),
+            user_type=(User.UserType.COSMETOLOGIST),
             is_cosmetologist_verified=False,
         )
 
@@ -217,32 +188,24 @@ class ShopModelTests(TestCase):
             client_phone="+380991112254",
         )
 
-        with self.assertRaises(
-                ValidationError
-        ):
+        with self.assertRaises(ValidationError):
             OrderItem.objects.create(
                 order=order,
-                product=(
-                    self.professional_product
-                ),
+                product=(self.professional_product),
                 quantity=1,
             )
 
-        self.assertFalse(
-            order.items.exists()
-        )
+        self.assertFalse(order.items.exists())
 
     def test_cosmetologist_can_buy_professional_product(
-            self,
+        self,
     ):
         cosmetologist = User.objects.create_user(
             username="professional",
             password="test-password-123",
             first_name="Олена",
             phone_number="+380991112255",
-            user_type=(
-                User.UserType.COSMETOLOGIST
-            ),
+            user_type=(User.UserType.COSMETOLOGIST),
             is_cosmetologist_verified=True,
         )
 
@@ -265,9 +228,7 @@ class ShopModelTests(TestCase):
 
     def test_payment_decreases_stock_quantity(self):
         order = self.create_guest_order(
-            payment_method=(
-                Order.PaymentMethod.CARD
-            ),
+            payment_method=(Order.PaymentMethod.CARD),
         )
 
         OrderItem.objects.create(
@@ -286,9 +247,7 @@ class ShopModelTests(TestCase):
             Order.Status.PAID,
         )
 
-        self.assertIsNotNone(
-            order.paid_at
-        )
+        self.assertIsNotNone(order.paid_at)
 
         self.assertEqual(
             self.public_product.stock_quantity,
@@ -296,12 +255,10 @@ class ShopModelTests(TestCase):
         )
 
     def test_cancelling_paid_order_restores_stock(
-            self,
+        self,
     ):
         order = self.create_guest_order(
-            payment_method=(
-                Order.PaymentMethod.CASH
-            ),
+            payment_method=(Order.PaymentMethod.CASH),
         )
 
         OrderItem.objects.create(
@@ -328,14 +285,10 @@ class ShopModelTests(TestCase):
 
     def test_empty_order_cannot_be_paid(self):
         order = self.create_guest_order(
-            payment_method=(
-                Order.PaymentMethod.CARD
-            ),
+            payment_method=(Order.PaymentMethod.CARD),
         )
 
-        with self.assertRaises(
-                ValidationError
-        ):
+        with self.assertRaises(ValidationError):
             order.mark_as_paid()
 
         order.refresh_from_db()
@@ -346,7 +299,7 @@ class ShopModelTests(TestCase):
         )
 
     def test_order_without_payment_method_cannot_be_paid(
-            self,
+        self,
     ):
         order = self.create_guest_order()
 
@@ -356,9 +309,7 @@ class ShopModelTests(TestCase):
             quantity=1,
         )
 
-        with self.assertRaises(
-                ValidationError
-        ):
+        with self.assertRaises(ValidationError):
             order.mark_as_paid()
 
         order.refresh_from_db()
@@ -369,13 +320,11 @@ class ShopModelTests(TestCase):
         )
 
     def test_order_cannot_exceed_available_stock(
-            self,
+        self,
     ):
         order = self.create_guest_order()
 
-        with self.assertRaises(
-                ValidationError
-        ):
+        with self.assertRaises(ValidationError):
             OrderItem.objects.create(
                 order=order,
                 product=self.public_product,
@@ -384,9 +333,7 @@ class ShopModelTests(TestCase):
 
     def test_cancelled_order_cannot_be_paid(self):
         order = self.create_guest_order(
-            payment_method=(
-                Order.PaymentMethod.CARD
-            ),
+            payment_method=(Order.PaymentMethod.CARD),
         )
 
         OrderItem.objects.create(
@@ -397,7 +344,5 @@ class ShopModelTests(TestCase):
 
         order.cancel()
 
-        with self.assertRaises(
-                ValidationError
-        ):
+        with self.assertRaises(ValidationError):
             order.mark_as_paid()

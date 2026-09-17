@@ -27,17 +27,10 @@ def booking_create(request):
         request.POST or None,
     )
 
-    if (
-            request.method == "POST"
-            and form.is_valid()
-    ):
-        booking = form.save(
-            commit=False
-        )
+    if request.method == "POST" and form.is_valid():
+        booking = form.save(commit=False)
 
-        booking.source = (
-            Booking.Source.ADMIN
-        )
+        booking.source = Booking.Source.ADMIN
 
         booking.created_by = request.user
         booking.save()
@@ -60,9 +53,7 @@ def booking_create(request):
             "booking": None,
             "page_title": "Новий запис",
             "submit_text": "Створити запис",
-            "cancel_url": reverse(
-                "crm:booking-list"
-            ),
+            "cancel_url": reverse("crm:booking-list"),
         },
     )
 
@@ -84,10 +75,7 @@ def booking_update(request, pk):
         instance=booking,
     )
 
-    if (
-            request.method == "POST"
-            and form.is_valid()
-    ):
+    if request.method == "POST" and form.is_valid():
         booking = form.save()
 
         messages.success(
@@ -106,9 +94,7 @@ def booking_update(request, pk):
         {
             "form": form,
             "booking": booking,
-            "page_title": (
-                f"Редагування запису №{booking.pk}"
-            ),
+            "page_title": (f"Редагування запису №{booking.pk}"),
             "submit_text": "Зберегти зміни",
             "cancel_url": reverse(
                 "crm:booking-detail",
@@ -123,8 +109,8 @@ def booking_update(request, pk):
 @staff_member_required
 @transaction.atomic
 def booking_comment_update(
-        request,
-        pk,
+    request,
+    pk,
 ):
     booking = get_object_or_404(
         Booking.objects.select_related(
@@ -134,24 +120,17 @@ def booking_comment_update(
         pk=pk,
     )
 
-    visit_comment = (
-        VisitComment.objects.filter(
-            booking=booking,
-        ).first()
-    )
+    visit_comment = VisitComment.objects.filter(
+        booking=booking,
+    ).first()
 
     form = VisitCommentForm(
         request.POST or None,
         instance=visit_comment,
     )
 
-    if (
-            request.method == "POST"
-            and form.is_valid()
-    ):
-        comment = form.save(
-            commit=False
-        )
+    if request.method == "POST" and form.is_valid():
+        comment = form.save(commit=False)
 
         comment.booking = booking
         comment.author = request.user
@@ -159,10 +138,7 @@ def booking_comment_update(
 
         messages.success(
             request,
-            (
-                "Коментар лікаря та "
-                "рекомендації збережено."
-            ),
+            ("Коментар лікаря та " "рекомендації збережено."),
         )
 
         return redirect(

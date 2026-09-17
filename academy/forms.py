@@ -13,9 +13,7 @@ class CourseApplicationForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": (
-                    "Введіть ваше ім’я"
-                ),
+                "placeholder": ("Введіть ваше ім’я"),
                 "autocomplete": "name",
             }
         ),
@@ -27,9 +25,7 @@ class CourseApplicationForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": (
-                    "+380991112233"
-                ),
+                "placeholder": ("+380991112233"),
                 "autocomplete": "tel",
             }
         ),
@@ -52,10 +48,10 @@ class CourseApplicationForm(forms.Form):
     )
 
     def __init__(
-            self,
-            *args,
-            user=None,
-            **kwargs,
+        self,
+        *args,
+        user=None,
+        **kwargs,
     ):
         super().__init__(
             *args,
@@ -63,42 +59,24 @@ class CourseApplicationForm(forms.Form):
         )
 
         if user and user.is_authenticated:
-            self.fields[
-                "applicant_name"
-            ].initial = (
-                    user.get_full_name()
-                    or user.username
+            self.fields["applicant_name"].initial = (
+                user.get_full_name() or user.username
             )
 
-            self.fields[
-                "applicant_phone"
-            ].initial = (
-                user.phone_number
-            )
+            self.fields["applicant_phone"].initial = user.phone_number
 
     def clean_applicant_name(self):
-        applicant_name = (
-            self.cleaned_data[
-                "applicant_name"
-            ].strip()
-        )
+        applicant_name = self.cleaned_data["applicant_name"].strip()
 
         if len(applicant_name) < 2:
             raise ValidationError(
-                "Ім’я повинно містити "
-                "щонайменше 2 символи."
+                "Ім’я повинно містити " "щонайменше 2 символи."
             )
 
         return applicant_name
 
     def clean_applicant_phone(self):
-        return normalize_phone_number(
-            self.cleaned_data[
-                "applicant_phone"
-            ]
-        )
+        return normalize_phone_number(self.cleaned_data["applicant_phone"])
 
     def clean_applicant_comment(self):
-        return self.cleaned_data[
-            "applicant_comment"
-        ].strip()
+        return self.cleaned_data["applicant_comment"].strip()

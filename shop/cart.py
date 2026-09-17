@@ -10,14 +10,10 @@ class Cart:
         self.session = request.session
         self.user = request.user
 
-        cart = self.session.get(
-            CART_SESSION_ID
-        )
+        cart = self.session.get(CART_SESSION_ID)
 
         if cart is None:
-            cart = self.session[
-                CART_SESSION_ID
-            ] = {}
+            cart = self.session[CART_SESSION_ID] = {}
 
         self.cart = cart
 
@@ -29,10 +25,10 @@ class Cart:
         )
 
     def add(
-            self,
-            product,
-            quantity=1,
-            override_quantity=False,
+        self,
+        product,
+        quantity=1,
+        override_quantity=False,
     ):
         product_id = str(product.pk)
 
@@ -44,10 +40,7 @@ class Cart:
         if override_quantity:
             new_quantity = quantity
         else:
-            new_quantity = (
-                    self.cart[product_id]["quantity"]
-                    + quantity
-            )
+            new_quantity = self.cart[product_id]["quantity"] + quantity
 
         self.cart[product_id]["quantity"] = min(
             new_quantity,
@@ -71,46 +64,30 @@ class Cart:
 
     def clear(self):
         self.session[CART_SESSION_ID] = {}
-        self.cart = self.session[
-            CART_SESSION_ID
-        ]
+        self.cart = self.session[CART_SESSION_ID]
         self.save()
 
     def __len__(self):
-        return sum(
-            item["quantity"]
-            for item in self.cart.values()
-        )
+        return sum(item["quantity"] for item in self.cart.values())
 
     def __iter__(self):
-        product_ids = list(
-            self.cart.keys()
-        )
+        product_ids = list(self.cart.keys())
 
-        products = (
-            Product.objects.filter(
-                pk__in=product_ids,
-                is_active=True,
-            )
-            .select_related("category")
-        )
+        products = Product.objects.filter(
+            pk__in=product_ids,
+            is_active=True,
+        ).select_related("category")
 
         if not self.user_has_professional_access:
             products = products.filter(
-                availability=(
-                    Product.Availability.PUBLIC
-                ),
+                availability=(Product.Availability.PUBLIC),
                 retail_price__isnull=False,
             )
 
-        products_by_id = {
-            str(product.pk): product
-            for product in products
-        }
+        products_by_id = {str(product.pk): product for product in products}
 
-        invalid_product_ids = (
-                set(self.cart.keys())
-                - set(products_by_id.keys())
+        invalid_product_ids = set(self.cart.keys()) - set(
+            products_by_id.keys()
         )
 
         for product_id in invalid_product_ids:
@@ -119,19 +96,13 @@ class Cart:
         if invalid_product_ids:
             self.save()
 
-        for product_id in list(
-                self.cart.keys()
-        ):
-            product = products_by_id.get(
-                product_id
-            )
+        for product_id in list(self.cart.keys()):
+            product = products_by_id.get(product_id)
 
             if product is None:
                 continue
 
-            cart_item = self.cart[
-                product_id
-            ].copy()
+            cart_item = self.cart[product_id].copy()
 
             quantity = cart_item.get(
                 "quantity",
@@ -145,9 +116,7 @@ class Cart:
 
             if quantity > product.stock_quantity:
                 quantity = product.stock_quantity
-                self.cart[product_id][
-                    "quantity"
-                ] = quantity
+                self.cart[product_id]["quantity"] = quantity
                 self.save()
 
             if quantity < 1:
@@ -163,18 +132,13 @@ class Cart:
             cart_item["quantity"] = quantity
             cart_item["product"] = product
             cart_item["price"] = price
-            cart_item["total_price"] = (
-                    price * quantity
-            )
+            cart_item["total_price"] = price * quantity
 
             yield cart_item
 
     def get_total_price(self):
         return sum(
-            (
-                item["total_price"]
-                for item in self
-            ),
+            (item["total_price"] for item in self),
             Decimal("0.00"),
         )
 

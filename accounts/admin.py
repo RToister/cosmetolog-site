@@ -96,15 +96,11 @@ class CustomUserAdmin(UserAdmin):
 
         return "Очікує підтвердження"
 
-    @admin.action(
-        description=(
-                "Підтвердити вибраних косметологів"
-        )
-    )
+    @admin.action(description=("Підтвердити вибраних косметологів"))
     def verify_cosmetologists(
-            self,
-            request,
-            queryset,
+        self,
+        request,
+        queryset,
     ):
         cosmetologists = queryset.filter(
             user_type=User.UserType.COSMETOLOGIST,
@@ -119,17 +115,12 @@ class CustomUserAdmin(UserAdmin):
             )
             verified_count += 1
 
-        skipped_count = (
-                queryset.count() - verified_count
-        )
+        skipped_count = queryset.count() - verified_count
 
         if verified_count:
             self.message_user(
                 request,
-                (
-                    "Підтверджено косметологів: "
-                    f"{verified_count}."
-                ),
+                ("Підтверджено косметологів: " f"{verified_count}."),
                 level=messages.SUCCESS,
             )
 
@@ -144,15 +135,11 @@ class CustomUserAdmin(UserAdmin):
                 level=messages.WARNING,
             )
 
-    @admin.action(
-        description=(
-                "Скасувати підтвердження косметологів"
-        )
-    )
+    @admin.action(description=("Скасувати підтвердження косметологів"))
     def revoke_cosmetologist_verification(
-            self,
-            request,
-            queryset,
+        self,
+        request,
+        queryset,
     ):
         verified_cosmetologists = queryset.filter(
             user_type=User.UserType.COSMETOLOGIST,
@@ -165,17 +152,12 @@ class CustomUserAdmin(UserAdmin):
             user.revoke_cosmetologist_verification()
             revoked_count += 1
 
-        skipped_count = (
-                queryset.count() - revoked_count
-        )
+        skipped_count = queryset.count() - revoked_count
 
         if revoked_count:
             self.message_user(
                 request,
-                (
-                    "Скасовано підтверджень: "
-                    f"{revoked_count}."
-                ),
+                ("Скасовано підтверджень: " f"{revoked_count}."),
                 level=messages.SUCCESS,
             )
 

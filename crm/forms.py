@@ -37,9 +37,7 @@ class CustomerForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "rows": 5,
-                    "placeholder": (
-                        "Внутрішні нотатки про клієнта"
-                    ),
+                    "placeholder": ("Внутрішні нотатки про клієнта"),
                 }
             ),
             "is_active": forms.CheckboxInput(
@@ -50,14 +48,11 @@ class CustomerForm(forms.ModelForm):
         }
 
     def clean_full_name(self):
-        full_name = self.cleaned_data[
-            "full_name"
-        ].strip()
+        full_name = self.cleaned_data["full_name"].strip()
 
         if len(full_name) < 2:
             raise forms.ValidationError(
-                "Ім’я повинно містити щонайменше "
-                "2 символи."
+                "Ім’я повинно містити щонайменше " "2 символи."
             )
 
         return full_name

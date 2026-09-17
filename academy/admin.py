@@ -78,11 +78,7 @@ class CourseAdmin(admin.ModelAdmin):
         ),
         (
             "Публікація",
-            {
-                "fields": (
-                    "is_published",
-                )
-            },
+            {"fields": ("is_published",)},
         ),
         (
             "Системна інформація",
@@ -137,9 +133,7 @@ class CourseEnrollmentAdmin(admin.ModelAdmin):
         "updated_at",
     )
     date_hierarchy = "enrolled_at"
-    ordering = (
-        "-enrolled_at",
-    )
+    ordering = ("-enrolled_at",)
 
     fieldsets = (
         (
@@ -182,11 +176,11 @@ class CourseEnrollmentAdmin(admin.ModelAdmin):
         return obj.course.get_audience_display()
 
     def save_model(
-            self,
-            request,
-            obj,
-            form,
-            change,
+        self,
+        request,
+        obj,
+        form,
+        change,
     ):
         if not obj.created_by_id:
             obj.created_by = request.user

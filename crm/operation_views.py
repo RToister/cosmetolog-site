@@ -52,9 +52,7 @@ def paginate(request, queryset):
         ITEMS_PER_PAGE,
     )
 
-    return paginator.get_page(
-        request.GET.get("page")
-    )
+    return paginator.get_page(request.GET.get("page"))
 
 
 def get_common_filters(request):
@@ -84,20 +82,16 @@ def get_common_filters(request):
     )
 
     if sort not in (
-            "newest",
-            "oldest",
+        "newest",
+        "oldest",
     ):
         sort = "newest"
 
     return {
         "search_query": search_query,
         "status": status,
-        "date_from": parse_date(
-            date_from_value
-        ),
-        "date_to": parse_date(
-            date_to_value
-        ),
+        "date_from": parse_date(date_from_value),
+        "date_to": parse_date(date_to_value),
         "date_from_value": date_from_value,
         "date_to_value": date_to_value,
         "sort": sort,
@@ -108,43 +102,25 @@ def get_common_filters(request):
 def booking_list(request):
     filters = get_common_filters(request)
 
-    valid_statuses = {
-        value
-        for value, label
-        in Booking.Status.choices
-    }
+    valid_statuses = {value for value, label in Booking.Status.choices}
 
     if filters["status"] not in valid_statuses:
         filters["status"] = ""
 
-    bookings = (
-        Booking.objects.select_related(
-            "procedure",
-            "client",
-            "customer",
-            "created_by",
-        )
+    bookings = Booking.objects.select_related(
+        "procedure",
+        "client",
+        "customer",
+        "created_by",
     )
 
     if filters["search_query"]:
         search_query = filters["search_query"]
 
         bookings = bookings.filter(
-            Q(
-                client_name__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                client_phone__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                procedure__name__icontains=(
-                    search_query
-                )
-            )
+            Q(client_name__icontains=(search_query))
+            | Q(client_phone__icontains=(search_query))
+            | Q(procedure__name__icontains=(search_query))
         )
 
     if filters["status"]:
@@ -201,8 +177,7 @@ def booking_list(request):
         "active_crm_section": "bookings",
         "page_title": "Записи на послуги",
         "page_description": (
-            "Усі записи на процедури незалежно "
-            "від конкретного клієнта."
+            "Усі записи на процедури незалежно " "від конкретного клієнта."
         ),
         "page_obj": paginate(
             request,
@@ -210,9 +185,7 @@ def booking_list(request):
         ),
         "statistics": statistics,
         "status_choices": Booking.Status.choices,
-        "pagination_query": (
-            get_pagination_query(request)
-        ),
+        "pagination_query": (get_pagination_query(request)),
         **filters,
     }
 
@@ -227,11 +200,7 @@ def booking_list(request):
 def order_list(request):
     filters = get_common_filters(request)
 
-    valid_statuses = {
-        value
-        for value, label
-        in Order.Status.choices
-    }
+    valid_statuses = {value for value, label in Order.Status.choices}
 
     if filters["status"] not in valid_statuses:
         filters["status"] = ""
@@ -258,21 +227,9 @@ def order_list(request):
         search_query = filters["search_query"]
 
         orders = orders.filter(
-            Q(
-                client_name__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                client_phone__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                items__product__name__icontains=(
-                    search_query
-                )
-            )
+            Q(client_name__icontains=(search_query))
+            | Q(client_phone__icontains=(search_query))
+            | Q(items__product__name__icontains=(search_query))
         ).distinct()
 
     if filters["status"]:
@@ -282,16 +239,12 @@ def order_list(request):
 
     if filters["date_from"]:
         orders = orders.filter(
-            created_at__date__gte=(
-                filters["date_from"]
-            ),
+            created_at__date__gte=(filters["date_from"]),
         )
 
     if filters["date_to"]:
         orders = orders.filter(
-            created_at__date__lte=(
-                filters["date_to"]
-            ),
+            created_at__date__lte=(filters["date_to"]),
         )
 
     if filters["sort"] == "oldest":
@@ -339,8 +292,7 @@ def order_list(request):
         "active_crm_section": "orders",
         "page_title": "Замовлення товарів",
         "page_description": (
-            "Усі замовлення магазину, товари, "
-            "суми та статуси оплати."
+            "Усі замовлення магазину, товари, " "суми та статуси оплати."
         ),
         "page_obj": paginate(
             request,
@@ -348,9 +300,7 @@ def order_list(request):
         ),
         "statistics": statistics,
         "status_choices": Order.Status.choices,
-        "pagination_query": (
-            get_pagination_query(request)
-        ),
+        "pagination_query": (get_pagination_query(request)),
         **filters,
     }
 
@@ -371,16 +321,10 @@ def course_application_list(request):
     )
 
     valid_statuses = {
-        value
-        for value, label
-        in CourseEnrollment.Status.choices
+        value for value, label in CourseEnrollment.Status.choices
     }
 
-    valid_audiences = {
-        value
-        for value, label
-        in Course.Audience.choices
-    }
+    valid_audiences = {value for value, label in Course.Audience.choices}
 
     if filters["status"] not in valid_statuses:
         filters["status"] = ""
@@ -388,34 +332,20 @@ def course_application_list(request):
     if audience not in valid_audiences:
         audience = ""
 
-    applications = (
-        CourseEnrollment.objects.select_related(
-            "course",
-            "student",
-            "customer",
-            "created_by",
-        )
+    applications = CourseEnrollment.objects.select_related(
+        "course",
+        "student",
+        "customer",
+        "created_by",
     )
 
     if filters["search_query"]:
         search_query = filters["search_query"]
 
         applications = applications.filter(
-            Q(
-                applicant_name__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                applicant_phone__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                course__title__icontains=(
-                    search_query
-                )
-            )
+            Q(applicant_name__icontains=(search_query))
+            | Q(applicant_phone__icontains=(search_query))
+            | Q(course__title__icontains=(search_query))
         )
 
     if filters["status"]:
@@ -430,16 +360,12 @@ def course_application_list(request):
 
     if filters["date_from"]:
         applications = applications.filter(
-            enrolled_at__date__gte=(
-                filters["date_from"]
-            ),
+            enrolled_at__date__gte=(filters["date_from"]),
         )
 
     if filters["date_to"]:
         applications = applications.filter(
-            enrolled_at__date__lte=(
-                filters["date_to"]
-            ),
+            enrolled_at__date__lte=(filters["date_to"]),
         )
 
     if filters["sort"] == "oldest":
@@ -458,19 +384,13 @@ def course_application_list(request):
         completed=Count(
             "id",
             filter=Q(
-                status=(
-                    CourseEnrollment
-                    .Status.COMPLETED
-                ),
+                status=(CourseEnrollment.Status.COMPLETED),
             ),
         ),
         pending=Count(
             "id",
             filter=Q(
-                status=(
-                    CourseEnrollment
-                    .Status.PENDING
-                ),
+                status=(CourseEnrollment.Status.PENDING),
             ),
         ),
         total_value=Coalesce(
@@ -485,22 +405,17 @@ def course_application_list(request):
         "active_crm_section": "courses",
         "page_title": "Заявки на навчання",
         "page_description": (
-            "Усі заявки до Школи догляду "
-            "та на підвищення кваліфікації."
+            "Усі заявки до Школи догляду " "та на підвищення кваліфікації."
         ),
         "page_obj": paginate(
             request,
             applications,
         ),
         "statistics": statistics,
-        "status_choices": (
-            CourseEnrollment.Status.choices
-        ),
+        "status_choices": (CourseEnrollment.Status.choices),
         "audience_choices": Course.Audience.choices,
         "selected_audience": audience,
-        "pagination_query": (
-            get_pagination_query(request)
-        ),
+        "pagination_query": (get_pagination_query(request)),
         **filters,
     }
 

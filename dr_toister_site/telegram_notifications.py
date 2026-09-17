@@ -1,13 +1,7 @@
 import json
 import logging
-from urllib.error import (
-    HTTPError,
-    URLError,
-)
-from urllib.request import (
-    Request,
-    urlopen,
-)
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from django.conf import settings
 from django.utils import timezone
@@ -32,19 +26,15 @@ def send_telegram_message(
 
     if not settings.TELEGRAM_BOT_TOKEN:
         logger.warning(
-            (
-                "Telegram-сповіщення увімкнені, "
-                "але TELEGRAM_BOT_TOKEN не задано."
-            )
+            "Telegram-сповіщення увімкнені, "
+            "але TELEGRAM_BOT_TOKEN не задано."
         )
         return False
 
     if not chat_id:
         logger.warning(
-            (
-                "Telegram-сповіщення не надіслано: "
-                "не задано ID групи."
-            )
+            "Telegram-сповіщення не надіслано: "
+            "не задано ID групи."
         )
         return False
 
@@ -74,9 +64,7 @@ def send_telegram_message(
     try:
         with urlopen(
                 request,
-                timeout=(
-                        settings.TELEGRAM_REQUEST_TIMEOUT
-                ),
+                timeout=settings.TELEGRAM_REQUEST_TIMEOUT,
         ) as response:
             response_data = json.loads(
                 response.read().decode("utf-8")
@@ -84,10 +72,8 @@ def send_telegram_message(
 
         if not response_data.get("ok"):
             logger.warning(
-                (
-                    "Telegram API повернув "
-                    "невдалу відповідь."
-                )
+                "Telegram API повернув "
+                "невдалу відповідь."
             )
             return False
 
@@ -100,7 +86,10 @@ def send_telegram_message(
             ValueError,
     ) as error:
         logger.warning(
-            "Не вдалося надіслати Telegram-повідомлення: %s",
+            (
+                "Не вдалося надіслати "
+                "Telegram-повідомлення: %s"
+            ),
             error,
         )
         return False
@@ -129,16 +118,19 @@ def format_booking_message(booking):
         f"Запис №{booking.pk}",
         f"Клієнт: {booking.client_name}",
         f"Телефон: {booking.client_phone}",
-        f"Процедура: {booking.procedure.name}",
+        (
+            "Процедура: "
+            f"{booking.procedure.name}"
+        ),
         (
             "Дата: "
-            f"{booking.date.strftime('%d.%m.%Y')}"
+            f"{booking.date:%d.%m.%Y}"
         ),
         (
             "Час: "
-            f"{booking.start_time.strftime('%H:%M')}"
+            f"{booking.start_time:%H:%M}"
             "–"
-            f"{booking.end_time.strftime('%H:%M')}"
+            f"{booking.end_time:%H:%M}"
         ),
         (
             "Вартість: "
@@ -173,9 +165,11 @@ def format_booking_message(booking):
 
 
 def format_order_message(order):
-    order_items = order.items.select_related(
-        "product"
-    ).all()
+    order_items = (
+        order.items.select_related(
+            "product"
+        ).all()
+    )
 
     lines = [
         "НОВЕ ЗАМОВЛЕННЯ",
@@ -196,8 +190,7 @@ def format_order_message(order):
     for item in order_items:
         if (
                 item.product.availability
-                == item.product.Availability
-                .PROFESSIONALS_ONLY
+                == item.product.Availability.PROFESSIONALS_ONLY
         ):
             has_professional_products = True
 
@@ -234,7 +227,9 @@ def format_order_message(order):
     return "\n".join(lines)
 
 
-def format_course_application_message(application):
+def format_course_application_message(
+        application,
+):
     course = application.course
 
     if (
@@ -246,6 +241,10 @@ def format_course_application_message(application):
         )
     else:
         course_group = "Школа догляду"
+
+    application_datetime = timezone.localtime(
+        application.enrolled_at
+    )
 
     lines = [
         "НОВА ЗАЯВКА НА НАВЧАННЯ",
@@ -278,7 +277,7 @@ def format_course_application_message(application):
         ),
         (
             "Дата заявки: "
-            f"{timezone.localtime(application.enrolled_at).strftime('%d.%m.%Y %H:%M')}"
+            f"{application_datetime:%d.%m.%Y %H:%M}"
         ),
     ]
 
@@ -298,9 +297,7 @@ def format_course_application_message(application):
 
 def send_booking_notification(booking):
     return send_telegram_message(
-        chat_id=(
-            settings.TELEGRAM_BOOKINGS_CHAT_ID
-        ),
+        chat_id=settings.TELEGRAM_BOOKINGS_CHAT_ID,
         text=format_booking_message(
             booking
         ),
@@ -309,9 +306,7 @@ def send_booking_notification(booking):
 
 def send_order_notification(order):
     return send_telegram_message(
-        chat_id=(
-            settings.TELEGRAM_ORDERS_CHAT_ID
-        ),
+        chat_id=settings.TELEGRAM_ORDERS_CHAT_ID,
         text=format_order_message(
             order
         ),
@@ -322,13 +317,9 @@ def send_course_application_notification(
         application,
 ):
     return send_telegram_message(
-        chat_id=(
-            settings.TELEGRAM_COURSES_CHAT_ID
-        ),
-        text=(
-            format_course_application_message(
-                application
-            )
+        chat_id=settings.TELEGRAM_COURSES_CHAT_ID,
+        text=format_course_application_message(
+            application
         ),
     )
 
@@ -340,7 +331,7 @@ def format_daily_bookings_message(
     lines = [
         (
             "ЗАПИСИ НА "
-            f"{reminder_date.strftime('%d.%m.%Y')}"
+            f"{reminder_date:%d.%m.%Y}"
         ),
         "",
     ]
@@ -355,7 +346,7 @@ def format_daily_bookings_message(
         lines.extend(
             [
                 (
-                    f"{booking.start_time.strftime('%H:%M')} — "
+                    f"{booking.start_time:%H:%M} — "
                     f"{booking.procedure.name}"
                 ),
                 (
@@ -391,10 +382,8 @@ def notify_booking_created(booking_id):
         )
     except Booking.DoesNotExist:
         logger.warning(
-            (
-                "Telegram: запис №%s "
-                "не знайдено."
-            ),
+            "Telegram: запис №%s "
+            "не знайдено.",
             booking_id,
         )
         return False
@@ -420,10 +409,8 @@ def notify_order_created(order_id):
         )
     except Order.DoesNotExist:
         logger.warning(
-            (
-                "Telegram: замовлення №%s "
-                "не знайдено."
-            ),
+            "Telegram: замовлення №%s "
+            "не знайдено.",
             order_id,
         )
         return False
@@ -449,10 +436,8 @@ def notify_course_application_created(
         )
     except CourseEnrollment.DoesNotExist:
         logger.warning(
-            (
-                "Telegram: заявку на навчання "
-                "№%s не знайдено."
-            ),
+            "Telegram: заявку на навчання "
+            "№%s не знайдено.",
             application_id,
         )
         return False

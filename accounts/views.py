@@ -15,22 +15,16 @@ from .forms import (
 
 def register(request):
     if request.user.is_authenticated:
-        return redirect(
-            "accounts:dashboard"
-        )
+        return redirect("accounts:dashboard")
 
     if request.method == "POST":
-        form = UserRegistrationForm(
-            request.POST
-        )
+        form = UserRegistrationForm(request.POST)
 
         if form.is_valid():
             user = form.save()
             login(request, user)
 
-            return redirect(
-                "accounts:registration-pending"
-            )
+            return redirect("accounts:registration-pending")
     else:
         form = UserRegistrationForm()
 
@@ -46,14 +40,10 @@ def register(request):
 @login_required
 def registration_pending(request):
     if not request.user.is_cosmetologist:
-        return redirect(
-            "accounts:dashboard"
-        )
+        return redirect("accounts:dashboard")
 
     if request.user.is_cosmetologist_verified:
-        return redirect(
-            "accounts:dashboard"
-        )
+        return redirect("accounts:dashboard")
 
     return render(
         request,
@@ -67,16 +57,12 @@ def dashboard(request):
     today = current_datetime.date()
     current_time = current_datetime.time()
 
-    bookings = (
-        request.user.bookings
-        .select_related(
-            "procedure",
-            "procedure__category",
-        )
-        .order_by(
-            "-date",
-            "-start_time",
-        )
+    bookings = request.user.bookings.select_related(
+        "procedure",
+        "procedure__category",
+    ).order_by(
+        "-date",
+        "-start_time",
     )
 
     upcoming_bookings = bookings.filter(
@@ -108,33 +94,22 @@ def dashboard(request):
         )
     )
 
-    orders = (
-        request.user.orders
-        .prefetch_related(
-            "items",
-            "items__product",
-        )
-        .order_by("-created_at")
-    )
+    orders = request.user.orders.prefetch_related(
+        "items",
+        "items__product",
+    ).order_by("-created_at")
 
-    course_enrollments = (
-        request.user.course_enrollments
-        .select_related("course")
-        .order_by("-enrolled_at")
-    )
+    course_enrollments = request.user.course_enrollments.select_related(
+        "course"
+    ).order_by("-enrolled_at")
 
     context = {
-        "upcoming_bookings": (
-            upcoming_bookings
-        ),
+        "upcoming_bookings": (upcoming_bookings),
         "booking_history": booking_history,
         "orders": orders,
-        "course_enrollments": (
-            course_enrollments
-        ),
+        "course_enrollments": (course_enrollments),
         "verification_status": (
-            request.user
-            .cosmetologist_verification_status
+            request.user.cosmetologist_verification_status
         ),
     }
 
@@ -158,19 +133,12 @@ def profile_update(request):
 
             messages.success(
                 request,
-                (
-                    "Дані профілю успішно "
-                    "оновлено."
-                ),
+                ("Дані профілю успішно " "оновлено."),
             )
 
-            return redirect(
-                "accounts:dashboard"
-            )
+            return redirect("accounts:dashboard")
     else:
-        form = UserProfileForm(
-            instance=request.user
-        )
+        form = UserProfileForm(instance=request.user)
 
     return render(
         request,

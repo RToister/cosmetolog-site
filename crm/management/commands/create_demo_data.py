@@ -38,40 +38,29 @@ class Command(BaseCommand):
         parser.add_argument(
             "--clear",
             action="store_true",
-            help=(
-                "Підтверджує очищення наявних "
-                "бізнес-даних."
-            ),
+            help=("Підтверджує очищення наявних " "бізнес-даних."),
         )
 
     def ensure_local_environment(self, clear):
         if not settings.DEBUG:
             raise CommandError(
-                "Команду дозволено запускати лише "
-                "при DEBUG=True."
+                "Команду дозволено запускати лише " "при DEBUG=True."
             )
 
         database = settings.DATABASES["default"]
 
-        if (
-                database["ENGINE"]
-                != "django.db.backends.sqlite3"
-        ):
+        if database["ENGINE"] != "django.db.backends.sqlite3":
             raise CommandError(
-                "Команда призначена лише для "
-                "локальної SQLite-бази."
+                "Команда призначена лише для " "локальної SQLite-бази."
             )
 
         if not clear:
             raise CommandError(
-                "Для очищення даних додайте "
-                "прапорець --clear."
+                "Для очищення даних додайте " "прапорець --clear."
             )
 
     def clear_business_data(self):
-        self.stdout.write(
-            "Очищення бізнес-даних..."
-        )
+        self.stdout.write("Очищення бізнес-даних...")
 
         VisitComment.objects.all().delete()
         Booking.objects.all().delete()
@@ -107,40 +96,27 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(
-            self.style.SUCCESS(
-                "Створено графік: щодня 08:00–21:00."
-            )
+            self.style.SUCCESS("Створено графік: щодня 08:00–21:00.")
         )
 
     def create_procedures(self):
-        injection_category = (
-            ProcedureCategory.objects.create(
-                name="Ін’єкційна косметологія",
-                description=(
-                    "Ін’єкційні процедури для "
-                    "корекції та омолодження."
-                ),
-            )
+        injection_category = ProcedureCategory.objects.create(
+            name="Ін’єкційна косметологія",
+            description=(
+                "Ін’єкційні процедури для " "корекції та омолодження."
+            ),
         )
 
-        skincare_category = (
-            ProcedureCategory.objects.create(
-                name="Догляд за шкірою",
-                description=(
-                    "Професійні процедури очищення "
-                    "та відновлення шкіри."
-                ),
-            )
+        skincare_category = ProcedureCategory.objects.create(
+            name="Догляд за шкірою",
+            description=(
+                "Професійні процедури очищення " "та відновлення шкіри."
+            ),
         )
 
-        consultation_category = (
-            ProcedureCategory.objects.create(
-                name="Консультації",
-                description=(
-                    "Консультації "
-                    "косметолога-дерматолога."
-                ),
-            )
+        consultation_category = ProcedureCategory.objects.create(
+            name="Консультації",
+            description=("Консультації " "косметолога-дерматолога."),
         )
 
         return {
@@ -158,9 +134,7 @@ class Command(BaseCommand):
             "botox": Procedure.objects.create(
                 category=injection_category,
                 name="Ботулінотерапія",
-                description=(
-                    "Корекція мімічних зморшок."
-                ),
+                description=("Корекція мімічних зморшок."),
                 duration_minutes=60,
                 price=Decimal("3500.00"),
                 is_active=True,
@@ -168,10 +142,7 @@ class Command(BaseCommand):
             "mesotherapy": Procedure.objects.create(
                 category=injection_category,
                 name="Мезотерапія обличчя",
-                description=(
-                    "Ін’єкційне зволоження та "
-                    "відновлення шкіри."
-                ),
+                description=("Ін’єкційне зволоження та " "відновлення шкіри."),
                 duration_minutes=90,
                 price=Decimal("2800.00"),
                 is_active=True,
@@ -179,9 +150,7 @@ class Command(BaseCommand):
             "cleaning": Procedure.objects.create(
                 category=skincare_category,
                 name="Комбінована чистка обличчя",
-                description=(
-                    "Комплексне очищення шкіри."
-                ),
+                description=("Комплексне очищення шкіри."),
                 duration_minutes=90,
                 price=Decimal("1600.00"),
                 is_active=True,
@@ -189,9 +158,7 @@ class Command(BaseCommand):
             "peeling": Procedure.objects.create(
                 category=skincare_category,
                 name="Хімічний пілінг",
-                description=(
-                    "Оновлення текстури та тону шкіри."
-                ),
+                description=("Оновлення текстури та тону шкіри."),
                 duration_minutes=60,
                 price=Decimal("1400.00"),
                 is_active=True,
@@ -201,10 +168,7 @@ class Command(BaseCommand):
     def create_products(self):
         skincare = ProductCategory.objects.create(
             name="Домашній догляд",
-            description=(
-                "Косметика для щоденного "
-                "домашнього догляду."
-            ),
+            description=("Косметика для щоденного " "домашнього догляду."),
         )
 
         professional = ProductCategory.objects.create(
@@ -220,19 +184,13 @@ class Command(BaseCommand):
                 category=skincare,
                 name="Очищувальний гель",
                 sku="DRT-CLEAN-001",
-                description=(
-                    "М’який гель для щоденного "
-                    "очищення."
-                ),
+                description=("М’який гель для щоденного " "очищення."),
                 usage_recommendations=(
-                    "Використовувати вранці "
-                    "та ввечері."
+                    "Використовувати вранці " "та ввечері."
                 ),
                 retail_price=Decimal("780.00"),
                 professional_price=Decimal("590.00"),
-                availability=(
-                    Product.Availability.PUBLIC
-                ),
+                availability=(Product.Availability.PUBLIC),
                 stock_quantity=25,
                 is_active=True,
             ),
@@ -241,17 +199,12 @@ class Command(BaseCommand):
                 name="Відновлювальний крем",
                 sku="DRT-CREAM-001",
                 description=(
-                    "Крем для відновлення захисного "
-                    "бар’єра шкіри."
+                    "Крем для відновлення захисного " "бар’єра шкіри."
                 ),
-                usage_recommendations=(
-                    "Наносити після очищення."
-                ),
+                usage_recommendations=("Наносити після очищення."),
                 retail_price=Decimal("1150.00"),
                 professional_price=Decimal("870.00"),
-                availability=(
-                    Product.Availability.PUBLIC
-                ),
+                availability=(Product.Availability.PUBLIC),
                 stock_quantity=18,
                 is_active=True,
             ),
@@ -259,19 +212,11 @@ class Command(BaseCommand):
                 category=skincare,
                 name="Сонцезахисний крем SPF 50",
                 sku="DRT-SPF-001",
-                description=(
-                    "Щоденний захист шкіри "
-                    "від ультрафіолету."
-                ),
-                usage_recommendations=(
-                    "Наносити за 15 хвилин "
-                    "до виходу."
-                ),
+                description=("Щоденний захист шкіри " "від ультрафіолету."),
+                usage_recommendations=("Наносити за 15 хвилин " "до виходу."),
                 retail_price=Decimal("980.00"),
                 professional_price=Decimal("740.00"),
-                availability=(
-                    Product.Availability.PUBLIC
-                ),
+                availability=(Product.Availability.PUBLIC),
                 stock_quantity=30,
                 is_active=True,
             ),
@@ -279,44 +224,29 @@ class Command(BaseCommand):
                 category=skincare,
                 name="Зволожувальна сироватка",
                 sku="DRT-SERUM-001",
-                description=(
-                    "Сироватка з гіалуроновою "
-                    "кислотою."
-                ),
-                usage_recommendations=(
-                    "Наносити перед кремом."
-                ),
+                description=("Сироватка з гіалуроновою " "кислотою."),
+                usage_recommendations=("Наносити перед кремом."),
                 retail_price=Decimal("1350.00"),
                 professional_price=Decimal("990.00"),
-                availability=(
-                    Product.Availability.PUBLIC
-                ),
+                availability=(Product.Availability.PUBLIC),
                 stock_quantity=20,
                 is_active=True,
             ),
             "professional_mask": (
                 Product.objects.create(
                     category=professional,
-                    name=(
-                        "Професійна альгінатна маска"
-                    ),
+                    name=("Професійна альгінатна маска"),
                     sku="DRT-PRO-MASK-001",
                     description=(
-                        "Професійна маска для "
-                        "кабінетного використання."
+                        "Професійна маска для " "кабінетного використання."
                     ),
                     usage_recommendations=(
                         "Використовувати відповідно "
                         "до професійного протоколу."
                     ),
                     retail_price=None,
-                    professional_price=(
-                        Decimal("650.00")
-                    ),
-                    availability=(
-                        Product.Availability
-                        .PROFESSIONALS_ONLY
-                    ),
+                    professional_price=(Decimal("650.00")),
+                    availability=(Product.Availability.PROFESSIONALS_ONLY),
                     stock_quantity=15,
                     is_active=True,
                 )
@@ -324,8 +254,8 @@ class Command(BaseCommand):
         }
 
     def create_users_and_customers(
-            self,
-            admin_user,
+        self,
+        admin_user,
     ):
         demo_users = {
             "maria": {
@@ -342,9 +272,7 @@ class Command(BaseCommand):
                 "last_name": "Бондар",
                 "email": "olena@example.com",
                 "phone_number": "+380502223344",
-                "user_type": (
-                    User.UserType.COSMETOLOGIST
-                ),
+                "user_type": (User.UserType.COSMETOLOGIST),
             },
         }
 
@@ -355,9 +283,7 @@ class Command(BaseCommand):
                 **user_data,
             )
             user.set_unusable_password()
-            user.save(
-                update_fields=("password",)
-            )
+            user.save(update_fields=("password",))
             users[key] = user
 
         users["olena"].verify_cosmetologist(
@@ -404,29 +330,24 @@ class Command(BaseCommand):
                 "Наталія Ткаченко",
                 "+380505556677",
                 Customer.CustomerType.COSMETOLOGIST,
-                (
-                    "Цікавиться професійним "
-                    "навчанням."
-                ),
+                ("Цікавиться професійним " "навчанням."),
                 None,
             ),
         ]
 
         for (
-                key,
-                full_name,
-                phone_number,
-                customer_type,
-                notes,
-                user,
+            key,
+            full_name,
+            phone_number,
+            customer_type,
+            notes,
+            user,
         ) in customer_data:
-            customer, created = (
-                Customer.objects.get_or_create_by_phone(
-                    full_name=full_name,
-                    phone_number=phone_number,
-                    user=user,
-                    customer_type=customer_type,
-                )
+            customer, created = Customer.objects.get_or_create_by_phone(
+                full_name=full_name,
+                phone_number=phone_number,
+                user=user,
+                customer_type=customer_type,
             )
 
             customer.notes = notes
@@ -444,10 +365,10 @@ class Command(BaseCommand):
         return users, customers
 
     def create_bookings(
-            self,
-            procedures,
-            customers,
-            admin_user,
+        self,
+        procedures,
+        customers,
+        admin_user,
     ):
         today = timezone.localdate()
 
@@ -458,10 +379,7 @@ class Command(BaseCommand):
                 today + timedelta(days=1),
                 time(9, 0),
                 Booking.Status.CONFIRMED,
-                (
-                    "Потрібна консультація "
-                    "щодо догляду."
-                ),
+                ("Потрібна консультація " "щодо догляду."),
             ),
             (
                 customers["anna"],
@@ -485,10 +403,7 @@ class Command(BaseCommand):
                 today + timedelta(days=3),
                 time(13, 0),
                 Booking.Status.PENDING,
-                (
-                    "Уточнити зони перед "
-                    "процедурою."
-                ),
+                ("Уточнити зони перед " "процедурою."),
             ),
             (
                 customers["natalia"],
@@ -503,12 +418,12 @@ class Command(BaseCommand):
         bookings = []
 
         for (
-                customer,
-                procedure,
-                booking_date,
-                start_time,
-                status,
-                client_note,
+            customer,
+            procedure,
+            booking_date,
+            start_time,
+            status,
+            client_note,
         ) in booking_data:
             booking = Booking.objects.create(
                 client=customer.user,
@@ -529,10 +444,7 @@ class Command(BaseCommand):
         VisitComment.objects.create(
             booking=bookings[0],
             author=admin_user,
-            comment=(
-                "Проведено первинну оцінку "
-                "стану шкіри."
-            ),
+            comment=("Проведено первинну оцінку " "стану шкіри."),
             recommendations=(
                 "Використовувати м’яке очищення, "
                 "зволожувальний крем та SPF 50."
@@ -542,27 +454,21 @@ class Command(BaseCommand):
         return bookings
 
     def create_orders(
-            self,
-            products,
-            users,
-            customers,
-            admin_user,
+        self,
+        products,
+        users,
+        customers,
+        admin_user,
     ):
         first_order = Order.objects.create(
             client=users["maria"],
             customer=customers["maria"],
-            client_name=(
-                customers["maria"].full_name
-            ),
-            client_phone=(
-                customers["maria"].phone_number
-            ),
+            client_name=(customers["maria"].full_name),
+            client_phone=(customers["maria"].phone_number),
             created_by=admin_user,
             status=Order.Status.PENDING,
             source=Order.Source.ONLINE,
-            payment_method=(
-                Order.PaymentMethod.CARD
-            ),
+            payment_method=(Order.PaymentMethod.CARD),
         )
 
         OrderItem.objects.create(
@@ -581,18 +487,12 @@ class Command(BaseCommand):
 
         second_order = Order.objects.create(
             customer=customers["anna"],
-            client_name=(
-                customers["anna"].full_name
-            ),
-            client_phone=(
-                customers["anna"].phone_number
-            ),
+            client_name=(customers["anna"].full_name),
+            client_phone=(customers["anna"].phone_number),
             created_by=admin_user,
             status=Order.Status.PENDING,
             source=Order.Source.CLINIC,
-            payment_method=(
-                Order.PaymentMethod.CASH
-            ),
+            payment_method=(Order.PaymentMethod.CASH),
         )
 
         OrderItem.objects.create(
@@ -606,18 +506,12 @@ class Command(BaseCommand):
         third_order = Order.objects.create(
             client=users["olena"],
             customer=customers["olena"],
-            client_name=(
-                customers["olena"].full_name
-            ),
-            client_phone=(
-                customers["olena"].phone_number
-            ),
+            client_name=(customers["olena"].full_name),
+            client_phone=(customers["olena"].phone_number),
             created_by=admin_user,
             status=Order.Status.PENDING,
             source=Order.Source.CLINIC,
-            payment_method=(
-                Order.PaymentMethod.BANK_TRANSFER
-            ),
+            payment_method=(Order.PaymentMethod.BANK_TRANSFER),
         )
 
         OrderItem.objects.create(
@@ -628,9 +522,7 @@ class Command(BaseCommand):
 
         OrderItem.objects.create(
             order=third_order,
-            product=products[
-                "professional_mask"
-            ],
+            product=products["professional_mask"],
             quantity=2,
         )
 
@@ -638,12 +530,8 @@ class Command(BaseCommand):
 
         pending_order = Order.objects.create(
             customer=customers["sofia"],
-            client_name=(
-                customers["sofia"].full_name
-            ),
-            client_phone=(
-                customers["sofia"].phone_number
-            ),
+            client_name=(customers["sofia"].full_name),
+            client_phone=(customers["sofia"].phone_number),
             created_by=admin_user,
             status=Order.Status.PENDING,
             source=Order.Source.ONLINE,
@@ -657,132 +545,88 @@ class Command(BaseCommand):
         )
 
     def create_courses(
-            self,
-            users,
-            customers,
-            admin_user,
+        self,
+        users,
+        customers,
+        admin_user,
     ):
         today = timezone.localdate()
 
         skincare_course = Course.objects.create(
             title="Базовий домашній догляд",
             description=(
-                "Практичний курс із підбору "
-                "щоденного догляду за шкірою."
+                "Практичний курс із підбору " "щоденного догляду за шкірою."
             ),
             audience=Course.Audience.EVERYONE,
-            training_type=(
-                Course.TrainingType.GROUP
-            ),
+            training_type=(Course.TrainingType.GROUP),
             format=Course.Format.ONLINE,
             duration_hours=4,
             price=Decimal("1200.00"),
-            start_date=(
-                    today + timedelta(days=14)
-            ),
+            start_date=(today + timedelta(days=14)),
             location="Онлайн",
             is_published=True,
         )
 
-        professional_course = (
-            Course.objects.create(
-                title="Професійні пілінги",
-                description=(
-                    "Поглиблений курс для "
-                    "практикуючих косметологів."
-                ),
-                audience=(
-                    Course.Audience.COSMETOLOGISTS
-                ),
-                training_type=(
-                    Course.TrainingType.BOTH
-                ),
-                format=Course.Format.HYBRID,
-                duration_hours=12,
-                price=Decimal("6500.00"),
-                start_date=(
-                        today + timedelta(days=30)
-                ),
-                location="Клініка DR TOISTER",
-                is_published=True,
-            )
+        professional_course = Course.objects.create(
+            title="Професійні пілінги",
+            description=("Поглиблений курс для " "практикуючих косметологів."),
+            audience=(Course.Audience.COSMETOLOGISTS),
+            training_type=(Course.TrainingType.BOTH),
+            format=Course.Format.HYBRID,
+            duration_hours=12,
+            price=Decimal("6500.00"),
+            start_date=(today + timedelta(days=30)),
+            location="Клініка DR TOISTER",
+            is_published=True,
         )
 
         CourseEnrollment.objects.create(
             student=users["maria"],
             customer=customers["maria"],
-            applicant_name=(
-                customers["maria"].full_name
-            ),
-            applicant_phone=(
-                customers["maria"].phone_number
-            ),
-            applicant_comment=(
-                "Хочу покращити домашній догляд."
-            ),
+            applicant_name=(customers["maria"].full_name),
+            applicant_phone=(customers["maria"].phone_number),
+            applicant_comment=("Хочу покращити домашній догляд."),
             course=skincare_course,
             created_by=admin_user,
-            status=(
-                CourseEnrollment.Status.CONFIRMED
-            ),
-            source=(
-                CourseEnrollment.Source.ONLINE
-            ),
+            status=(CourseEnrollment.Status.CONFIRMED),
+            source=(CourseEnrollment.Source.ONLINE),
         )
 
         CourseEnrollment.objects.create(
             student=users["olena"],
             customer=customers["olena"],
-            applicant_name=(
-                customers["olena"].full_name
-            ),
-            applicant_phone=(
-                customers["olena"].phone_number
-            ),
-            applicant_comment=(
-                "Цікавить індивідуальний формат."
-            ),
+            applicant_name=(customers["olena"].full_name),
+            applicant_phone=(customers["olena"].phone_number),
+            applicant_comment=("Цікавить індивідуальний формат."),
             course=professional_course,
             created_by=admin_user,
-            status=(
-                CourseEnrollment.Status.COMPLETED
-            ),
-            source=(
-                CourseEnrollment.Source.CLINIC
-            ),
+            status=(CourseEnrollment.Status.COMPLETED),
+            source=(CourseEnrollment.Source.CLINIC),
         )
 
         CourseEnrollment.objects.create(
             customer=customers["natalia"],
-            applicant_name=(
-                customers["natalia"].full_name
-            ),
-            applicant_phone=(
-                customers["natalia"].phone_number
-            ),
-            applicant_comment=(
-                "Потрібні деталі програми."
-            ),
+            applicant_name=(customers["natalia"].full_name),
+            applicant_phone=(customers["natalia"].phone_number),
+            applicant_comment=("Потрібні деталі програми."),
             course=professional_course,
             created_by=admin_user,
-            status=(
-                CourseEnrollment.Status.PENDING
-            ),
-            source=(
-                CourseEnrollment.Source.ONLINE
-            ),
+            status=(CourseEnrollment.Status.PENDING),
+            source=(CourseEnrollment.Source.ONLINE),
         )
 
     @transaction.atomic
     def handle(self, *args, **options):
-        self.ensure_local_environment(
-            options["clear"]
-        )
+        self.ensure_local_environment(options["clear"])
 
-        admin_user = User.objects.filter(
-            is_superuser=True,
-            is_active=True,
-        ).order_by("pk").first()
+        admin_user = (
+            User.objects.filter(
+                is_superuser=True,
+                is_active=True,
+            )
+            .order_by("pk")
+            .first()
+        )
 
         if admin_user is None:
             raise CommandError(
@@ -804,11 +648,7 @@ class Command(BaseCommand):
         procedures = self.create_procedures()
         products = self.create_products()
 
-        users, customers = (
-            self.create_users_and_customers(
-                admin_user
-            )
-        )
+        users, customers = self.create_users_and_customers(admin_user)
 
         bookings = self.create_bookings(
             procedures,
@@ -831,40 +671,18 @@ class Command(BaseCommand):
 
         self.stdout.write("")
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                "Демонстраційну базу створено."
-            )
-        )
+        self.stdout.write(self.style.SUCCESS("Демонстраційну базу створено."))
 
-        self.stdout.write(
-            f"Клієнтів CRM: "
-            f"{Customer.objects.count()}"
-        )
+        self.stdout.write(f"Клієнтів CRM: " f"{Customer.objects.count()}")
 
-        self.stdout.write(
-            f"Процедур: "
-            f"{Procedure.objects.count()}"
-        )
+        self.stdout.write(f"Процедур: " f"{Procedure.objects.count()}")
 
-        self.stdout.write(
-            f"Товарів: "
-            f"{Product.objects.count()}"
-        )
+        self.stdout.write(f"Товарів: " f"{Product.objects.count()}")
 
-        self.stdout.write(
-            f"Записів: {len(bookings)}"
-        )
+        self.stdout.write(f"Записів: {len(bookings)}")
 
-        self.stdout.write(
-            f"Замовлень: "
-            f"{Order.objects.count()}"
-        )
+        self.stdout.write(f"Замовлень: " f"{Order.objects.count()}")
 
-        self.stdout.write(
-            f"Курсів: {Course.objects.count()}"
-        )
+        self.stdout.write(f"Курсів: {Course.objects.count()}")
 
-        self.stdout.write(
-            "Графік: щодня з 08:00 до 21:00."
-        )
+        self.stdout.write("Графік: щодня з 08:00 до 21:00.")

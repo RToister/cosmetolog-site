@@ -27,9 +27,7 @@ class CustomerAdmin(admin.ModelAdmin):
         "user__first_name",
         "user__last_name",
     )
-    autocomplete_fields = (
-        "user",
-    )
+    autocomplete_fields = ("user",)
     readonly_fields = (
         "first_contact_at",
         "last_activity_at",
@@ -41,9 +39,7 @@ class CustomerAdmin(admin.ModelAdmin):
         "is_active",
     )
     date_hierarchy = "first_contact_at"
-    ordering = (
-        "-last_activity_at",
-    )
+    ordering = ("-last_activity_at",)
 
     fieldsets = (
         (
@@ -60,11 +56,7 @@ class CustomerAdmin(admin.ModelAdmin):
         ),
         (
             "Нотатки лікаря",
-            {
-                "fields": (
-                    "notes",
-                )
-            },
+            {"fields": ("notes",)},
         ),
         (
             "Системна інформація",

@@ -27,17 +27,13 @@ class BookingForm(forms.ModelForm):
         widgets = {
             "client_name": forms.TextInput(
                 attrs={
-                    "placeholder": (
-                        "Введіть ваше ім’я"
-                    ),
+                    "placeholder": ("Введіть ваше ім’я"),
                     "autocomplete": "name",
                 }
             ),
             "client_phone": forms.TextInput(
                 attrs={
-                    "placeholder": (
-                        "+380991112233"
-                    ),
+                    "placeholder": ("+380991112233"),
                     "autocomplete": "tel",
                 }
             ),
@@ -52,18 +48,17 @@ class BookingForm(forms.ModelForm):
                 attrs={
                     "rows": 4,
                     "placeholder": (
-                        "Ваші побажання або "
-                        "додаткова інформація"
+                        "Ваші побажання або " "додаткова інформація"
                     ),
                 }
             ),
         }
 
     def __init__(
-            self,
-            *args,
-            user=None,
-            **kwargs,
+        self,
+        *args,
+        user=None,
+        **kwargs,
     ):
         super().__init__(
             *args,
@@ -83,17 +78,12 @@ class BookingForm(forms.ModelForm):
             )
         )
 
-        self.fields["procedure"].empty_label = (
-            "Оберіть процедуру"
-        )
+        self.fields["procedure"].empty_label = "Оберіть процедуру"
 
         self.fields["start_time"].choices = [
             (
                 "",
-                (
-                    "Спочатку оберіть "
-                    "процедуру та дату"
-                ),
+                ("Спочатку оберіть " "процедуру та дату"),
             )
         ]
 
@@ -102,41 +92,26 @@ class BookingForm(forms.ModelForm):
         ] = timezone.localdate().isoformat()
 
         if user and user.is_authenticated:
-            self.fields[
-                "client_name"
-            ].initial = (
-                    user.get_full_name()
-                    or user.username
+            self.fields["client_name"].initial = (
+                user.get_full_name() or user.username
             )
 
-            self.fields[
-                "client_phone"
-            ].initial = user.phone_number
+            self.fields["client_phone"].initial = user.phone_number
 
-        for field_name, field in (
-                self.fields.items()
-        ):
+        for field_name, field in self.fields.items():
             if field_name in (
-                    "procedure",
-                    "start_time",
+                "procedure",
+                "start_time",
             ):
-                field.widget.attrs[
-                    "class"
-                ] = "form-select"
+                field.widget.attrs["class"] = "form-select"
             else:
-                field.widget.attrs[
-                    "class"
-                ] = "form-control"
+                field.widget.attrs["class"] = "form-control"
 
         if self.is_bound:
-            selected_time = self.data.get(
-                "start_time"
-            )
+            selected_time = self.data.get("start_time")
 
             if selected_time:
-                self.fields[
-                    "start_time"
-                ].choices = [
+                self.fields["start_time"].choices = [
                     (
                         selected_time,
                         selected_time,
@@ -144,37 +119,24 @@ class BookingForm(forms.ModelForm):
                 ]
 
     def clean_client_name(self):
-        client_name = self.cleaned_data[
-            "client_name"
-        ].strip()
+        client_name = self.cleaned_data["client_name"].strip()
 
         if len(client_name) < 2:
             raise ValidationError(
-                "Ім’я повинно містити "
-                "щонайменше 2 символи."
+                "Ім’я повинно містити " "щонайменше 2 символи."
             )
 
         return client_name
 
     def clean_client_phone(self):
-        return normalize_phone_number(
-            self.cleaned_data[
-                "client_phone"
-            ]
-        )
+        return normalize_phone_number(self.cleaned_data["client_phone"])
 
     def clean_date(self):
-        booking_date = self.cleaned_data[
-            "date"
-        ]
+        booking_date = self.cleaned_data["date"]
 
-        if (
-                booking_date
-                < timezone.localdate()
-        ):
+        if booking_date < timezone.localdate():
             raise ValidationError(
-                "Неможливо створити запис "
-                "на минулу дату."
+                "Неможливо створити запис " "на минулу дату."
             )
 
         return booking_date
@@ -196,18 +158,14 @@ class StaffBookingForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "autocomplete": "name",
-                    "placeholder": (
-                        "Ім’я клієнта"
-                    ),
+                    "placeholder": ("Ім’я клієнта"),
                 }
             ),
             "client_phone": forms.TextInput(
                 attrs={
                     "class": "form-control",
                     "autocomplete": "tel",
-                    "placeholder": (
-                        "+380991112233"
-                    ),
+                    "placeholder": ("+380991112233"),
                 }
             ),
             "procedure": forms.Select(
@@ -233,18 +191,15 @@ class StaffBookingForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "rows": 4,
-                    "placeholder": (
-                        "Коментар або "
-                        "побажання клієнта"
-                    ),
+                    "placeholder": ("Коментар або " "побажання клієнта"),
                 }
             ),
         }
 
     def __init__(
-            self,
-            *args,
-            **kwargs,
+        self,
+        *args,
+        **kwargs,
     ):
         super().__init__(
             *args,
@@ -262,46 +217,31 @@ class StaffBookingForm(forms.ModelForm):
             )
         )
 
-        self.fields["procedure"].empty_label = (
-            "Оберіть процедуру"
-        )
+        self.fields["procedure"].empty_label = "Оберіть процедуру"
 
         self.fields["date"].widget.attrs[
             "min"
         ] = timezone.localdate().isoformat()
 
     def clean_client_name(self):
-        client_name = self.cleaned_data[
-            "client_name"
-        ].strip()
+        client_name = self.cleaned_data["client_name"].strip()
 
         if len(client_name) < 2:
             raise ValidationError(
-                "Ім’я повинно містити "
-                "щонайменше 2 символи."
+                "Ім’я повинно містити " "щонайменше 2 символи."
             )
 
         return client_name
 
     def clean_client_phone(self):
-        return normalize_phone_number(
-            self.cleaned_data[
-                "client_phone"
-            ]
-        )
+        return normalize_phone_number(self.cleaned_data["client_phone"])
 
     def clean_date(self):
-        booking_date = self.cleaned_data[
-            "date"
-        ]
+        booking_date = self.cleaned_data["date"]
 
-        if (
-                booking_date
-                < timezone.localdate()
-        ):
+        if booking_date < timezone.localdate():
             raise ValidationError(
-                "Неможливо перенести запис "
-                "на минулу дату."
+                "Неможливо перенести запис " "на минулу дату."
             )
 
         return booking_date
@@ -320,8 +260,7 @@ class VisitCommentForm(forms.ModelForm):
                     "class": "form-control",
                     "rows": 5,
                     "placeholder": (
-                        "Результат огляду або "
-                        "коментар після процедури"
+                        "Результат огляду або " "коментар після процедури"
                     ),
                 }
             ),
@@ -329,27 +268,20 @@ class VisitCommentForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "rows": 5,
-                    "placeholder": (
-                        "Рекомендації щодо догляду"
-                    ),
+                    "placeholder": ("Рекомендації щодо догляду"),
                 }
             ),
         }
 
     def clean_comment(self):
-        comment = self.cleaned_data[
-            "comment"
-        ].strip()
+        comment = self.cleaned_data["comment"].strip()
 
         if len(comment) < 2:
             raise ValidationError(
-                "Коментар повинен містити "
-                "щонайменше 2 символи."
+                "Коментар повинен містити " "щонайменше 2 символи."
             )
 
         return comment
 
     def clean_recommendations(self):
-        return self.cleaned_data[
-            "recommendations"
-        ].strip()
+        return self.cleaned_data["recommendations"].strip()

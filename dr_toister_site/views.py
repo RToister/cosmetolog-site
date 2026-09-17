@@ -21,36 +21,20 @@ def home(request):
         )[:6]
     )
 
-    public_courses = (
-        Course.objects.filter(
-            is_published=True,
-            audience=Course.Audience.EVERYONE,
-        )
-        .order_by(
-            "start_date",
-            "title",
-        )[:3]
-    )
+    public_courses = Course.objects.filter(
+        is_published=True,
+        audience=Course.Audience.EVERYONE,
+    ).order_by("start_date", "title",)[:3]
 
-    professional_courses = (
-        Course.objects.filter(
-            is_published=True,
-            audience=(
-                Course.Audience.COSMETOLOGISTS
-            ),
-        )
-        .order_by(
-            "start_date",
-            "title",
-        )[:3]
-    )
+    professional_courses = Course.objects.filter(
+        is_published=True,
+        audience=(Course.Audience.COSMETOLOGISTS),
+    ).order_by("start_date", "title",)[:3]
 
     products = (
         Product.objects.filter(
             is_active=True,
-            availability=(
-                Product.Availability.PUBLIC
-            ),
+            availability=(Product.Availability.PUBLIC),
         )
         .select_related("category")
         .order_by("name")[:4]
@@ -62,9 +46,7 @@ def home(request):
         {
             "procedures": procedures,
             "public_courses": public_courses,
-            "professional_courses": (
-                professional_courses
-            ),
+            "professional_courses": (professional_courses),
             "products": products,
         },
     )

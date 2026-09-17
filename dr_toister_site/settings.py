@@ -5,9 +5,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(
-    BASE_DIR / ".env"
-)
+load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
@@ -15,11 +13,11 @@ SECRET_KEY = os.getenv(
 )
 
 DEBUG = (
-        os.getenv(
-            "DJANGO_DEBUG",
-            "True",
-        ).lower()
-        == "true"
+    os.getenv(
+        "DJANGO_DEBUG",
+        "True",
+    ).lower()
+    == "true"
 )
 
 ALLOWED_HOSTS = [
@@ -50,61 +48,35 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    (
-        "django.contrib.sessions.middleware."
-        "SessionMiddleware"
-    ),
+    ("django.contrib.sessions.middleware." "SessionMiddleware"),
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    (
-        "django.contrib.auth.middleware."
-        "AuthenticationMiddleware"
-    ),
-    (
-        "django.contrib.messages.middleware."
-        "MessageMiddleware"
-    ),
-    (
-        "django.middleware.clickjacking."
-        "XFrameOptionsMiddleware"
-    ),
+    ("django.contrib.auth.middleware." "AuthenticationMiddleware"),
+    ("django.contrib.messages.middleware." "MessageMiddleware"),
+    ("django.middleware.clickjacking." "XFrameOptionsMiddleware"),
 ]
 
 ROOT_URLCONF = "dr_toister_site.urls"
 
 TEMPLATES = [
     {
-        "BACKEND": (
-            "django.template.backends.django."
-            "DjangoTemplates"
-        ),
+        "BACKEND": ("django.template.backends.django." "DjangoTemplates"),
         "DIRS": [
             BASE_DIR / "templates",
         ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                (
-                    "django.template.context_processors."
-                    "request"
-                ),
-                (
-                    "django.contrib.auth."
-                    "context_processors.auth"
-                ),
-                (
-                    "django.contrib.messages."
-                    "context_processors.messages"
-                ),
+                ("django.template.context_processors." "request"),
+                ("django.contrib.auth." "context_processors.auth"),
+                ("django.contrib.messages." "context_processors.messages"),
                 "shop.context_processors.cart",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = (
-    "dr_toister_site.wsgi.application"
-)
+WSGI_APPLICATION = "dr_toister_site.wsgi.application"
 
 DATABASES = {
     "default": {
@@ -124,8 +96,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": (
-            "django.contrib.auth.password_validation."
-            "MinimumLengthValidator"
+            "django.contrib.auth.password_validation." "MinimumLengthValidator"
         ),
     },
     {
@@ -152,11 +123,13 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-] if (
-        BASE_DIR / "static"
-).exists() else []
+STATICFILES_DIRS = (
+    [
+        BASE_DIR / "static",
+    ]
+    if (BASE_DIR / "static").exists()
+    else []
+)
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -164,14 +137,9 @@ MEDIA_URL = "media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
-EMAIL_BACKEND = (
-    "django.core.mail.backends.console."
-    "EmailBackend"
-)
+EMAIL_BACKEND = "django.core.mail.backends.console." "EmailBackend"
 
-DEFAULT_AUTO_FIELD = (
-    "django.db.models.BigAutoField"
-)
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "accounts:login"
 
@@ -180,11 +148,11 @@ LOGIN_REDIRECT_URL = "accounts:dashboard"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 TELEGRAM_NOTIFICATIONS_ENABLED = (
-        os.getenv(
-            "TELEGRAM_NOTIFICATIONS_ENABLED",
-            "False",
-        ).lower()
-        == "true"
+    os.getenv(
+        "TELEGRAM_NOTIFICATIONS_ENABLED",
+        "False",
+    ).lower()
+    == "true"
 )
 
 TELEGRAM_BOT_TOKEN = os.getenv(

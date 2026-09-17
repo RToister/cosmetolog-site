@@ -46,20 +46,12 @@ class OrderStatusForm(forms.Form):
         cleaned_data = super().clean()
 
         status = cleaned_data.get("status")
-        payment_method = cleaned_data.get(
-            "payment_method"
-        )
+        payment_method = cleaned_data.get("payment_method")
 
-        if (
-                status == Order.Status.PAID
-                and not payment_method
-        ):
+        if status == Order.Status.PAID and not payment_method:
             self.add_error(
                 "payment_method",
-                (
-                    "Для оплаченого замовлення "
-                    "оберіть спосіб оплати."
-                ),
+                ("Для оплаченого замовлення " "оберіть спосіб оплати."),
             )
 
         return cleaned_data

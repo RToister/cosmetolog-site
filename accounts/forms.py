@@ -48,11 +48,10 @@ class UserRegistrationForm(UserCreationForm):
         )
 
         if User.objects.filter(
-                phone_number=phone_number,
+            phone_number=phone_number,
         ).exists():
             raise forms.ValidationError(
-                "Користувач із таким номером "
-                "уже існує."
+                "Користувач із таким номером " "уже існує."
             )
 
         return phone_number
@@ -60,9 +59,7 @@ class UserRegistrationForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
 
-        user.user_type = (
-            User.UserType.COSMETOLOGIST
-        )
+        user.user_type = User.UserType.COSMETOLOGIST
         user.is_cosmetologist_verified = False
         user.cosmetologist_verified_at = None
         user.cosmetologist_verified_by = None
@@ -100,14 +97,17 @@ class UserProfileForm(forms.ModelForm):
             self.cleaned_data["phone_number"]
         )
 
-        if User.objects.filter(
+        if (
+            User.objects.filter(
                 phone_number=phone_number,
-        ).exclude(
-            pk=self.instance.pk,
-        ).exists():
+            )
+            .exclude(
+                pk=self.instance.pk,
+            )
+            .exists()
+        ):
             raise forms.ValidationError(
-                "Користувач із таким номером "
-                "уже існує."
+                "Користувач із таким номером " "уже існує."
             )
 
         return phone_number

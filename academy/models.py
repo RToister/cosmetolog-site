@@ -93,9 +93,7 @@ class Course(models.Model):
         max_digits=10,
         decimal_places=2,
         validators=[
-            MinValueValidator(
-                Decimal("0.01")
-            ),
+            MinValueValidator(Decimal("0.01")),
         ],
     )
 
@@ -190,9 +188,7 @@ class CourseEnrollment(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         related_name="course_enrollments",
-        verbose_name=(
-            "Зареєстрований користувач"
-        ),
+        verbose_name=("Зареєстрований користувач"),
         null=True,
         blank=True,
     )
@@ -233,9 +229,7 @@ class CourseEnrollment(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
-        related_name=(
-            "created_course_enrollments"
-        ),
+        related_name=("created_course_enrollments"),
         verbose_name="Хто створив",
         null=True,
         blank=True,
@@ -275,83 +269,54 @@ class CourseEnrollment(models.Model):
     class Meta:
         ordering = ("-enrolled_at",)
         verbose_name = "Заявка на курс"
-        verbose_name_plural = (
-            "Заявки на курси"
-        )
+        verbose_name_plural = "Заявки на курси"
         constraints = [
             models.UniqueConstraint(
                 fields=(
                     "student",
                     "course",
                 ),
-                condition=(
-                        Q(student__isnull=False)
-                        & ~Q(status="cancelled")
-                ),
-                name=(
-                    "unique_active_course_enrollment"
-                ),
+                condition=(Q(student__isnull=False) & ~Q(status="cancelled")),
+                name=("unique_active_course_enrollment"),
             ),
         ]
 
     def clean(self):
         super().clean()
 
-        self.applicant_name = (
-            self.applicant_name.strip()
-        )
+        self.applicant_name = self.applicant_name.strip()
 
         if len(self.applicant_name) < 2:
             raise ValidationError(
                 {
                     "applicant_name": (
-                        "Ім’я повинно містити "
-                        "щонайменше 2 символи."
+                        "Ім’я повинно містити " "щонайменше 2 символи."
                     )
                 }
             )
 
-        self.applicant_phone = (
-            normalize_phone_number(
-                self.applicant_phone
-            )
-        )
+        self.applicant_phone = normalize_phone_number(self.applicant_phone)
 
-        self.applicant_comment = (
-            self.applicant_comment.strip()
-        )
+        self.applicant_comment = self.applicant_comment.strip()
 
     def save(self, *args, **kwargs):
         if self.student_id:
             if not self.applicant_name:
                 self.applicant_name = (
-                        self.student.get_full_name()
-                        or self.student.username
+                    self.student.get_full_name() or self.student.username
                 )
 
             if not self.applicant_phone:
-                self.applicant_phone = (
-                    self.student.phone_number
-                )
+                self.applicant_phone = self.student.phone_number
 
-        self.applicant_name = (
-            self.applicant_name.strip()
-        )
+        self.applicant_name = self.applicant_name.strip()
 
-        self.applicant_phone = (
-            normalize_phone_number(
-                self.applicant_phone
-            )
-        )
+        self.applicant_phone = normalize_phone_number(self.applicant_phone)
 
-        self.applicant_comment = (
-            self.applicant_comment.strip()
-        )
+        self.applicant_comment = self.applicant_comment.strip()
 
         if self._state.adding:
-            self.price_at_enrollment = (
-                self.course.price
-            )
+            self.price_at_enrollment = self.course.price
 
         self.full_clean()
 
@@ -361,7 +326,4 @@ class CourseEnrollment(models.Model):
         )
 
     def __str__(self):
-        return (
-            f"{self.applicant_name} — "
-            f"{self.course.title}"
-        )
+        return f"{self.applicant_name} — " f"{self.course.title}"

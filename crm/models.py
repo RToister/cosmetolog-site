@@ -10,40 +10,30 @@ from dr_toister_site.phone_numbers import (
 
 class CustomerManager(models.Manager):
     def get_or_create_by_phone(
-            self,
-            *,
-            full_name,
-            phone_number,
-            user=None,
-            customer_type=None,
+        self,
+        *,
+        full_name,
+        phone_number,
+        user=None,
+        customer_type=None,
     ):
-        normalized_phone = normalize_phone_number(
-            phone_number
-        )
+        normalized_phone = normalize_phone_number(phone_number)
 
         if customer_type is None:
-            customer_type = (
-                self.model.CustomerType.CLIENT
-            )
+            customer_type = self.model.CustomerType.CLIENT
 
         if (
-                user
-                and user.is_authenticated
-                and user.user_type == "cosmetologist"
+            user
+            and user.is_authenticated
+            and user.user_type == "cosmetologist"
         ):
-            customer_type = (
-                self.model.CustomerType.COSMETOLOGIST
-            )
+            customer_type = self.model.CustomerType.COSMETOLOGIST
 
         customer = self.filter(
             phone_number=normalized_phone,
         ).first()
 
-        if (
-                customer is None
-                and user
-                and user.is_authenticated
-        ):
+        if customer is None and user and user.is_authenticated:
             customer = self.filter(
                 user=user,
             ).first()
@@ -52,14 +42,7 @@ class CustomerManager(models.Manager):
             customer = self.create(
                 full_name=full_name,
                 phone_number=normalized_phone,
-                user=(
-                    user
-                    if (
-                            user
-                            and user.is_authenticated
-                    )
-                    else None
-                ),
+                user=(user if (user and user.is_authenticated) else None),
                 customer_type=customer_type,
                 last_activity_at=timezone.now(),
             )
@@ -69,40 +52,22 @@ class CustomerManager(models.Manager):
         fields_to_update = []
 
         if full_name and not customer.full_name:
-            customer.full_name = (
-                full_name.strip()
-            )
-            fields_to_update.append(
-                "full_name"
-            )
+            customer.full_name = full_name.strip()
+            fields_to_update.append("full_name")
 
-        if (
-                user
-                and user.is_authenticated
-                and customer.user_id is None
-        ):
+        if user and user.is_authenticated and customer.user_id is None:
             customer.user = user
             fields_to_update.append("user")
 
         if (
-                customer_type
-                == self.model.CustomerType.COSMETOLOGIST
-                and customer.customer_type
-                != self.model.CustomerType.COSMETOLOGIST
+            customer_type == self.model.CustomerType.COSMETOLOGIST
+            and customer.customer_type != self.model.CustomerType.COSMETOLOGIST
         ):
-            customer.customer_type = (
-                customer_type
-            )
-            fields_to_update.append(
-                "customer_type"
-            )
+            customer.customer_type = customer_type
+            fields_to_update.append("customer_type")
 
-        customer.last_activity_at = (
-            timezone.now()
-        )
-        fields_to_update.append(
-            "last_activity_at"
-        )
+        customer.last_activity_at = timezone.now()
+        fields_to_update.append("last_activity_at")
 
         customer.save(
             update_fields=fields_to_update,
@@ -192,60 +157,35 @@ class Customer(models.Model):
     def clean(self):
         super().clean()
 
-        self.full_name = (
-            self.full_name.strip()
-        )
+        self.full_name = self.full_name.strip()
 
         if len(self.full_name) < 2:
             raise ValidationError(
                 {
                     "full_name": (
-                        "Ім’я повинно містити "
-                        "щонайменше 2 символи."
+                        "Ім’я повинно містити " "щонайменше 2 символи."
                     )
                 }
             )
 
-        self.phone_number = (
-            normalize_phone_number(
-                self.phone_number
-            )
-        )
+        self.phone_number = normalize_phone_number(self.phone_number)
 
-        if (
-                self.user_id
-                and self.user.user_type
-                == "cosmetologist"
-        ):
-            self.customer_type = (
-                self.CustomerType.COSMETOLOGIST
-            )
+        if self.user_id and self.user.user_type == "cosmetologist":
+            self.customer_type = self.CustomerType.COSMETOLOGIST
 
     def save(self, *args, **kwargs):
         if self.user_id:
             if not self.full_name:
                 self.full_name = (
-                        self.user.get_full_name()
-                        or self.user.username
+                    self.user.get_full_name() or self.user.username
                 )
 
-            if (
-                    not self.phone_number
-                    and self.user.phone_number
-            ):
-                self.phone_number = (
-                    self.user.phone_number
-                )
+            if not self.phone_number and self.user.phone_number:
+                self.phone_number = self.user.phone_number
 
-        self.full_name = (
-            self.full_name.strip()
-        )
+        self.full_name = self.full_name.strip()
 
-        self.phone_number = (
-            normalize_phone_number(
-                self.phone_number
-            )
-        )
+        self.phone_number = normalize_phone_number(self.phone_number)
 
         self.full_clean()
 
@@ -255,9 +195,7 @@ class Customer(models.Model):
         )
 
     def touch(self):
-        self.last_activity_at = (
-            timezone.now()
-        )
+        self.last_activity_at = timezone.now()
 
         self.save(
             update_fields=(
@@ -267,7 +205,4 @@ class Customer(models.Model):
         )
 
     def __str__(self):
-        return (
-            f"{self.full_name} — "
-            f"{self.phone_number}"
-        )
+        return f"{self.full_name} — " f"{self.phone_number}"

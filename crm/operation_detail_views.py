@@ -68,9 +68,7 @@ def booking_status_update(request, pk):
         pk=pk,
     )
 
-    form = BookingStatusForm(
-        request.POST
-    )
+    form = BookingStatusForm(request.POST)
 
     if not form.is_valid():
         messages.error(
@@ -118,9 +116,7 @@ def order_detail(request, pk):
     status_form = OrderStatusForm(
         initial={
             "status": order.status,
-            "payment_method": (
-                order.payment_method
-            ),
+            "payment_method": (order.payment_method),
         }
     )
 
@@ -145,9 +141,7 @@ def order_status_update(request, pk):
         pk=pk,
     )
 
-    form = OrderStatusForm(
-        request.POST
-    )
+    form = OrderStatusForm(request.POST)
 
     if not form.is_valid():
         for errors in form.errors.values():
@@ -163,9 +157,7 @@ def order_status_update(request, pk):
         )
 
     new_status = form.cleaned_data["status"]
-    payment_method = form.cleaned_data[
-        "payment_method"
-    ]
+    payment_method = form.cleaned_data["payment_method"]
 
     try:
         if new_status == Order.Status.PAID:
@@ -230,9 +222,7 @@ def order_status_update(request, pk):
 
     except ValidationError as error:
         if hasattr(error, "messages"):
-            error_text = " ".join(
-                error.messages
-            )
+            error_text = " ".join(error.messages)
         else:
             error_text = str(error)
 
@@ -259,8 +249,8 @@ def order_status_update(request, pk):
 
 @staff_member_required
 def course_application_detail(
-        request,
-        pk,
+    request,
+    pk,
 ):
     application = get_object_or_404(
         CourseEnrollment.objects.select_related(
@@ -272,12 +262,10 @@ def course_application_detail(
         pk=pk,
     )
 
-    status_form = (
-        CourseApplicationStatusForm(
-            initial={
-                "status": application.status,
-            }
-        )
+    status_form = CourseApplicationStatusForm(
+        initial={
+            "status": application.status,
+        }
     )
 
     return render(
@@ -295,17 +283,15 @@ def course_application_detail(
 @staff_member_required
 @require_POST
 def course_application_status_update(
-        request,
-        pk,
+    request,
+    pk,
 ):
     application = get_object_or_404(
         CourseEnrollment,
         pk=pk,
     )
 
-    form = CourseApplicationStatusForm(
-        request.POST
-    )
+    form = CourseApplicationStatusForm(request.POST)
 
     if not form.is_valid():
         messages.error(

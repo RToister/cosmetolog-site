@@ -40,9 +40,7 @@ class AppointmentManagementTests(TestCase):
         )
 
     def setUp(self):
-        self.booking_date = (
-                date.today() + timedelta(days=7)
-        )
+        self.booking_date = date.today() + timedelta(days=7)
 
         WorkingHour.objects.update_or_create(
             day_of_week=self.booking_date.weekday(),
@@ -64,11 +62,9 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_anonymous_user_cannot_open_manage_list(
-            self,
+        self,
     ):
-        response = self.client.get(
-            reverse("appointments:manage-list")
-        )
+        response = self.client.get(reverse("appointments:manage-list"))
 
         self.assertEqual(
             response.status_code,
@@ -80,15 +76,11 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_regular_user_cannot_open_manage_list(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.regular_user
-        )
+        self.client.force_login(self.regular_user)
 
-        response = self.client.get(
-            reverse("appointments:manage-list")
-        )
+        response = self.client.get(reverse("appointments:manage-list"))
 
         self.assertEqual(
             response.status_code,
@@ -100,15 +92,11 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_staff_user_can_open_manage_list(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
-        response = self.client.get(
-            reverse("appointments:manage-list")
-        )
+        response = self.client.get(reverse("appointments:manage-list"))
 
         self.assertEqual(
             response.status_code,
@@ -124,11 +112,9 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_staff_user_can_open_booking_detail(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
         response = self.client.get(
             reverse(
@@ -157,15 +143,11 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_staff_user_can_create_booking(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
-        new_date = (
-                self.booking_date + timedelta(days=7)
-        )
+        new_date = self.booking_date + timedelta(days=7)
 
         WorkingHour.objects.update_or_create(
             day_of_week=new_date.weekday(),
@@ -211,11 +193,9 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_staff_user_can_update_booking(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
         response = self.client.post(
             reverse(
@@ -259,11 +239,9 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_staff_user_can_change_status(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
         response = self.client.post(
             reverse(
@@ -294,9 +272,7 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_invalid_status_is_rejected(self):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
         self.client.post(
             reverse(
@@ -318,9 +294,7 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_status_update_requires_post(self):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
         response = self.client.get(
             reverse(
@@ -337,11 +311,9 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_staff_user_can_add_visit_comment(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
         response = self.client.post(
             reverse(
@@ -352,9 +324,7 @@ class AppointmentManagementTests(TestCase):
             ),
             {
                 "comment": "Процедуру проведено успішно.",
-                "recommendations": (
-                    "Використовувати SPF щодня."
-                ),
+                "recommendations": ("Використовувати SPF щодня."),
             },
         )
 
@@ -385,11 +355,9 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_manage_list_filters_by_status(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
         confirmed_booking = Booking.objects.create(
             client_name="Підтверджений клієнт",
@@ -418,11 +386,9 @@ class AppointmentManagementTests(TestCase):
         )
 
     def test_manage_list_searches_by_phone(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.staff_user
-        )
+        self.client.force_login(self.staff_user)
 
         response = self.client.get(
             reverse("appointments:manage-list"),

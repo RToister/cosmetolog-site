@@ -49,9 +49,7 @@ class ShoppingCartTests(TestCase):
             name="Професійний препарат",
             sku="CART-PRO-001",
             professional_price=Decimal("2000.00"),
-            availability=(
-                Product.Availability.PROFESSIONALS_ONLY
-            ),
+            availability=(Product.Availability.PROFESSIONALS_ONLY),
             stock_quantity=5,
             is_active=True,
         )
@@ -62,26 +60,18 @@ class ShoppingCartTests(TestCase):
             user_type=User.UserType.CLIENT,
         )
 
-        cls.unverified_cosmetologist = (
-            User.objects.create_user(
-                username="unverified-cosmetologist",
-                phone_number="+380991110002",
-                user_type=(
-                    User.UserType.COSMETOLOGIST
-                ),
-                is_cosmetologist_verified=False,
-            )
+        cls.unverified_cosmetologist = User.objects.create_user(
+            username="unverified-cosmetologist",
+            phone_number="+380991110002",
+            user_type=(User.UserType.COSMETOLOGIST),
+            is_cosmetologist_verified=False,
         )
 
-        cls.verified_cosmetologist = (
-            User.objects.create_user(
-                username="verified-cosmetologist",
-                phone_number="+380991110003",
-                user_type=(
-                    User.UserType.COSMETOLOGIST
-                ),
-                is_cosmetologist_verified=True,
-            )
+        cls.verified_cosmetologist = User.objects.create_user(
+            username="verified-cosmetologist",
+            phone_number="+380991110003",
+            user_type=(User.UserType.COSMETOLOGIST),
+            is_cosmetologist_verified=True,
         )
 
     def professional_product_url(self):
@@ -97,7 +87,7 @@ class ShoppingCartTests(TestCase):
         )
 
     def assert_professional_product_not_in_cart(
-            self,
+        self,
     ):
         session_cart = self.client.session.get(
             "cart",
@@ -126,9 +116,9 @@ class ShoppingCartTests(TestCase):
         )
 
         self.assertEqual(
-            self.client.session["cart"][
-                str(self.first_product.pk)
-            ]["quantity"],
+            self.client.session["cart"][str(self.first_product.pk)][
+                "quantity"
+            ],
             2,
         )
 
@@ -159,9 +149,9 @@ class ShoppingCartTests(TestCase):
         )
 
         self.assertEqual(
-            self.client.session["cart"][
-                str(self.first_product.pk)
-            ]["quantity"],
+            self.client.session["cart"][str(self.first_product.pk)][
+                "quantity"
+            ],
             4,
         )
 
@@ -194,9 +184,7 @@ class ShoppingCartTests(TestCase):
         )
 
     def test_guest_can_view_professional_product(self):
-        response = self.client.get(
-            self.professional_product_url()
-        )
+        response = self.client.get(self.professional_product_url())
 
         self.assertEqual(
             response.status_code,
@@ -226,15 +214,11 @@ class ShoppingCartTests(TestCase):
         self.assert_professional_product_not_in_cart()
 
     def test_regular_user_cannot_view_professional_price(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.regular_user
-        )
+        self.client.force_login(self.regular_user)
 
-        response = self.client.get(
-            self.professional_product_url()
-        )
+        response = self.client.get(self.professional_product_url())
 
         self.assertEqual(
             response.status_code,
@@ -246,11 +230,9 @@ class ShoppingCartTests(TestCase):
         )
 
     def test_regular_user_cannot_add_professional_product(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.regular_user
-        )
+        self.client.force_login(self.regular_user)
 
         response = self.client.post(
             self.add_professional_product_url(),
@@ -266,15 +248,11 @@ class ShoppingCartTests(TestCase):
         self.assert_professional_product_not_in_cart()
 
     def test_unverified_cosmetologist_cannot_view_price(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.unverified_cosmetologist
-        )
+        self.client.force_login(self.unverified_cosmetologist)
 
-        response = self.client.get(
-            self.professional_product_url()
-        )
+        response = self.client.get(self.professional_product_url())
 
         self.assertEqual(
             response.status_code,
@@ -290,11 +268,9 @@ class ShoppingCartTests(TestCase):
         )
 
     def test_unverified_cosmetologist_cannot_add_product(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.unverified_cosmetologist
-        )
+        self.client.force_login(self.unverified_cosmetologist)
 
         response = self.client.post(
             self.add_professional_product_url(),
@@ -310,15 +286,11 @@ class ShoppingCartTests(TestCase):
         self.assert_professional_product_not_in_cart()
 
     def test_verified_cosmetologist_can_view_price(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.verified_cosmetologist
-        )
+        self.client.force_login(self.verified_cosmetologist)
 
-        response = self.client.get(
-            self.professional_product_url()
-        )
+        response = self.client.get(self.professional_product_url())
 
         self.assertEqual(
             response.status_code,
@@ -330,11 +302,9 @@ class ShoppingCartTests(TestCase):
         )
 
     def test_verified_cosmetologist_can_add_product(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.verified_cosmetologist
-        )
+        self.client.force_login(self.verified_cosmetologist)
 
         response = self.client.post(
             self.add_professional_product_url(),
@@ -349,18 +319,16 @@ class ShoppingCartTests(TestCase):
         )
 
         self.assertEqual(
-            self.client.session["cart"][
-                str(self.professional_product.pk)
-            ]["quantity"],
+            self.client.session["cart"][str(self.professional_product.pk)][
+                "quantity"
+            ],
             1,
         )
 
     def test_verified_cosmetologist_gets_professional_price(
-            self,
+        self,
     ):
-        self.client.force_login(
-            self.verified_cosmetologist
-        )
+        self.client.force_login(self.verified_cosmetologist)
 
         response = self.client.get(
             reverse(
@@ -416,9 +384,7 @@ class ShoppingCartTests(TestCase):
             },
         )
 
-        response = self.client.get(
-            reverse("shop:cart-detail")
-        )
+        response = self.client.get(reverse("shop:cart-detail"))
 
         self.assertEqual(
             response.status_code,
@@ -506,21 +472,17 @@ class ShoppingCartTests(TestCase):
         )
 
     def test_empty_cart_redirects_from_checkout(self):
-        response = self.client.get(
-            reverse("shop:checkout")
-        )
+        response = self.client.get(reverse("shop:checkout"))
 
         self.assertRedirects(
             response,
             reverse("shop:product-list"),
         )
 
-        self.assertFalse(
-            Order.objects.exists()
-        )
+        self.assertFalse(Order.objects.exists())
 
     def test_order_success_is_available_after_checkout(
-            self,
+        self,
     ):
         self.client.post(
             reverse(

@@ -51,12 +51,9 @@ def analytics_dashboard(request):
         status=Booking.Status.COMPLETED,
     )
 
-    procedure_revenue = (
-            completed_bookings.aggregate(
-                total=Sum("price_at_booking"),
-            )["total"]
-            or Decimal("0.00")
-    )
+    procedure_revenue = completed_bookings.aggregate(
+        total=Sum("price_at_booking"),
+    )["total"] or Decimal("0.00")
 
     paid_orders = Order.objects.filter(
         status=Order.Status.PAID,
@@ -66,16 +63,13 @@ def analytics_dashboard(request):
         ),
     )
 
-    product_revenue = (
-            paid_orders.aggregate(
-                total=Sum("total_price"),
-            )["total"]
-            or Decimal("0.00")
-    )
+    product_revenue = paid_orders.aggregate(
+        total=Sum("total_price"),
+    )[
+        "total"
+    ] or Decimal("0.00")
 
-    total_revenue = (
-            procedure_revenue + product_revenue
-    )
+    total_revenue = procedure_revenue + product_revenue
 
     top_procedures = (
         completed_bookings.values(
@@ -116,15 +110,19 @@ def analytics_dashboard(request):
     )
 
     registered_clients_count = (
-        get_user_model().objects.filter(
+        get_user_model()
+        .objects.filter(
             user_type="client",
-        ).count()
+        )
+        .count()
     )
 
     cosmetologists_count = (
-        get_user_model().objects.filter(
+        get_user_model()
+        .objects.filter(
             user_type="cosmetologist",
-        ).count()
+        )
+        .count()
     )
 
     unique_booking_clients = (
@@ -138,11 +136,9 @@ def analytics_dashboard(request):
         status=Order.Status.PENDING,
     ).count()
 
-    pending_course_applications_count = (
-        CourseEnrollment.objects.filter(
-            status=CourseEnrollment.Status.PENDING,
-        ).count()
-    )
+    pending_course_applications_count = CourseEnrollment.objects.filter(
+        status=CourseEnrollment.Status.PENDING,
+    ).count()
 
     upcoming_bookings_count = (
         Booking.objects.filter(
@@ -175,22 +171,17 @@ def analytics_dashboard(request):
         )[:5]
     )
 
-    recent_course_applications = (
-        CourseEnrollment.objects.select_related(
-            "student",
-            "course",
-        )
-        .order_by("-enrolled_at")[:5]
-    )
+    recent_course_applications = CourseEnrollment.objects.select_related(
+        "student",
+        "course",
+    ).order_by("-enrolled_at")[:5]
 
     context = {
         "form": form,
         "start_date": start_date,
         "end_date": end_date,
         "bookings_count": bookings.count(),
-        "completed_bookings_count": (
-            completed_bookings.count()
-        ),
+        "completed_bookings_count": (completed_bookings.count()),
         "cancelled_bookings_count": (
             bookings.filter(
                 status=Booking.Status.CANCELLED,
@@ -206,29 +197,19 @@ def analytics_dashboard(request):
         "procedure_revenue": procedure_revenue,
         "product_revenue": product_revenue,
         "total_revenue": total_revenue,
-        "registered_clients_count": (
-            registered_clients_count
-        ),
+        "registered_clients_count": (registered_clients_count),
         "cosmetologists_count": cosmetologists_count,
-        "unique_booking_clients": (
-            unique_booking_clients
-        ),
-        "pending_orders_count": (
-            pending_orders_count
-        ),
+        "unique_booking_clients": (unique_booking_clients),
+        "pending_orders_count": (pending_orders_count),
         "pending_course_applications_count": (
             pending_course_applications_count
         ),
-        "upcoming_bookings_count": (
-            upcoming_bookings_count
-        ),
+        "upcoming_bookings_count": (upcoming_bookings_count),
         "top_procedures": top_procedures,
         "top_products": top_products,
         "recent_orders": recent_orders,
         "upcoming_bookings": upcoming_bookings,
-        "recent_course_applications": (
-            recent_course_applications
-        ),
+        "recent_course_applications": (recent_course_applications),
     }
 
     return render(

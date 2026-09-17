@@ -34,8 +34,8 @@ class CreateDemoDataCommandTests(TestCase):
 
     def test_command_requires_clear_flag(self):
         with self.assertRaisesMessage(
-                Exception,
-                "--clear",
+            Exception,
+            "--clear",
         ):
             call_command(
                 "create_demo_data",
@@ -75,9 +75,7 @@ class CreateDemoDataCommandTests(TestCase):
                 working_hour.end_time.hour,
                 21,
             )
-            self.assertTrue(
-                working_hour.is_active
-            )
+            self.assertTrue(working_hour.is_active)
 
         self.assertEqual(
             Customer.objects.count(),

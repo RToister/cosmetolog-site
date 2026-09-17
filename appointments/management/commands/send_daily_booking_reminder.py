@@ -16,8 +16,7 @@ from dr_toister_site.telegram_notifications import (
 
 class Command(BaseCommand):
     help = (
-        "Надсилає в Telegram список записів "
-        "на поточний або вказаний день."
+        "Надсилає в Telegram список записів " "на поточний або вказаний день."
     )
 
     def add_arguments(self, parser):
@@ -46,9 +45,7 @@ class Command(BaseCommand):
             ) from error
 
     def handle(self, *args, **options):
-        reminder_date = self.get_reminder_date(
-            options.get("reminder_date")
-        )
+        reminder_date = self.get_reminder_date(options.get("reminder_date"))
 
         bookings = list(
             Booking.objects.filter(
@@ -94,9 +91,7 @@ class Command(BaseCommand):
             text=message,
         )
 
-        formatted_date = reminder_date.strftime(
-            "%d.%m.%Y"
-        )
+        formatted_date = reminder_date.strftime("%d.%m.%Y")
 
         if sent:
             self.stdout.write(

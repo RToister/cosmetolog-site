@@ -37,9 +37,7 @@ def booking_create(request):
     initial = {}
 
     if request.method == "GET":
-        procedure_id = request.GET.get(
-            "procedure"
-        )
+        procedure_id = request.GET.get("procedure")
 
         if procedure_id:
             initial["procedure"] = procedure_id
@@ -50,10 +48,7 @@ def booking_create(request):
         initial=initial,
     )
 
-    if (
-            request.method == "POST"
-            and form.is_valid()
-    ):
+    if request.method == "POST" and form.is_valid():
         booking = form.save(commit=False)
         booking.source = Booking.Source.ONLINE
 
@@ -64,11 +59,7 @@ def booking_create(request):
         booking.save()
 
         transaction.on_commit(
-            lambda booking_id=booking.pk: (
-                notify_booking_created(
-                    booking_id
-                )
-            )
+            lambda booking_id=booking.pk: (notify_booking_created(booking_id))
         )
 
         messages.success(
@@ -76,9 +67,7 @@ def booking_create(request):
             "Ваш запис успішно створено.",
         )
 
-        return redirect(
-            "appointments:booking-success"
-        )
+        return redirect("appointments:booking-success")
 
     return render(
         request,
@@ -99,17 +88,13 @@ def booking_success(request):
 @require_GET
 def available_times(request):
     selected_date = request.GET.get("date")
-    procedure_id = request.GET.get(
-        "procedure"
-    )
+    procedure_id = request.GET.get("procedure")
 
     if not selected_date or not procedure_id:
         return JsonResponse(
             {
                 "available_times": [],
-                "error": (
-                    "Оберіть процедуру та дату."
-                ),
+                "error": ("Оберіть процедуру та дату."),
             }
         )
 
@@ -130,10 +115,7 @@ def available_times(request):
         return JsonResponse(
             {
                 "available_times": [],
-                "error": (
-                    "Неможливо записатися "
-                    "на минулу дату."
-                ),
+                "error": ("Неможливо записатися " "на минулу дату."),
             }
         )
 
@@ -143,45 +125,36 @@ def available_times(request):
             is_active=True,
         )
     except (
-            Procedure.DoesNotExist,
-            ValueError,
+        Procedure.DoesNotExist,
+        ValueError,
     ):
         return JsonResponse(
             {
                 "available_times": [],
-                "error": (
-                    "Процедуру не знайдено."
-                ),
+                "error": ("Процедуру не знайдено."),
             }
         )
 
     if BlockedDate.objects.filter(
-            date=booking_date,
+        date=booking_date,
     ).exists():
         return JsonResponse(
             {
                 "available_times": [],
-                "error": (
-                    "Обраний день недоступний "
-                    "для запису."
-                ),
+                "error": ("Обраний день недоступний " "для запису."),
             }
         )
 
     try:
         working_hours = WorkingHour.objects.get(
-            day_of_week=(
-                booking_date.weekday()
-            ),
+            day_of_week=(booking_date.weekday()),
             is_active=True,
         )
     except WorkingHour.DoesNotExist:
         return JsonResponse(
             {
                 "available_times": [],
-                "error": (
-                    "У цей день лікар не працює."
-                ),
+                "error": ("У цей день лікар не працює."),
             }
         )
 
@@ -191,15 +164,11 @@ def available_times(request):
         status=Booking.Status.CANCELLED,
     )
 
-    excluded_booking_id = request.GET.get(
-        "exclude_booking"
-    )
+    excluded_booking_id = request.GET.get("exclude_booking")
 
     if excluded_booking_id:
-        existing_bookings = (
-            existing_bookings.exclude(
-                pk=excluded_booking_id,
-            )
+        existing_bookings = existing_bookings.exclude(
+            pk=excluded_booking_id,
         )
 
     current_datetime = timezone.localtime()
@@ -218,27 +187,18 @@ def available_times(request):
         minutes=procedure.duration_minutes,
     )
 
-    slot_interval = timedelta(
-        minutes=30
-    )
+    slot_interval = timedelta(minutes=30)
 
     available_slots = []
 
-    while (
-            slot_datetime + procedure_duration
-            <= working_day_end
-    ):
+    while slot_datetime + procedure_duration <= working_day_end:
         slot_start = slot_datetime.time()
 
-        slot_end = (
-                slot_datetime + procedure_duration
-        ).time()
+        slot_end = (slot_datetime + procedure_duration).time()
 
         slot_is_in_past = (
-                booking_date
-                == current_datetime.date()
-                and slot_start
-                <= current_datetime.time()
+            booking_date == current_datetime.date()
+            and slot_start <= current_datetime.time()
         )
 
         has_overlap = existing_bookings.filter(
@@ -246,18 +206,11 @@ def available_times(request):
             end_time__gt=slot_start,
         ).exists()
 
-        if (
-                not slot_is_in_past
-                and not has_overlap
-        ):
+        if not slot_is_in_past and not has_overlap:
             available_slots.append(
                 {
-                    "value": slot_start.strftime(
-                        "%H:%M"
-                    ),
-                    "label": slot_start.strftime(
-                        "%H:%M"
-                    ),
+                    "value": slot_start.strftime("%H:%M"),
+                    "label": slot_start.strftime("%H:%M"),
                 }
             )
 
@@ -308,11 +261,7 @@ def booking_manage_list(request):
                 date=parsed_date,
             )
 
-    valid_statuses = {
-        value
-        for value, label
-        in Booking.Status.choices
-    }
+    valid_statuses = {value for value, label in Booking.Status.choices}
 
     if selected_status in valid_statuses:
         bookings = bookings.filter(
@@ -323,21 +272,9 @@ def booking_manage_list(request):
 
     if search_query:
         bookings = bookings.filter(
-            Q(
-                client_name__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                client_phone__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                procedure__name__icontains=(
-                    search_query
-                )
-            )
+            Q(client_name__icontains=(search_query))
+            | Q(client_phone__icontains=(search_query))
+            | Q(procedure__name__icontains=(search_query))
         )
 
     bookings = bookings.order_by(
@@ -350,9 +287,7 @@ def booking_manage_list(request):
         25,
     )
 
-    page_obj = paginator.get_page(
-        request.GET.get("page")
-    )
+    page_obj = paginator.get_page(request.GET.get("page"))
 
     today = timezone.localdate()
 
@@ -361,18 +296,14 @@ def booking_manage_list(request):
         "selected_date": selected_date,
         "selected_status": selected_status,
         "search_query": search_query,
-        "status_choices": (
-            Booking.Status.choices
-        ),
+        "status_choices": (Booking.Status.choices),
         "today": today,
         "today_count": (
             Booking.objects.filter(
                 date=today,
             )
             .exclude(
-                status=(
-                    Booking.Status.CANCELLED
-                ),
+                status=(Booking.Status.CANCELLED),
             )
             .count()
         ),
@@ -383,9 +314,7 @@ def booking_manage_list(request):
         ),
         "confirmed_count": (
             Booking.objects.filter(
-                status=(
-                    Booking.Status.CONFIRMED
-                ),
+                status=(Booking.Status.CONFIRMED),
             ).count()
         ),
     }
@@ -404,10 +333,7 @@ def booking_manage_create(request):
         request.POST or None,
     )
 
-    if (
-            request.method == "POST"
-            and form.is_valid()
-    ):
+    if request.method == "POST" and form.is_valid():
         booking = form.save(commit=False)
         booking.source = Booking.Source.ADMIN
         booking.created_by = request.user
@@ -449,9 +375,7 @@ def booking_manage_detail(request, pk):
     )
 
     try:
-        visit_comment = (
-            booking.visit_comment
-        )
+        visit_comment = booking.visit_comment
     except VisitComment.DoesNotExist:
         visit_comment = None
 
@@ -478,10 +402,7 @@ def booking_manage_update(request, pk):
         instance=booking,
     )
 
-    if (
-            request.method == "POST"
-            and form.is_valid()
-    ):
+    if request.method == "POST" and form.is_valid():
         booking = form.save()
 
         messages.success(
@@ -499,12 +420,8 @@ def booking_manage_update(request, pk):
         "appointments/manage_form.html",
         {
             "form": form,
-            "page_title": (
-                "Редагування запису"
-            ),
-            "submit_text": (
-                "Зберегти зміни"
-            ),
+            "page_title": ("Редагування запису"),
+            "submit_text": ("Зберегти зміни"),
             "booking": booking,
         },
     )
@@ -518,15 +435,9 @@ def booking_status_update(request, pk):
         pk=pk,
     )
 
-    new_status = request.POST.get(
-        "status"
-    )
+    new_status = request.POST.get("status")
 
-    valid_statuses = {
-        value
-        for value, label
-        in Booking.Status.choices
-    }
+    valid_statuses = {value for value, label in Booking.Status.choices}
 
     if new_status not in valid_statuses:
         messages.error(
@@ -565,21 +476,16 @@ def booking_comment_update(request, pk):
         pk=pk,
     )
 
-    visit_comment = (
-        VisitComment.objects.filter(
-            booking=booking,
-        ).first()
-    )
+    visit_comment = VisitComment.objects.filter(
+        booking=booking,
+    ).first()
 
     form = VisitCommentForm(
         request.POST or None,
         instance=visit_comment,
     )
 
-    if (
-            request.method == "POST"
-            and form.is_valid()
-    ):
+    if request.method == "POST" and form.is_valid():
         comment = form.save(commit=False)
         comment.booking = booking
         comment.author = request.user
@@ -587,10 +493,7 @@ def booking_comment_update(request, pk):
 
         messages.success(
             request,
-            (
-                "Коментар і рекомендації "
-                "збережено."
-            ),
+            ("Коментар і рекомендації " "збережено."),
         )
 
         return redirect(

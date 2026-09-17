@@ -5,7 +5,6 @@ from django.contrib.admin.views.decorators import (
 from django.http import HttpResponseRedirect
 from django.shortcuts import (
     get_object_or_404,
-    redirect,
 )
 from django.urls import reverse
 from django.utils.http import (
@@ -23,15 +22,12 @@ def get_safe_next_url(request, customer):
         "",
     )
 
-    if (
-            next_url
-            and url_has_allowed_host_and_scheme(
+    if next_url and url_has_allowed_host_and_scheme(
         url=next_url,
         allowed_hosts={
             request.get_host(),
         },
         require_https=request.is_secure(),
-    )
     ):
         return next_url
 
@@ -47,9 +43,7 @@ def get_safe_next_url(request, customer):
 @require_POST
 def verify_cosmetologist(request, pk):
     customer = get_object_or_404(
-        Customer.objects.select_related(
-            "user"
-        ),
+        Customer.objects.select_related("user"),
         pk=pk,
     )
 
@@ -68,63 +62,37 @@ def verify_cosmetologist(request, pk):
             ),
         )
 
-        return HttpResponseRedirect(
-            redirect_url
-        )
+        return HttpResponseRedirect(redirect_url)
 
-    if (
-            customer.customer_type
-            != Customer.CustomerType.COSMETOLOGIST
-    ):
+    if customer.customer_type != Customer.CustomerType.COSMETOLOGIST:
         messages.error(
             request,
-            (
-                "Підтвердити можна лише клієнта "
-                "з типом «Косметолог»."
-            ),
+            ("Підтвердити можна лише клієнта " "з типом «Косметолог»."),
         )
 
-        return HttpResponseRedirect(
-            redirect_url
-        )
+        return HttpResponseRedirect(redirect_url)
 
     user = customer.user
 
     if user.is_cosmetologist_verified:
         messages.info(
             request,
-            (
-                "Цього косметолога вже "
-                "підтверджено."
-            ),
+            ("Цього косметолога вже " "підтверджено."),
         )
 
-        return HttpResponseRedirect(
-            redirect_url
-        )
+        return HttpResponseRedirect(redirect_url)
 
     if not user.is_cosmetologist:
-        user.user_type = (
-            User.UserType.COSMETOLOGIST
-        )
+        user.user_type = User.UserType.COSMETOLOGIST
 
-        user.save(
-            update_fields=(
-                "user_type",
-            )
-        )
+        user.save(update_fields=("user_type",))
 
     user.verify_cosmetologist(
         verified_by=request.user,
     )
 
-    if (
-            customer.customer_type
-            != Customer.CustomerType.COSMETOLOGIST
-    ):
-        customer.customer_type = (
-            Customer.CustomerType.COSMETOLOGIST
-        )
+    if customer.customer_type != Customer.CustomerType.COSMETOLOGIST:
+        customer.customer_type = Customer.CustomerType.COSMETOLOGIST
 
         customer.save(
             update_fields=(
@@ -142,21 +110,17 @@ def verify_cosmetologist(request, pk):
         ),
     )
 
-    return HttpResponseRedirect(
-        redirect_url
-    )
+    return HttpResponseRedirect(redirect_url)
 
 
 @staff_member_required
 @require_POST
 def revoke_cosmetologist_verification(
-        request,
-        pk,
+    request,
+    pk,
 ):
     customer = get_object_or_404(
-        Customer.objects.select_related(
-            "user"
-        ),
+        Customer.objects.select_related("user"),
         pk=pk,
     )
 
@@ -175,22 +139,15 @@ def revoke_cosmetologist_verification(
             ),
         )
 
-        return HttpResponseRedirect(
-            redirect_url
-        )
+        return HttpResponseRedirect(redirect_url)
 
     if not customer.user.is_cosmetologist_verified:
         messages.info(
             request,
-            (
-                "Цей косметолог не має "
-                "активного підтвердження."
-            ),
+            ("Цей косметолог не має " "активного підтвердження."),
         )
 
-        return HttpResponseRedirect(
-            redirect_url
-        )
+        return HttpResponseRedirect(redirect_url)
 
     customer.user.revoke_cosmetologist_verification()
 
@@ -203,6 +160,4 @@ def revoke_cosmetologist_verification(
         ),
     )
 
-    return HttpResponseRedirect(
-        redirect_url
-    )
+    return HttpResponseRedirect(redirect_url)

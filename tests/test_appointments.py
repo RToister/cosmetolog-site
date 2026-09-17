@@ -42,9 +42,7 @@ class AppointmentViewsTests(TestCase):
         )
 
     def test_booking_page_is_available(self):
-        response = self.client.get(
-            reverse("appointments:booking-create")
-        )
+        response = self.client.get(reverse("appointments:booking-create"))
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
@@ -53,9 +51,7 @@ class AppointmentViewsTests(TestCase):
         )
 
     def test_booking_success_page_is_available(self):
-        response = self.client.get(
-            reverse("appointments:booking-success")
-        )
+        response = self.client.get(reverse("appointments:booking-success"))
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
@@ -120,8 +116,7 @@ class AppointmentViewsTests(TestCase):
         response_data = response.json()
 
         available_values = [
-            slot["value"]
-            for slot in response_data["available_times"]
+            slot["value"] for slot in response_data["available_times"]
         ]
 
         self.assertIn("08:00", available_values)
@@ -153,8 +148,7 @@ class AppointmentViewsTests(TestCase):
         response_data = response.json()
 
         available_values = [
-            slot["value"]
-            for slot in response_data["available_times"]
+            slot["value"] for slot in response_data["available_times"]
         ]
 
         self.assertNotIn("09:30", available_values)
@@ -259,9 +253,7 @@ class AppointmentViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Booking.objects.exists())
 
-        phone_errors = response.context["form"].errors[
-            "client_phone"
-        ]
+        phone_errors = response.context["form"].errors["client_phone"]
 
         self.assertIn(
             (

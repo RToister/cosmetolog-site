@@ -52,9 +52,7 @@ class Booking(models.Model):
         related_name="bookings",
         null=True,
         blank=True,
-        verbose_name=(
-            "Обліковий запис клієнта"
-        ),
+        verbose_name=("Обліковий запис клієнта"),
     )
 
     customer = models.ForeignKey(
@@ -155,21 +153,13 @@ class Booking(models.Model):
                     "date",
                     "start_time",
                 ),
-                condition=~models.Q(
-                    status="cancelled"
-                ),
-                name=(
-                    "unique_active_booking_start"
-                ),
+                condition=~models.Q(status="cancelled"),
+                name=("unique_active_booking_start"),
             ),
         ]
 
     def calculate_end_time(self):
-        if (
-                not self.date
-                or not self.start_time
-                or not self.procedure_id
-        ):
+        if not self.date or not self.start_time or not self.procedure_id:
             return None
 
         start_datetime = datetime.combine(
@@ -177,14 +167,8 @@ class Booking(models.Model):
             self.start_time,
         )
 
-        end_datetime = (
-                start_datetime
-                + timedelta(
-            minutes=(
-                self.procedure
-                .duration_minutes
-            ),
-        )
+        end_datetime = start_datetime + timedelta(
+            minutes=(self.procedure.duration_minutes),
         )
 
         return end_datetime.time()
@@ -192,185 +176,112 @@ class Booking(models.Model):
     def clean(self):
         super().clean()
 
-        self.client_name = (
-            self.client_name.strip()
-        )
+        self.client_name = self.client_name.strip()
 
         if len(self.client_name) < 2:
             raise ValidationError(
                 {
                     "client_name": (
-                        "Ім’я повинно містити "
-                        "щонайменше 2 символи."
+                        "Ім’я повинно містити " "щонайменше 2 символи."
                     )
                 }
             )
 
-        self.client_phone = (
-            normalize_phone_number(
-                self.client_phone
-            )
-        )
+        self.client_phone = normalize_phone_number(self.client_phone)
 
-        if (
-                not self.date
-                or not self.start_time
-                or not self.procedure_id
-        ):
+        if not self.date or not self.start_time or not self.procedure_id:
             return
 
-        calculated_end_time = (
-            self.calculate_end_time()
-        )
+        calculated_end_time = self.calculate_end_time()
 
         if calculated_end_time is None:
             return
 
         self.end_time = calculated_end_time
 
-        current_datetime = (
-            timezone.localtime()
-        )
-        current_date = (
-            current_datetime.date()
-        )
-        current_time = (
-            current_datetime.time()
-            .replace(
-                tzinfo=None,
-            )
+        current_datetime = timezone.localtime()
+        current_date = current_datetime.date()
+        current_time = current_datetime.time().replace(
+            tzinfo=None,
         )
 
         if self.date < current_date:
             raise ValidationError(
-                {
-                    "date": (
-                        "Неможливо створити запис "
-                        "на минулу дату."
-                    )
-                }
+                {"date": ("Неможливо створити запис " "на минулу дату.")}
             )
 
-        if (
-                self.date == current_date
-                and self.start_time <= current_time
-        ):
+        if self.date == current_date and self.start_time <= current_time:
             raise ValidationError(
                 {
                     "start_time": (
-                        "Неможливо створити запис "
-                        "на час, який уже минув."
+                        "Неможливо створити запис " "на час, який уже минув."
                     )
                 }
             )
 
         if BlockedDate.objects.filter(
-                date=self.date,
+            date=self.date,
         ).exists():
             raise ValidationError(
-                {
-                    "date": (
-                        "Обраний день недоступний "
-                        "для запису."
-                    )
-                }
+                {"date": ("Обраний день недоступний " "для запису.")}
             )
 
         try:
-            working_hours = (
-                WorkingHour.objects.get(
-                    day_of_week=(
-                        self.date.weekday()
-                    ),
-                    is_active=True,
-                )
+            working_hours = WorkingHour.objects.get(
+                day_of_week=(self.date.weekday()),
+                is_active=True,
             )
         except WorkingHour.DoesNotExist:
-            raise ValidationError(
-                {
-                    "date": (
-                        "У цей день лікар "
-                        "не працює."
-                    )
-                }
-            )
+            raise ValidationError({"date": ("У цей день лікар " "не працює.")})
 
         if (
-                self.start_time
-                < working_hours.start_time
-                or calculated_end_time
-                > working_hours.end_time
+            self.start_time < working_hours.start_time
+            or calculated_end_time > working_hours.end_time
         ):
             raise ValidationError(
                 {
                     "start_time": (
-                        "Час запису виходить "
-                        "за межі робочого графіка."
+                        "Час запису виходить " "за межі робочого графіка."
                     )
                 }
             )
 
-        overlapping_bookings = (
-            Booking.objects.filter(
-                date=self.date,
-                start_time__lt=(
-                    calculated_end_time
-                ),
-                end_time__gt=(
-                    self.start_time
-                ),
-            )
-            .exclude(
-                status=self.Status.CANCELLED,
-            )
+        overlapping_bookings = Booking.objects.filter(
+            date=self.date,
+            start_time__lt=(calculated_end_time),
+            end_time__gt=(self.start_time),
+        ).exclude(
+            status=self.Status.CANCELLED,
         )
 
         if self.pk:
-            overlapping_bookings = (
-                overlapping_bookings.exclude(
-                    pk=self.pk
-                )
-            )
+            overlapping_bookings = overlapping_bookings.exclude(pk=self.pk)
 
         if overlapping_bookings.exists():
             raise ValidationError(
                 {
                     "start_time": (
-                        "Обраний час перетинається "
-                        "з іншим записом."
+                        "Обраний час перетинається " "з іншим записом."
                     )
                 }
             )
 
     def save(self, *args, **kwargs):
-        self.client_name = (
-            self.client_name.strip()
-        )
+        self.client_name = self.client_name.strip()
 
-        self.client_phone = (
-            normalize_phone_number(
-                self.client_phone
-            )
-        )
+        self.client_phone = normalize_phone_number(self.client_phone)
 
-        calculated_end_time = (
-            self.calculate_end_time()
-        )
+        calculated_end_time = self.calculate_end_time()
 
         if calculated_end_time is not None:
-            self.end_time = (
-                calculated_end_time
-            )
+            self.end_time = calculated_end_time
 
         if (
-                self._state.adding
-                and self.procedure_id
-                and self.price_at_booking
-                == Decimal("0.00")
+            self._state.adding
+            and self.procedure_id
+            and self.price_at_booking == Decimal("0.00")
         ):
-            self.price_at_booking = (
-                self.procedure.price
-            )
+            self.price_at_booking = self.procedure.price
 
         self.full_clean()
 
@@ -399,9 +310,7 @@ class VisitComment(models.Model):
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
-        related_name=(
-            "authored_visit_comments"
-        ),
+        related_name=("authored_visit_comments"),
         null=True,
         blank=True,
         verbose_name="Автор",
@@ -428,12 +337,8 @@ class VisitComment(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
-        verbose_name = (
-            "Коментар до візиту"
-        )
-        verbose_name_plural = (
-            "Коментарі до візитів"
-        )
+        verbose_name = "Коментар до візиту"
+        verbose_name_plural = "Коментарі до візитів"
 
     def __str__(self):
         return (

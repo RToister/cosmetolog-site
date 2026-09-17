@@ -20,10 +20,10 @@ class CartAddProductForm(forms.Form):
     )
 
     def __init__(
-            self,
-            *args,
-            product,
-            **kwargs,
+        self,
+        *args,
+        product,
+        **kwargs,
     ):
         super().__init__(
             *args,
@@ -32,28 +32,17 @@ class CartAddProductForm(forms.Form):
 
         self.product = product
 
-        self.fields["quantity"].widget.attrs[
-            "max"
-        ] = product.stock_quantity
+        self.fields["quantity"].widget.attrs["max"] = product.stock_quantity
 
     def clean_quantity(self):
-        quantity = self.cleaned_data[
-            "quantity"
-        ]
+        quantity = self.cleaned_data["quantity"]
 
         if self.product.stock_quantity < 1:
-            raise ValidationError(
-                "Товару наразі немає "
-                "в наявності."
-            )
+            raise ValidationError("Товару наразі немає " "в наявності.")
 
-        if (
-                quantity
-                > self.product.stock_quantity
-        ):
+        if quantity > self.product.stock_quantity:
             raise ValidationError(
-                "Обрана кількість перевищує "
-                "залишок товару на складі."
+                "Обрана кількість перевищує " "залишок товару на складі."
             )
 
         return quantity
@@ -66,9 +55,7 @@ class CheckoutForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": (
-                    "Введіть ваше ім’я"
-                ),
+                "placeholder": ("Введіть ваше ім’я"),
                 "autocomplete": "name",
             }
         ),
@@ -80,19 +67,17 @@ class CheckoutForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": (
-                    "+380991112233"
-                ),
+                "placeholder": ("+380991112233"),
                 "autocomplete": "tel",
             }
         ),
     )
 
     def __init__(
-            self,
-            *args,
-            user=None,
-            **kwargs,
+        self,
+        *args,
+        user=None,
+        **kwargs,
     ):
         super().__init__(
             *args,
@@ -100,35 +85,21 @@ class CheckoutForm(forms.Form):
         )
 
         if user and user.is_authenticated:
-            self.fields[
-                "client_name"
-            ].initial = (
-                    user.get_full_name()
-                    or user.username
+            self.fields["client_name"].initial = (
+                user.get_full_name() or user.username
             )
 
-            self.fields[
-                "client_phone"
-            ].initial = (
-                user.phone_number
-            )
+            self.fields["client_phone"].initial = user.phone_number
 
     def clean_client_name(self):
-        client_name = self.cleaned_data[
-            "client_name"
-        ].strip()
+        client_name = self.cleaned_data["client_name"].strip()
 
         if len(client_name) < 2:
             raise ValidationError(
-                "Ім’я повинно містити "
-                "щонайменше 2 символи."
+                "Ім’я повинно містити " "щонайменше 2 символи."
             )
 
         return client_name
 
     def clean_client_phone(self):
-        return normalize_phone_number(
-            self.cleaned_data[
-                "client_phone"
-            ]
-        )
+        return normalize_phone_number(self.cleaned_data["client_phone"])

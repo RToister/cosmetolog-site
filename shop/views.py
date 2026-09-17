@@ -28,38 +28,26 @@ from .models import (
 
 
 def user_is_cosmetologist(user):
-    return bool(
-        user.is_authenticated
-        and user.is_cosmetologist
-    )
+    return bool(user.is_authenticated and user.is_cosmetologist)
 
 
 def user_has_professional_access(user):
-    return bool(
-        user.is_authenticated
-        and user.can_buy_professional_products
-    )
+    return bool(user.is_authenticated and user.can_buy_professional_products)
 
 
 def user_is_awaiting_verification(user):
     return bool(
-        user_is_cosmetologist(user)
-        and not user.is_cosmetologist_verified
+        user_is_cosmetologist(user) and not user.is_cosmetologist_verified
     )
 
 
 def product_is_professional(product):
-    return (
-            product.availability
-            == Product.Availability.PROFESSIONALS_ONLY
-    )
+    return product.availability == Product.Availability.PROFESSIONALS_ONLY
 
 
 def user_can_buy_product(user, product):
     if product_is_professional(product):
-        return user_has_professional_access(
-            user
-        )
+        return user_has_professional_access(user)
 
     return product.retail_price is not None
 
@@ -83,53 +71,37 @@ def get_purchasable_products(user):
 
 
 def set_product_display_data(
-        product,
-        has_professional_access,
+    product,
+    has_professional_access,
 ):
-    product.is_professional_product = (
-        product_is_professional(product)
-    )
+    product.is_professional_product = product_is_professional(product)
 
     product.can_view_price = (
-            not product.is_professional_product
-            or has_professional_access
+        not product.is_professional_product or has_professional_access
     )
 
     product.can_purchase = (
-            product.can_view_price
-            and product.stock_quantity > 0
+        product.can_view_price and product.stock_quantity > 0
     )
 
     if not product.can_view_price:
         product.display_price = None
     elif has_professional_access:
-        product.display_price = (
-            product.professional_price
-        )
+        product.display_price = product.professional_price
     else:
-        product.display_price = (
-            product.retail_price
-        )
+        product.display_price = product.retail_price
 
 
 def get_access_context(user):
     return {
-        "is_cosmetologist": (
-            user_is_cosmetologist(user)
-        ),
-        "has_professional_access": (
-            user_has_professional_access(user)
-        ),
-        "is_awaiting_verification": (
-            user_is_awaiting_verification(user)
-        ),
+        "is_cosmetologist": (user_is_cosmetologist(user)),
+        "has_professional_access": (user_has_professional_access(user)),
+        "is_awaiting_verification": (user_is_awaiting_verification(user)),
     }
 
 
 def product_list(request):
-    access_context = get_access_context(
-        request.user
-    )
+    access_context = get_access_context(request.user)
 
     products = get_visible_products().order_by(
         "availability",
@@ -172,24 +144,10 @@ def product_list(request):
     if search_query:
         products = products.filter(
             Q(name__icontains=search_query)
-            | Q(
-                description__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                usage_recommendations__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                category__name__icontains=(
-                    search_query
-                )
-            )
-            | Q(
-                sku__icontains=search_query
-            )
+            | Q(description__icontains=(search_query))
+            | Q(usage_recommendations__icontains=(search_query))
+            | Q(category__name__icontains=(search_query))
+            | Q(sku__icontains=search_query)
         )
 
     paginator = Paginator(
@@ -197,21 +155,21 @@ def product_list(request):
         9,
     )
 
-    page_obj = paginator.get_page(
-        request.GET.get("page")
-    )
+    page_obj = paginator.get_page(request.GET.get("page"))
 
     for product in page_obj:
         set_product_display_data(
             product,
-            access_context[
-                "has_professional_access"
-            ],
+            access_context["has_professional_access"],
         )
 
-    categories = ProductCategory.objects.filter(
-        products__is_active=True,
-    ).distinct().order_by("name")
+    categories = (
+        ProductCategory.objects.filter(
+            products__is_active=True,
+        )
+        .distinct()
+        .order_by("name")
+    )
 
     context = {
         "page_obj": page_obj,
@@ -230,9 +188,7 @@ def product_list(request):
 
 
 def product_detail(request, pk):
-    access_context = get_access_context(
-        request.user
-    )
+    access_context = get_access_context(request.user)
 
     product = get_object_or_404(
         get_visible_products(),
@@ -241,9 +197,7 @@ def product_detail(request, pk):
 
     set_product_display_data(
         product,
-        access_context[
-            "has_professional_access"
-        ],
+        access_context["has_professional_access"],
     )
 
     related_products = list(
@@ -258,9 +212,7 @@ def product_detail(request, pk):
     for related_product in related_products:
         set_product_display_data(
             related_product,
-            access_context[
-                "has_professional_access"
-            ],
+            access_context["has_professional_access"],
         )
 
     cart_form = None
@@ -294,9 +246,7 @@ def add_access_denied_message(request):
                 "відкривається після підтвердження."
             ),
         )
-    elif user_is_awaiting_verification(
-            request.user
-    ):
+    elif user_is_awaiting_verification(request.user):
         messages.warning(
             request,
             (
@@ -324,8 +274,8 @@ def cart_add(request, product_id):
     )
 
     if not user_can_buy_product(
-            request.user,
-            visible_product,
+        request.user,
+        visible_product,
     ):
         add_access_denied_message(request)
 
@@ -335,9 +285,7 @@ def cart_add(request, product_id):
         )
 
     product = get_object_or_404(
-        get_purchasable_products(
-            request.user
-        ),
+        get_purchasable_products(request.user),
         pk=product_id,
     )
 
@@ -351,22 +299,15 @@ def cart_add(request, product_id):
 
         cart.add(
             product=product,
-            quantity=(
-                form.cleaned_data["quantity"]
-            ),
+            quantity=(form.cleaned_data["quantity"]),
         )
 
         messages.success(
             request,
-            (
-                f"Товар «{product.name}» "
-                f"додано до кошика."
-            ),
+            (f"Товар «{product.name}» " f"додано до кошика."),
         )
 
-        return redirect(
-            "shop:cart-detail"
-        )
+        return redirect("shop:cart-detail")
 
     messages.error(
         request,
@@ -387,22 +328,18 @@ def cart_update(request, product_id):
     )
 
     if not user_can_buy_product(
-            request.user,
-            visible_product,
+        request.user,
+        visible_product,
     ):
         cart = Cart(request)
         cart.remove(visible_product)
 
         add_access_denied_message(request)
 
-        return redirect(
-            "shop:cart-detail"
-        )
+        return redirect("shop:cart-detail")
 
     product = get_object_or_404(
-        get_purchasable_products(
-            request.user
-        ),
+        get_purchasable_products(request.user),
         pk=product_id,
     )
 
@@ -416,9 +353,7 @@ def cart_update(request, product_id):
 
         cart.add(
             product=product,
-            quantity=(
-                form.cleaned_data["quantity"]
-            ),
+            quantity=(form.cleaned_data["quantity"]),
             override_quantity=True,
         )
 
@@ -429,15 +364,10 @@ def cart_update(request, product_id):
     else:
         messages.error(
             request,
-            (
-                "Не вдалося оновити "
-                "кількість товару."
-            ),
+            ("Не вдалося оновити " "кількість товару."),
         )
 
-    return redirect(
-        "shop:cart-detail"
-    )
+    return redirect("shop:cart-detail")
 
 
 @require_POST
@@ -452,15 +382,10 @@ def cart_remove(request, product_id):
 
     messages.success(
         request,
-        (
-            f"Товар «{product.name}» "
-            f"видалено з кошика."
-        ),
+        (f"Товар «{product.name}» " f"видалено з кошика."),
     )
 
-    return redirect(
-        "shop:cart-detail"
-    )
+    return redirect("shop:cart-detail")
 
 
 def cart_detail(request):
@@ -473,23 +398,17 @@ def cart_detail(request):
         product = item["product"]
 
         if not user_can_buy_product(
-                request.user,
-                product,
+            request.user,
+            product,
         ):
-            restricted_products.append(
-                product
-            )
+            restricted_products.append(product)
             continue
 
-        item["update_form"] = (
-            CartAddProductForm(
-                product=product,
-                initial={
-                    "quantity": (
-                        item["quantity"]
-                    ),
-                },
-            )
+        item["update_form"] = CartAddProductForm(
+            product=product,
+            initial={
+                "quantity": (item["quantity"]),
+            },
         )
 
     if restricted_products:
@@ -498,9 +417,7 @@ def cart_detail(request):
 
         add_access_denied_message(request)
 
-        return redirect(
-            "shop:cart-detail"
-        )
+        return redirect("shop:cart-detail")
 
     return render(
         request,
@@ -522,72 +439,44 @@ def checkout(request):
             "Ваш кошик порожній.",
         )
 
-        return redirect(
-            "shop:product-list"
-        )
+        return redirect("shop:product-list")
 
     for item in cart_items:
         product = item["product"]
 
         if not user_can_buy_product(
-                request.user,
-                product,
+            request.user,
+            product,
         ):
             cart.remove(product)
-            add_access_denied_message(
-                request
-            )
+            add_access_denied_message(request)
 
-            return redirect(
-                "shop:cart-detail"
-            )
+            return redirect("shop:cart-detail")
 
     form = CheckoutForm(
         request.POST or None,
         user=request.user,
     )
 
-    if (
-            request.method == "POST"
-            and form.is_valid()
-    ):
+    if request.method == "POST" and form.is_valid():
         for item in cart_items:
             product = item["product"]
 
-            if (
-                    item["quantity"]
-                    > product.stock_quantity
-            ):
+            if item["quantity"] > product.stock_quantity:
                 messages.error(
                     request,
-                    (
-                        "Недостатньо товару "
-                        f"«{product.name}» "
-                        "на складі."
-                    ),
+                    ("Недостатньо товару " f"«{product.name}» " "на складі."),
                 )
 
-                return redirect(
-                    "shop:cart-detail"
-                )
+                return redirect("shop:cart-detail")
 
         with transaction.atomic():
             order = Order.objects.create(
                 client=(
-                    request.user
-                    if request.user.is_authenticated
-                    else None
+                    request.user if request.user.is_authenticated else None
                 ),
-                client_name=(
-                    form.cleaned_data[
-                        "client_name"
-                    ]
-                ),
-                client_phone=(
-                    form.cleaned_data[
-                        "client_phone"
-                    ]
-                ),
+                client_name=(form.cleaned_data["client_name"]),
+                client_phone=(form.cleaned_data["client_phone"]),
                 source=Order.Source.ONLINE,
             )
 
@@ -599,18 +488,12 @@ def checkout(request):
                 )
 
         transaction.on_commit(
-            lambda order_id=order.pk: (
-                notify_order_created(
-                    order_id
-                )
-            )
+            lambda order_id=order.pk: (notify_order_created(order_id))
         )
 
         cart.clear()
 
-        request.session["last_order_id"] = (
-            order.pk
-        )
+        request.session["last_order_id"] = order.pk
 
         return redirect(
             "shop:order-success",
@@ -629,19 +512,13 @@ def checkout(request):
 
 
 def order_success(request, order_id):
-    last_order_id = request.session.get(
-        "last_order_id"
-    )
+    last_order_id = request.session.get("last_order_id")
 
     if last_order_id != order_id:
-        raise Http404(
-            "Замовлення не знайдено."
-        )
+        raise Http404("Замовлення не знайдено.")
 
     order = get_object_or_404(
-        Order.objects.prefetch_related(
-            "items__product"
-        ),
+        Order.objects.prefetch_related("items__product"),
         pk=order_id,
     )
 

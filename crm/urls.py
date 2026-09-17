@@ -68,24 +68,13 @@ urlpatterns = [
     ),
     path(
         "course-applications/<int:pk>/",
-        (
-            operation_detail_views
-            .course_application_detail
-        ),
+        (operation_detail_views.course_application_detail),
         name="course-application-detail",
     ),
     path(
-        (
-            "course-applications/<int:pk>/"
-            "status/"
-        ),
-        (
-            operation_detail_views
-            .course_application_status_update
-        ),
-        name=(
-            "course-application-status-update"
-        ),
+        ("course-applications/<int:pk>/" "status/"),
+        (operation_detail_views.course_application_status_update),
+        name=("course-application-status-update"),
     ),
     path(
         "customers/create/",
@@ -108,24 +97,13 @@ urlpatterns = [
         name="customer-toggle-active",
     ),
     path(
-        (
-            "customers/<int:pk>/"
-            "verify-cosmetologist/"
-        ),
+        ("customers/<int:pk>/" "verify-cosmetologist/"),
         verification_views.verify_cosmetologist,
         name="verify-cosmetologist",
     ),
     path(
-        (
-            "customers/<int:pk>/"
-            "revoke-cosmetologist/"
-        ),
-        (
-            verification_views
-            .revoke_cosmetologist_verification
-        ),
-        name=(
-            "revoke-cosmetologist-verification"
-        ),
+        ("customers/<int:pk>/" "revoke-cosmetologist/"),
+        (verification_views.revoke_cosmetologist_verification),
+        name=("revoke-cosmetologist-verification"),
     ),
 ]

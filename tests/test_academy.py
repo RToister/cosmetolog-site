@@ -13,8 +13,7 @@ class AcademyViewsTests(TestCase):
         cls.public_course = Course.objects.create(
             title="Основи домашнього догляду",
             description=(
-                "Навчання правильному домашньому "
-                "догляду за шкірою."
+                "Навчання правильному домашньому " "догляду за шкірою."
             ),
             audience=Course.Audience.EVERYONE,
             training_type=Course.TrainingType.BOTH,
@@ -26,9 +25,7 @@ class AcademyViewsTests(TestCase):
 
         cls.professional_course = Course.objects.create(
             title="Професійна мезотерапія",
-            description=(
-                "Професійне навчання для косметологів."
-            ),
+            description=("Професійне навчання для косметологів."),
             audience=Course.Audience.COSMETOLOGISTS,
             training_type=Course.TrainingType.INDIVIDUAL,
             format=Course.Format.OFFLINE,
@@ -49,9 +46,7 @@ class AcademyViewsTests(TestCase):
         )
 
     def test_course_list_is_available(self):
-        response = self.client.get(
-            reverse("academy:course-list")
-        )
+        response = self.client.get(reverse("academy:course-list"))
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(
@@ -60,9 +55,7 @@ class AcademyViewsTests(TestCase):
         )
 
     def test_course_list_displays_both_audiences(self):
-        response = self.client.get(
-            reverse("academy:course-list")
-        )
+        response = self.client.get(reverse("academy:course-list"))
 
         self.assertContains(
             response,
@@ -74,9 +67,7 @@ class AcademyViewsTests(TestCase):
         )
 
     def test_unpublished_course_is_hidden(self):
-        response = self.client.get(
-            reverse("academy:course-list")
-        )
+        response = self.client.get(reverse("academy:course-list"))
 
         self.assertNotContains(
             response,
@@ -122,9 +113,7 @@ class AcademyViewsTests(TestCase):
             {
                 "applicant_name": "Марія",
                 "applicant_phone": "+380991112233",
-                "applicant_comment": (
-                    "Цікавить індивідуальне навчання."
-                ),
+                "applicant_comment": ("Цікавить індивідуальне навчання."),
             },
         )
 
@@ -165,16 +154,14 @@ class AcademyViewsTests(TestCase):
         )
 
     def test_authenticated_user_cannot_create_duplicate_application(
-            self,
+        self,
     ):
-        cosmetologist = (
-            get_user_model().objects.create_user(
-                username="cosmetologist",
-                password="test-password-123",
-                first_name="Анна",
-                phone_number="+380991112244",
-                user_type="cosmetologist",
-            )
+        cosmetologist = get_user_model().objects.create_user(
+            username="cosmetologist",
+            password="test-password-123",
+            first_name="Анна",
+            phone_number="+380991112244",
+            user_type="cosmetologist",
         )
 
         self.client.force_login(cosmetologist)
@@ -223,13 +210,9 @@ class AcademyViewsTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(
-            CourseEnrollment.objects.exists()
-        )
+        self.assertFalse(CourseEnrollment.objects.exists())
 
-        phone_errors = response.context["form"].errors[
-            "applicant_phone"
-        ]
+        phone_errors = response.context["form"].errors["applicant_phone"]
 
         self.assertIn(
             (

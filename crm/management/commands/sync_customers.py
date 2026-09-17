@@ -25,18 +25,14 @@ class Command(BaseCommand):
         self.skipped_count = 0
 
     def get_customer_type(
-            self,
-            user=None,
-            professional=False,
+        self,
+        user=None,
+        professional=False,
     ):
         if professional:
             return Customer.CustomerType.COSMETOLOGIST
 
-        if (
-                user
-                and getattr(user, "user_type", None)
-                == "cosmetologist"
-        ):
+        if user and getattr(user, "user_type", None) == "cosmetologist":
             return Customer.CustomerType.COSMETOLOGIST
 
         return Customer.CustomerType.CLIENT
@@ -50,33 +46,30 @@ class Command(BaseCommand):
         return user.username
 
     def get_or_create_customer(
-            self,
-            *,
-            full_name,
-            phone_number,
-            user=None,
-            customer_type,
+        self,
+        *,
+        full_name,
+        phone_number,
+        user=None,
+        customer_type,
     ):
         if not phone_number:
             self.skipped_count += 1
             return None
 
         try:
-            customer, created = (
-                Customer.objects.get_or_create_by_phone(
-                    full_name=full_name,
-                    phone_number=phone_number,
-                    user=user,
-                    customer_type=customer_type,
-                )
+            customer, created = Customer.objects.get_or_create_by_phone(
+                full_name=full_name,
+                phone_number=phone_number,
+                user=user,
+                customer_type=customer_type,
             )
         except ValidationError as error:
             self.skipped_count += 1
 
             self.stdout.write(
                 self.style.WARNING(
-                    f"Пропущено номер {phone_number}: "
-                    f"{error}"
+                    f"Пропущено номер {phone_number}: " f"{error}"
                 )
             )
 
@@ -110,11 +103,7 @@ class Command(BaseCommand):
         )
 
         for booking in bookings.iterator():
-            user = (
-                booking.client
-                if booking.client_id
-                else None
-            )
+            user = booking.client if booking.client_id else None
 
             customer = self.get_or_create_customer(
                 full_name=booking.client_name,
@@ -125,10 +114,7 @@ class Command(BaseCommand):
                 ),
             )
 
-            if (
-                    customer
-                    and booking.customer_id != customer.pk
-            ):
+            if customer and booking.customer_id != customer.pk:
                 Booking.objects.filter(
                     pk=booking.pk,
                 ).update(
@@ -144,26 +130,22 @@ class Command(BaseCommand):
         )
 
         for order in orders.iterator():
-            user = (
-                order.client
-                if order.client_id
-                else None
-            )
+            user = order.client if order.client_id else None
 
             professional = (
-                    user is not None
-                    and getattr(
-                user,
-                "user_type",
-                None,
-            )
-                    == "cosmetologist"
+                user is not None
+                and getattr(
+                    user,
+                    "user_type",
+                    None,
+                )
+                == "cosmetologist"
             )
 
             if (
-                    order.customer_id
-                    and order.customer.customer_type
-                    == Customer.CustomerType.COSMETOLOGIST
+                order.customer_id
+                and order.customer.customer_type
+                == Customer.CustomerType.COSMETOLOGIST
             ):
                 professional = True
 
@@ -177,10 +159,7 @@ class Command(BaseCommand):
                 ),
             )
 
-            if (
-                    customer
-                    and order.customer_id != customer.pk
-            ):
+            if customer and order.customer_id != customer.pk:
                 Order.objects.filter(
                     pk=order.pk,
                 ).update(
@@ -190,23 +169,16 @@ class Command(BaseCommand):
                 self.linked_count += 1
 
     def sync_course_applications(self):
-        applications = (
-            CourseEnrollment.objects.select_related(
-                "student",
-                "course",
-            )
+        applications = CourseEnrollment.objects.select_related(
+            "student",
+            "course",
         )
 
         for application in applications.iterator():
-            user = (
-                application.student
-                if application.student_id
-                else None
-            )
+            user = application.student if application.student_id else None
 
             professional_course = (
-                    application.course.audience
-                    == Course.Audience.COSMETOLOGISTS
+                application.course.audience == Course.Audience.COSMETOLOGISTS
             )
 
             customer = self.get_or_create_customer(
@@ -219,11 +191,7 @@ class Command(BaseCommand):
                 ),
             )
 
-            if (
-                    customer
-                    and application.customer_id
-                    != customer.pk
-            ):
+            if customer and application.customer_id != customer.pk:
                 CourseEnrollment.objects.filter(
                     pk=application.pk,
                 ).update(
@@ -234,9 +202,7 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        self.stdout.write(
-            "Синхронізація клієнтів CRM..."
-        )
+        self.stdout.write("Синхронізація клієнтів CRM...")
 
         self.sync_users()
         self.sync_bookings()
@@ -250,45 +216,21 @@ class Command(BaseCommand):
         ).count()
 
         cosmetologists = Customer.objects.filter(
-            customer_type=(
-                Customer.CustomerType.COSMETOLOGIST
-            ),
+            customer_type=(Customer.CustomerType.COSMETOLOGIST),
         ).count()
 
         self.stdout.write("")
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                "Синхронізацію завершено."
-            )
-        )
+        self.stdout.write(self.style.SUCCESS("Синхронізацію завершено."))
 
-        self.stdout.write(
-            f"Створено нових клієнтів: "
-            f"{self.created_count}"
-        )
+        self.stdout.write(f"Створено нових клієнтів: " f"{self.created_count}")
 
-        self.stdout.write(
-            f"Прив’язано операцій: "
-            f"{self.linked_count}"
-        )
+        self.stdout.write(f"Прив’язано операцій: " f"{self.linked_count}")
 
-        self.stdout.write(
-            f"Пропущено записів: "
-            f"{self.skipped_count}"
-        )
+        self.stdout.write(f"Пропущено записів: " f"{self.skipped_count}")
 
-        self.stdout.write(
-            f"Усього клієнтів CRM: "
-            f"{total_customers}"
-        )
+        self.stdout.write(f"Усього клієнтів CRM: " f"{total_customers}")
 
-        self.stdout.write(
-            f"Звичайних клієнтів: "
-            f"{regular_clients}"
-        )
+        self.stdout.write(f"Звичайних клієнтів: " f"{regular_clients}")
 
-        self.stdout.write(
-            f"Косметологів: "
-            f"{cosmetologists}"
-        )
+        self.stdout.write(f"Косметологів: " f"{cosmetologists}")

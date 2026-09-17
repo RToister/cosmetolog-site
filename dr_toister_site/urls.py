@@ -5,9 +5,7 @@ from django.urls import include, path
 
 from . import views
 
-admin.site.site_header = (
-    "DR TOISTER — панель керування"
-)
+admin.site.site_header = "DR TOISTER — панель керування"
 admin.site.site_title = "DR TOISTER"
 admin.site.index_title = "Керування клінікою"
 

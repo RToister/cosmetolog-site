@@ -56,9 +56,7 @@ class ProductAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    ordering = (
-        "name",
-    )
+    ordering = ("name",)
 
     fieldsets = (
         (
@@ -109,9 +107,7 @@ class ProductAdmin(admin.ModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 1
-    autocomplete_fields = (
-        "product",
-    )
+    autocomplete_fields = ("product",)
     readonly_fields = (
         "price_at_purchase",
         "subtotal_display",
@@ -131,14 +127,11 @@ class OrderItemInline(admin.TabularInline):
         return f"{obj.subtotal:.2f} грн"
 
     def has_add_permission(
-            self,
-            request,
-            obj=None,
+        self,
+        request,
+        obj=None,
     ):
-        if (
-                obj
-                and obj.status != Order.Status.PENDING
-        ):
+        if obj and obj.status != Order.Status.PENDING:
             return False
 
         return super().has_add_permission(
@@ -147,14 +140,11 @@ class OrderItemInline(admin.TabularInline):
         )
 
     def has_delete_permission(
-            self,
-            request,
-            obj=None,
+        self,
+        request,
+        obj=None,
     ):
-        if (
-                obj
-                and obj.status != Order.Status.PENDING
-        ):
+        if obj and obj.status != Order.Status.PENDING:
             return False
 
         return super().has_delete_permission(
@@ -196,13 +186,9 @@ class OrderAdmin(admin.ModelAdmin):
         "updated_at",
         "created_by",
     )
-    autocomplete_fields = (
-        "client",
-    )
+    autocomplete_fields = ("client",)
     date_hierarchy = "created_at"
-    inlines = (
-        OrderItemInline,
-    )
+    inlines = (OrderItemInline,)
     actions = (
         "mark_selected_as_paid",
         "cancel_selected_orders",
@@ -259,11 +245,11 @@ class OrderAdmin(admin.ModelAdmin):
         return f"{obj.total_price:.2f} грн"
 
     def save_model(
-            self,
-            request,
-            obj,
-            form,
-            change,
+        self,
+        request,
+        obj,
+        form,
+        change,
     ):
         if not obj.created_by_id:
             obj.created_by = request.user
@@ -279,11 +265,11 @@ class OrderAdmin(admin.ModelAdmin):
         )
 
     def save_related(
-            self,
-            request,
-            form,
-            formsets,
-            change,
+        self,
+        request,
+        form,
+        formsets,
+        change,
     ):
         super().save_related(
             request,
@@ -294,15 +280,11 @@ class OrderAdmin(admin.ModelAdmin):
 
         form.instance.recalculate_total()
 
-    @admin.action(
-        description=(
-                "Позначити вибрані замовлення оплаченими"
-        )
-    )
+    @admin.action(description=("Позначити вибрані замовлення оплаченими"))
     def mark_selected_as_paid(
-            self,
-            request,
-            queryset,
+        self,
+        request,
+        queryset,
     ):
         completed_count = 0
 
@@ -323,20 +305,15 @@ class OrderAdmin(admin.ModelAdmin):
         if completed_count:
             self.message_user(
                 request,
-                (
-                    f"Оплачено замовлень: "
-                    f"{completed_count}."
-                ),
+                (f"Оплачено замовлень: " f"{completed_count}."),
                 level=messages.SUCCESS,
             )
 
-    @admin.action(
-        description="Скасувати вибрані замовлення"
-    )
+    @admin.action(description="Скасувати вибрані замовлення")
     def cancel_selected_orders(
-            self,
-            request,
-            queryset,
+        self,
+        request,
+        queryset,
     ):
         cancelled_count = 0
 
@@ -357,9 +334,6 @@ class OrderAdmin(admin.ModelAdmin):
         if cancelled_count:
             self.message_user(
                 request,
-                (
-                    f"Скасовано замовлень: "
-                    f"{cancelled_count}."
-                ),
+                (f"Скасовано замовлень: " f"{cancelled_count}."),
                 level=messages.SUCCESS,
             )
