@@ -4,8 +4,11 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from django.db.models import F
 from django.utils import timezone
+
+from dr_toister_site.phone_numbers import (
+    normalize_phone_number,
+)
 
 
 class ProductCategory(models.Model):
@@ -329,33 +332,25 @@ class Order(models.Model):
     def clean(self):
         super().clean()
 
-        if not self.client_name.strip():
+        self.client_name = (
+            self.client_name.strip()
+        )
+
+        if len(self.client_name) < 2:
             raise ValidationError(
                 {
                     "client_name": (
-                        "Вкажіть ім’я покупця."
+                        "Ім’я повинно містити "
+                        "щонайменше 2 символи."
                     )
                 }
             )
 
-        digits = "".join(
-            character
-            for character in self.client_phone
-            if character.isdigit()
+        self.client_phone = (
+            normalize_phone_number(
+                self.client_phone
+            )
         )
-
-        if (
-                len(digits) < 10
-                or len(digits) > 15
-        ):
-            raise ValidationError(
-                {
-                    "client_phone": (
-                        "Введіть коректний "
-                        "номер телефону."
-                    )
-                }
-            )
 
     def save(self, *args, **kwargs):
         if self.client_id:
@@ -369,6 +364,16 @@ class Order(models.Model):
                 self.client_phone = (
                     self.client.phone_number
                 )
+
+        self.client_name = (
+            self.client_name.strip()
+        )
+
+        self.client_phone = (
+            normalize_phone_number(
+                self.client_phone
+            )
+        )
 
         self.full_clean()
 
@@ -399,66 +404,113 @@ class Order(models.Model):
 
     @transaction.atomic
     def mark_as_paid(self):
-        if self.status == self.Status.PAID:
+        locked_order = (
+            type(self).objects
+            .select_for_update()
+            .get(pk=self.pk)
+        )
+
+        if (
+                locked_order.status
+                == self.Status.PAID
+        ):
+            self.status = locked_order.status
+            self.paid_at = locked_order.paid_at
+
             return
 
-        if self.status == self.Status.CANCELLED:
+        if (
+                locked_order.status
+                == self.Status.CANCELLED
+        ):
             raise ValidationError(
-                (
-                    "Скасоване замовлення "
-                    "не можна оплатити."
-                )
+                "Скасоване замовлення "
+                "не можна оплатити."
             )
 
-        if not self.payment_method:
+        if not locked_order.payment_method:
             raise ValidationError(
-                (
-                    "Перед оплатою оберіть "
-                    "спосіб оплати."
-                )
+                "Перед оплатою оберіть "
+                "спосіб оплати."
             )
 
         items = list(
-            self.items.select_related(
-                "product"
-            ).select_for_update()
+            locked_order.items.all()
         )
 
         if not items:
             raise ValidationError(
-                (
-                    "Порожнє замовлення "
-                    "не можна оплатити."
-                )
+                "Порожнє замовлення "
+                "не можна оплатити."
             )
 
+        product_ids = [
+            item.product_id
+            for item in items
+        ]
+
+        locked_products = {
+            product.pk: product
+            for product in (
+                Product.objects
+                .select_for_update()
+                .filter(
+                    pk__in=product_ids
+                )
+            )
+        }
+
         for item in items:
+            product = locked_products.get(
+                item.product_id
+            )
+
+            if product is None:
+                raise ValidationError(
+                    "Один із товарів "
+                    "більше не доступний."
+                )
+
+            if not product.is_active:
+                raise ValidationError(
+                    f"Товар «{product.name}» "
+                    "зараз недоступний."
+                )
+
             if (
                     item.quantity
-                    > item.product.stock_quantity
+                    > product.stock_quantity
             ):
                 raise ValidationError(
-                    (
-                        "Недостатньо товару "
-                        f"«{item.product.name}» "
-                        "на складі."
-                    )
+                    "Недостатньо товару "
+                    f"«{product.name}» "
+                    "на складі."
                 )
 
         for item in items:
-            Product.objects.filter(
-                pk=item.product_id,
-            ).update(
-                stock_quantity=(
-                        F("stock_quantity")
-                        - item.quantity
+            product = locked_products[
+                item.product_id
+            ]
+
+            product.stock_quantity -= (
+                item.quantity
+            )
+
+            product.save(
+                update_fields=(
+                    "stock_quantity",
+                    "updated_at",
                 )
             )
 
-        self.status = self.Status.PAID
-        self.paid_at = timezone.now()
+        locked_order.status = (
+            self.Status.PAID
+        )
+        locked_order.paid_at = (
+            timezone.now()
+        )
 
-        self.save(
+        locked_order.save(
             update_fields=(
                 "status",
                 "paid_at",
@@ -466,33 +518,87 @@ class Order(models.Model):
             )
         )
 
+        self.status = locked_order.status
+        self.paid_at = locked_order.paid_at
+
     @transaction.atomic
     def cancel(self):
-        if self.status == self.Status.CANCELLED:
+        locked_order = (
+            type(self).objects
+            .select_for_update()
+            .get(pk=self.pk)
+        )
+
+        if (
+                locked_order.status
+                == self.Status.CANCELLED
+        ):
+            self.status = locked_order.status
+
             return
 
-        if self.status == self.Status.PAID:
-            for item in self.items.all():
-                Product.objects.filter(
-                    pk=item.product_id,
-                ).update(
-                    stock_quantity=(
-                            F("stock_quantity")
-                            + item.quantity
+        items = list(
+            locked_order.items.all()
+        )
+
+        if (
+                locked_order.status
+                == self.Status.PAID
+        ):
+            product_ids = [
+                item.product_id
+                for item in items
+            ]
+
+            locked_products = {
+                product.pk: product
+                for product in (
+                    Product.objects
+                    .select_for_update()
+                    .filter(
+                        pk__in=product_ids
+                    )
+                )
+            }
+
+            for item in items:
+                product = (
+                    locked_products.get(
+                        item.product_id
                     )
                 )
 
-        self.status = self.Status.CANCELLED
+                if product is None:
+                    continue
 
-        self.save(
+                product.stock_quantity += (
+                    item.quantity
+                )
+
+                product.save(
+                    update_fields=(
+                        "stock_quantity",
+                        "updated_at",
+                    )
+                )
+
+        locked_order.status = (
+            self.Status.CANCELLED
+        )
+
+        locked_order.save(
             update_fields=(
                 "status",
                 "updated_at",
             )
         )
 
+        self.status = locked_order.status
+
     def __str__(self):
-        order_number = self.pk or "нове"
+        order_number = (
+                self.pk or "нове"
+        )
 
         return (
             f"Замовлення №{order_number} — "
@@ -531,14 +637,21 @@ class OrderItem(models.Model):
     )
 
     class Meta:
-        verbose_name = "Товар у замовленні"
+        verbose_name = (
+            "Товар у замовленні"
+        )
         verbose_name_plural = (
             "Товари в замовленні"
         )
         constraints = [
             models.UniqueConstraint(
-                fields=("order", "product"),
-                name="unique_product_in_order",
+                fields=(
+                    "order",
+                    "product",
+                ),
+                name=(
+                    "unique_product_in_order"
+                ),
             ),
         ]
 
@@ -661,5 +774,6 @@ class OrderItem(models.Model):
         return (
             f"{self.product} × "
             f"{self.quantity} "
-            f"у замовленні №{self.order_id}"
+            f"у замовленні "
+            f"№{self.order_id}"
         )

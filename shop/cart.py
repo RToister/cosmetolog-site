@@ -10,18 +10,22 @@ class Cart:
         self.session = request.session
         self.user = request.user
 
-        cart = self.session.get(CART_SESSION_ID)
+        cart = self.session.get(
+            CART_SESSION_ID
+        )
 
         if cart is None:
-            cart = self.session[CART_SESSION_ID] = {}
+            cart = self.session[
+                CART_SESSION_ID
+            ] = {}
 
         self.cart = cart
 
     @property
-    def user_is_cosmetologist(self):
-        return (
-                self.user.is_authenticated
-                and self.user.user_type == "cosmetologist"
+    def user_has_professional_access(self):
+        return bool(
+            self.user.is_authenticated
+            and self.user.can_buy_professional_products
         )
 
     def add(
@@ -38,17 +42,20 @@ class Cart:
             }
 
         if override_quantity:
-            self.cart[product_id]["quantity"] = quantity
+            new_quantity = quantity
         else:
-            self.cart[product_id]["quantity"] += quantity
-
-        if (
-                self.cart[product_id]["quantity"]
-                > product.stock_quantity
-        ):
-            self.cart[product_id]["quantity"] = (
-                product.stock_quantity
+            new_quantity = (
+                    self.cart[product_id]["quantity"]
+                    + quantity
             )
+
+        self.cart[product_id]["quantity"] = min(
+            new_quantity,
+            product.stock_quantity,
+        )
+
+        if self.cart[product_id]["quantity"] < 1:
+            del self.cart[product_id]
 
         self.save()
 
@@ -64,7 +71,9 @@ class Cart:
 
     def clear(self):
         self.session[CART_SESSION_ID] = {}
-        self.cart = self.session[CART_SESSION_ID]
+        self.cart = self.session[
+            CART_SESSION_ID
+        ]
         self.save()
 
     def __len__(self):
@@ -74,27 +83,34 @@ class Cart:
         )
 
     def __iter__(self):
-        product_ids = self.cart.keys()
+        product_ids = list(
+            self.cart.keys()
+        )
 
-        products = Product.objects.filter(
-            pk__in=product_ids,
-            is_active=True,
-        ).select_related("category")
+        products = (
+            Product.objects.filter(
+                pk__in=product_ids,
+                is_active=True,
+            )
+            .select_related("category")
+        )
 
-        if not self.user_is_cosmetologist:
+        if not self.user_has_professional_access:
             products = products.filter(
-                availability=Product.Availability.PUBLIC,
+                availability=(
+                    Product.Availability.PUBLIC
+                ),
                 retail_price__isnull=False,
             )
 
-        existing_product_ids = {
-            str(product.pk)
+        products_by_id = {
+            str(product.pk): product
             for product in products
         }
 
         invalid_product_ids = (
                 set(self.cart.keys())
-                - existing_product_ids
+                - set(products_by_id.keys())
         )
 
         for product_id in invalid_product_ids:
@@ -103,19 +119,52 @@ class Cart:
         if invalid_product_ids:
             self.save()
 
-        for product in products:
-            product_id = str(product.pk)
-            cart_item = self.cart[product_id].copy()
+        for product_id in list(
+                self.cart.keys()
+        ):
+            product = products_by_id.get(
+                product_id
+            )
 
-            if self.user_is_cosmetologist:
+            if product is None:
+                continue
+
+            cart_item = self.cart[
+                product_id
+            ].copy()
+
+            quantity = cart_item.get(
+                "quantity",
+                0,
+            )
+
+            if quantity < 1:
+                del self.cart[product_id]
+                self.save()
+                continue
+
+            if quantity > product.stock_quantity:
+                quantity = product.stock_quantity
+                self.cart[product_id][
+                    "quantity"
+                ] = quantity
+                self.save()
+
+            if quantity < 1:
+                del self.cart[product_id]
+                self.save()
+                continue
+
+            if self.user_has_professional_access:
                 price = product.professional_price
             else:
                 price = product.retail_price
 
+            cart_item["quantity"] = quantity
             cart_item["product"] = product
             cart_item["price"] = price
             cart_item["total_price"] = (
-                    price * cart_item["quantity"]
+                    price * quantity
             )
 
             yield cart_item

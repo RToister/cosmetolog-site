@@ -3,6 +3,10 @@ from django.contrib.auth.forms import (
     UserCreationForm,
 )
 
+from dr_toister_site.phone_numbers import (
+    normalize_phone_number,
+)
+
 from .models import User
 
 
@@ -17,6 +21,12 @@ class UserRegistrationForm(UserCreationForm):
         max_length=20,
         required=True,
         label="Номер телефону",
+        widget=forms.TextInput(
+            attrs={
+                "autocomplete": "tel",
+                "placeholder": "+380991112233",
+            }
+        ),
     )
 
     class Meta(UserCreationForm.Meta):
@@ -33,9 +43,8 @@ class UserRegistrationForm(UserCreationForm):
         }
 
     def clean_phone_number(self):
-        phone_number = (
+        phone_number = normalize_phone_number(
             self.cleaned_data["phone_number"]
-            .strip()
         )
 
         if User.objects.filter(
@@ -77,11 +86,18 @@ class UserProfileForm(forms.ModelForm):
             "last_name": "Прізвище",
             "phone_number": "Номер телефону",
         }
+        widgets = {
+            "phone_number": forms.TextInput(
+                attrs={
+                    "autocomplete": "tel",
+                    "placeholder": "+380991112233",
+                }
+            ),
+        }
 
     def clean_phone_number(self):
-        phone_number = (
+        phone_number = normalize_phone_number(
             self.cleaned_data["phone_number"]
-            .strip()
         )
 
         if User.objects.filter(

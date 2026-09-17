@@ -1,11 +1,16 @@
-from datetime import date
-
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
+from dr_toister_site.phone_numbers import (
+    normalize_phone_number,
+)
 from services.models import Procedure
 
-from .models import Booking, VisitComment
+from .models import (
+    Booking,
+    VisitComment,
+)
 
 
 class BookingForm(forms.ModelForm):
@@ -22,13 +27,17 @@ class BookingForm(forms.ModelForm):
         widgets = {
             "client_name": forms.TextInput(
                 attrs={
-                    "placeholder": "Введіть ваше ім’я",
+                    "placeholder": (
+                        "Введіть ваше ім’я"
+                    ),
                     "autocomplete": "name",
                 }
             ),
             "client_phone": forms.TextInput(
                 attrs={
-                    "placeholder": "+380XXXXXXXXX",
+                    "placeholder": (
+                        "+380991112233"
+                    ),
                     "autocomplete": "tel",
                 }
             ),
@@ -50,8 +59,16 @@ class BookingForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+            self,
+            *args,
+            user=None,
+            **kwargs,
+    ):
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
         self.user = user
 
@@ -69,38 +86,47 @@ class BookingForm(forms.ModelForm):
         self.fields["procedure"].empty_label = (
             "Оберіть процедуру"
         )
+
         self.fields["start_time"].choices = [
             (
                 "",
-                "Спочатку оберіть процедуру та дату",
+                (
+                    "Спочатку оберіть "
+                    "процедуру та дату"
+                ),
             )
         ]
 
-        self.fields["date"].widget.attrs["min"] = (
-            date.today().isoformat()
-        )
+        self.fields["date"].widget.attrs[
+            "min"
+        ] = timezone.localdate().isoformat()
 
         if user and user.is_authenticated:
-            self.fields["client_name"].initial = (
+            self.fields[
+                "client_name"
+            ].initial = (
                     user.get_full_name()
                     or user.username
             )
-            self.fields["client_phone"].initial = (
-                user.phone_number
-            )
 
-        for field_name, field in self.fields.items():
+            self.fields[
+                "client_phone"
+            ].initial = user.phone_number
+
+        for field_name, field in (
+                self.fields.items()
+        ):
             if field_name in (
                     "procedure",
                     "start_time",
             ):
-                field.widget.attrs["class"] = (
-                    "form-select"
-                )
+                field.widget.attrs[
+                    "class"
+                ] = "form-select"
             else:
-                field.widget.attrs["class"] = (
-                    "form-control"
-                )
+                field.widget.attrs[
+                    "class"
+                ] = "form-control"
 
         if self.is_bound:
             selected_time = self.data.get(
@@ -131,38 +157,21 @@ class BookingForm(forms.ModelForm):
         return client_name
 
     def clean_client_phone(self):
-        client_phone = self.cleaned_data[
-            "client_phone"
-        ].strip()
-
-        allowed_characters = "+0123456789 ()-"
-
-        if any(
-                character not in allowed_characters
-                for character in client_phone
-        ):
-            raise ValidationError(
-                "Номер телефону містить "
-                "недопустимі символи."
-            )
-
-        digits = "".join(
-            character
-            for character in client_phone
-            if character.isdigit()
+        return normalize_phone_number(
+            self.cleaned_data[
+                "client_phone"
+            ]
         )
 
-        if len(digits) < 10 or len(digits) > 15:
-            raise ValidationError(
-                "Введіть коректний номер телефону."
-            )
-
-        return client_phone
-
     def clean_date(self):
-        booking_date = self.cleaned_data["date"]
+        booking_date = self.cleaned_data[
+            "date"
+        ]
 
-        if booking_date < date.today():
+        if (
+                booking_date
+                < timezone.localdate()
+        ):
             raise ValidationError(
                 "Неможливо створити запис "
                 "на минулу дату."
@@ -187,14 +196,18 @@ class StaffBookingForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "autocomplete": "name",
-                    "placeholder": "Ім’я клієнта",
+                    "placeholder": (
+                        "Ім’я клієнта"
+                    ),
                 }
             ),
             "client_phone": forms.TextInput(
                 attrs={
                     "class": "form-control",
                     "autocomplete": "tel",
-                    "placeholder": "+380XXXXXXXXX",
+                    "placeholder": (
+                        "+380991112233"
+                    ),
                 }
             ),
             "procedure": forms.Select(
@@ -221,14 +234,22 @@ class StaffBookingForm(forms.ModelForm):
                     "class": "form-control",
                     "rows": 4,
                     "placeholder": (
-                        "Коментар або побажання клієнта"
+                        "Коментар або "
+                        "побажання клієнта"
                     ),
                 }
             ),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+            self,
+            *args,
+            **kwargs,
+    ):
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
         self.fields["procedure"].queryset = (
             Procedure.objects.filter(
@@ -244,9 +265,10 @@ class StaffBookingForm(forms.ModelForm):
         self.fields["procedure"].empty_label = (
             "Оберіть процедуру"
         )
-        self.fields["date"].widget.attrs["min"] = (
-            date.today().isoformat()
-        )
+
+        self.fields["date"].widget.attrs[
+            "min"
+        ] = timezone.localdate().isoformat()
 
     def clean_client_name(self):
         client_name = self.cleaned_data[
@@ -262,38 +284,21 @@ class StaffBookingForm(forms.ModelForm):
         return client_name
 
     def clean_client_phone(self):
-        phone_number = self.cleaned_data[
-            "client_phone"
-        ].strip()
-
-        allowed_characters = "+0123456789 ()-"
-
-        if any(
-                character not in allowed_characters
-                for character in phone_number
-        ):
-            raise ValidationError(
-                "Номер телефону містить "
-                "недопустимі символи."
-            )
-
-        digits = "".join(
-            character
-            for character in phone_number
-            if character.isdigit()
+        return normalize_phone_number(
+            self.cleaned_data[
+                "client_phone"
+            ]
         )
 
-        if len(digits) < 10 or len(digits) > 15:
-            raise ValidationError(
-                "Введіть коректний номер телефону."
-            )
-
-        return phone_number
-
     def clean_date(self):
-        booking_date = self.cleaned_data["date"]
+        booking_date = self.cleaned_data[
+            "date"
+        ]
 
-        if booking_date < date.today():
+        if (
+                booking_date
+                < timezone.localdate()
+        ):
             raise ValidationError(
                 "Неможливо перенести запис "
                 "на минулу дату."
@@ -330,3 +335,21 @@ class VisitCommentForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean_comment(self):
+        comment = self.cleaned_data[
+            "comment"
+        ].strip()
+
+        if len(comment) < 2:
+            raise ValidationError(
+                "Коментар повинен містити "
+                "щонайменше 2 символи."
+            )
+
+        return comment
+
+    def clean_recommendations(self):
+        return self.cleaned_data[
+            "recommendations"
+        ].strip()

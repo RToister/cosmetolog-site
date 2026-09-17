@@ -1,6 +1,10 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
+from dr_toister_site.phone_numbers import (
+    normalize_phone_number,
+)
+
 
 class CartAddProductForm(forms.Form):
     quantity = forms.IntegerField(
@@ -21,7 +25,10 @@ class CartAddProductForm(forms.Form):
             product,
             **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
         self.product = product
 
@@ -30,19 +37,23 @@ class CartAddProductForm(forms.Form):
         ] = product.stock_quantity
 
     def clean_quantity(self):
-        quantity = self.cleaned_data["quantity"]
+        quantity = self.cleaned_data[
+            "quantity"
+        ]
 
         if self.product.stock_quantity < 1:
             raise ValidationError(
-                "Товару наразі немає в наявності."
+                "Товару наразі немає "
+                "в наявності."
             )
 
-        if quantity > self.product.stock_quantity:
+        if (
+                quantity
+                > self.product.stock_quantity
+        ):
             raise ValidationError(
-                (
-                    "Обрана кількість перевищує "
-                    "залишок товару на складі."
-                )
+                "Обрана кількість перевищує "
+                "залишок товару на складі."
             )
 
         return quantity
@@ -55,18 +66,23 @@ class CheckoutForm(forms.Form):
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "Введіть ваше ім’я",
+                "placeholder": (
+                    "Введіть ваше ім’я"
+                ),
                 "autocomplete": "name",
             }
         ),
     )
+
     client_phone = forms.CharField(
         label="Номер телефону",
         max_length=20,
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
-                "placeholder": "+380XXXXXXXXX",
+                "placeholder": (
+                    "+380991112233"
+                ),
                 "autocomplete": "tel",
             }
         ),
@@ -78,14 +94,22 @@ class CheckoutForm(forms.Form):
             user=None,
             **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            **kwargs,
+        )
 
         if user and user.is_authenticated:
-            self.fields["client_name"].initial = (
+            self.fields[
+                "client_name"
+            ].initial = (
                     user.get_full_name()
                     or user.username
             )
-            self.fields["client_phone"].initial = (
+
+            self.fields[
+                "client_phone"
+            ].initial = (
                 user.phone_number
             )
 
@@ -96,35 +120,15 @@ class CheckoutForm(forms.Form):
 
         if len(client_name) < 2:
             raise ValidationError(
-                "Ім’я повинно містити щонайменше 2 символи."
+                "Ім’я повинно містити "
+                "щонайменше 2 символи."
             )
 
         return client_name
 
     def clean_client_phone(self):
-        client_phone = self.cleaned_data[
-            "client_phone"
-        ].strip()
-
-        allowed_characters = "+0123456789 ()-"
-
-        if any(
-                character not in allowed_characters
-                for character in client_phone
-        ):
-            raise ValidationError(
-                "Номер телефону містить недопустимі символи."
-            )
-
-        digits = "".join(
-            character
-            for character in client_phone
-            if character.isdigit()
+        return normalize_phone_number(
+            self.cleaned_data[
+                "client_phone"
+            ]
         )
-
-        if len(digits) < 10 or len(digits) > 15:
-            raise ValidationError(
-                "Введіть коректний номер телефону."
-            )
-
-        return client_phone

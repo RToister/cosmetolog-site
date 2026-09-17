@@ -3,6 +3,10 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 
+from dr_toister_site.phone_numbers import (
+    normalize_phone_number,
+)
+
 
 class User(AbstractUser):
     class UserType(models.TextChoices):
@@ -44,9 +48,7 @@ class User(AbstractUser):
     cosmetologist_verified_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name="Хто підтвердив косметолога",
-        related_name=(
-            "verified_cosmetologists"
-        ),
+        related_name="verified_cosmetologists",
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
@@ -119,7 +121,24 @@ class User(AbstractUser):
             ]
         )
 
+    def clean(self):
+        super().clean()
+
+        if self.phone_number:
+            self.phone_number = (
+                normalize_phone_number(
+                    self.phone_number
+                )
+            )
+
     def save(self, *args, **kwargs):
+        if self.phone_number:
+            self.phone_number = (
+                normalize_phone_number(
+                    self.phone_number
+                )
+            )
+
         if (
                 self.user_type
                 != self.UserType.COSMETOLOGIST

@@ -3,26 +3,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
-
-def normalize_phone_number(phone_number):
-    digits = "".join(
-        character
-        for character in str(phone_number)
-        if character.isdigit()
-    )
-
-    if digits.startswith("00"):
-        digits = digits[2:]
-
-    if len(digits) == 10 and digits.startswith("0"):
-        digits = f"38{digits}"
-
-    if len(digits) < 10 or len(digits) > 15:
-        raise ValidationError(
-            "Введіть коректний номер телефону."
-        )
-
-    return f"+{digits}"
+from dr_toister_site.phone_numbers import (
+    normalize_phone_number,
+)
 
 
 class CustomerManager(models.Manager):
@@ -56,7 +39,11 @@ class CustomerManager(models.Manager):
             phone_number=normalized_phone,
         ).first()
 
-        if customer is None and user and user.is_authenticated:
+        if (
+                customer is None
+                and user
+                and user.is_authenticated
+        ):
             customer = self.filter(
                 user=user,
             ).first()
@@ -67,7 +54,10 @@ class CustomerManager(models.Manager):
                 phone_number=normalized_phone,
                 user=(
                     user
-                    if user and user.is_authenticated
+                    if (
+                            user
+                            and user.is_authenticated
+                    )
                     else None
                 ),
                 customer_type=customer_type,
@@ -79,8 +69,12 @@ class CustomerManager(models.Manager):
         fields_to_update = []
 
         if full_name and not customer.full_name:
-            customer.full_name = full_name
-            fields_to_update.append("full_name")
+            customer.full_name = (
+                full_name.strip()
+            )
+            fields_to_update.append(
+                "full_name"
+            )
 
         if (
                 user
@@ -96,11 +90,19 @@ class CustomerManager(models.Manager):
                 and customer.customer_type
                 != self.model.CustomerType.COSMETOLOGIST
         ):
-            customer.customer_type = customer_type
-            fields_to_update.append("customer_type")
+            customer.customer_type = (
+                customer_type
+            )
+            fields_to_update.append(
+                "customer_type"
+            )
 
-        customer.last_activity_at = timezone.now()
-        fields_to_update.append("last_activity_at")
+        customer.last_activity_at = (
+            timezone.now()
+        )
+        fields_to_update.append(
+            "last_activity_at"
+        )
 
         customer.save(
             update_fields=fields_to_update,
@@ -111,7 +113,10 @@ class CustomerManager(models.Manager):
 
 class Customer(models.Model):
     class CustomerType(models.TextChoices):
-        CLIENT = "client", "Звичайний клієнт"
+        CLIENT = (
+            "client",
+            "Звичайний клієнт",
+        )
         COSMETOLOGIST = (
             "cosmetologist",
             "Косметолог",
@@ -125,41 +130,50 @@ class Customer(models.Model):
         null=True,
         blank=True,
     )
+
     full_name = models.CharField(
         "Ім’я",
         max_length=150,
     )
+
     phone_number = models.CharField(
         "Номер телефону",
         max_length=20,
         unique=True,
     )
+
     customer_type = models.CharField(
         "Тип клієнта",
         max_length=20,
         choices=CustomerType.choices,
         default=CustomerType.CLIENT,
     )
+
     notes = models.TextField(
         "Внутрішні нотатки",
         blank=True,
     )
+
     is_active = models.BooleanField(
         "Активний",
         default=True,
     )
+
     first_contact_at = models.DateTimeField(
         "Перше звернення",
         auto_now_add=True,
     )
+
     last_activity_at = models.DateTimeField(
         "Остання активність",
         default=timezone.now,
     )
+
     created_at = models.DateTimeField(
         "Створено",
         auto_now_add=True,
     )
+
     updated_at = models.DateTimeField(
         "Оновлено",
         auto_now=True,
@@ -178,7 +192,9 @@ class Customer(models.Model):
     def clean(self):
         super().clean()
 
-        self.full_name = self.full_name.strip()
+        self.full_name = (
+            self.full_name.strip()
+        )
 
         if len(self.full_name) < 2:
             raise ValidationError(
@@ -190,13 +206,16 @@ class Customer(models.Model):
                 }
             )
 
-        self.phone_number = normalize_phone_number(
-            self.phone_number
+        self.phone_number = (
+            normalize_phone_number(
+                self.phone_number
+            )
         )
 
         if (
                 self.user_id
-                and self.user.user_type == "cosmetologist"
+                and self.user.user_type
+                == "cosmetologist"
         ):
             self.customer_type = (
                 self.CustomerType.COSMETOLOGIST
@@ -218,12 +237,27 @@ class Customer(models.Model):
                     self.user.phone_number
                 )
 
+        self.full_name = (
+            self.full_name.strip()
+        )
+
+        self.phone_number = (
+            normalize_phone_number(
+                self.phone_number
+            )
+        )
+
         self.full_clean()
 
-        return super().save(*args, **kwargs)
+        return super().save(
+            *args,
+            **kwargs,
+        )
 
     def touch(self):
-        self.last_activity_at = timezone.now()
+        self.last_activity_at = (
+            timezone.now()
+        )
 
         self.save(
             update_fields=(
