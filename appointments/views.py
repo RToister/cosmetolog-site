@@ -19,6 +19,9 @@ from django.views.decorators.http import (
     require_POST,
 )
 
+from dr_toister_site.telegram_notifications import (
+    notify_booking_created,
+)
 from schedule.models import BlockedDate, WorkingHour
 from services.models import Procedure
 
@@ -34,7 +37,9 @@ def booking_create(request):
     initial = {}
 
     if request.method == "GET":
-        procedure_id = request.GET.get("procedure")
+        procedure_id = request.GET.get(
+            "procedure"
+        )
 
         if procedure_id:
             initial["procedure"] = procedure_id
@@ -57,6 +62,14 @@ def booking_create(request):
             booking.created_by = request.user
 
         booking.save()
+
+        transaction.on_commit(
+            lambda booking_id=booking.pk: (
+                notify_booking_created(
+                    booking_id
+                )
+            )
+        )
 
         messages.success(
             request,
@@ -86,7 +99,9 @@ def booking_success(request):
 @require_GET
 def available_times(request):
     selected_date = request.GET.get("date")
-    procedure_id = request.GET.get("procedure")
+    procedure_id = request.GET.get(
+        "procedure"
+    )
 
     if not selected_date or not procedure_id:
         return JsonResponse(
@@ -155,7 +170,9 @@ def available_times(request):
 
     try:
         working_hours = WorkingHour.objects.get(
-            day_of_week=booking_date.weekday(),
+            day_of_week=(
+                booking_date.weekday()
+            ),
             is_active=True,
         )
     except WorkingHour.DoesNotExist:
@@ -191,6 +208,7 @@ def available_times(request):
         booking_date,
         working_hours.start_time,
     )
+
     working_day_end = datetime.combine(
         booking_date,
         working_hours.end_time,
@@ -199,7 +217,10 @@ def available_times(request):
     procedure_duration = timedelta(
         minutes=procedure.duration_minutes,
     )
-    slot_interval = timedelta(minutes=30)
+
+    slot_interval = timedelta(
+        minutes=30
+    )
 
     available_slots = []
 
@@ -208,6 +229,7 @@ def available_times(request):
             <= working_day_end
     ):
         slot_start = slot_datetime.time()
+
         slot_end = (
                 slot_datetime + procedure_duration
         ).time()
@@ -255,10 +277,12 @@ def booking_manage_list(request):
         "date",
         "",
     )
+
     selected_status = request.GET.get(
         "status",
         "",
     )
+
     search_query = request.GET.get(
         "q",
         "",
@@ -286,7 +310,8 @@ def booking_manage_list(request):
 
     valid_statuses = {
         value
-        for value, label in Booking.Status.choices
+        for value, label
+        in Booking.Status.choices
     }
 
     if selected_status in valid_statuses:
@@ -324,6 +349,7 @@ def booking_manage_list(request):
         bookings,
         25,
     )
+
     page_obj = paginator.get_page(
         request.GET.get("page")
     )
@@ -335,19 +361,33 @@ def booking_manage_list(request):
         "selected_date": selected_date,
         "selected_status": selected_status,
         "search_query": search_query,
-        "status_choices": Booking.Status.choices,
+        "status_choices": (
+            Booking.Status.choices
+        ),
         "today": today,
-        "today_count": Booking.objects.filter(
-            date=today,
-        ).exclude(
-            status=Booking.Status.CANCELLED,
-        ).count(),
-        "pending_count": Booking.objects.filter(
-            status=Booking.Status.PENDING,
-        ).count(),
-        "confirmed_count": Booking.objects.filter(
-            status=Booking.Status.CONFIRMED,
-        ).count(),
+        "today_count": (
+            Booking.objects.filter(
+                date=today,
+            )
+            .exclude(
+                status=(
+                    Booking.Status.CANCELLED
+                ),
+            )
+            .count()
+        ),
+        "pending_count": (
+            Booking.objects.filter(
+                status=Booking.Status.PENDING,
+            ).count()
+        ),
+        "confirmed_count": (
+            Booking.objects.filter(
+                status=(
+                    Booking.Status.CONFIRMED
+                ),
+            ).count()
+        ),
     }
 
     return render(
@@ -409,7 +449,9 @@ def booking_manage_detail(request, pk):
     )
 
     try:
-        visit_comment = booking.visit_comment
+        visit_comment = (
+            booking.visit_comment
+        )
     except VisitComment.DoesNotExist:
         visit_comment = None
 
@@ -457,8 +499,12 @@ def booking_manage_update(request, pk):
         "appointments/manage_form.html",
         {
             "form": form,
-            "page_title": "Редагування запису",
-            "submit_text": "Зберегти зміни",
+            "page_title": (
+                "Редагування запису"
+            ),
+            "submit_text": (
+                "Зберегти зміни"
+            ),
             "booking": booking,
         },
     )
@@ -472,11 +518,14 @@ def booking_status_update(request, pk):
         pk=pk,
     )
 
-    new_status = request.POST.get("status")
+    new_status = request.POST.get(
+        "status"
+    )
 
     valid_statuses = {
         value
-        for value, label in Booking.Status.choices
+        for value, label
+        in Booking.Status.choices
     }
 
     if new_status not in valid_statuses:
@@ -516,9 +565,11 @@ def booking_comment_update(request, pk):
         pk=pk,
     )
 
-    visit_comment = VisitComment.objects.filter(
-        booking=booking,
-    ).first()
+    visit_comment = (
+        VisitComment.objects.filter(
+            booking=booking,
+        ).first()
+    )
 
     form = VisitCommentForm(
         request.POST or None,
@@ -536,7 +587,10 @@ def booking_comment_update(request, pk):
 
         messages.success(
             request,
-            "Коментар і рекомендації збережено.",
+            (
+                "Коментар і рекомендації "
+                "збережено."
+            ),
         )
 
         return redirect(

@@ -10,8 +10,15 @@ from django.shortcuts import (
 )
 from django.views.decorators.http import require_POST
 
+from dr_toister_site.telegram_notifications import (
+    notify_order_created,
+)
+
 from .cart import Cart
-from .forms import CartAddProductForm, CheckoutForm
+from .forms import (
+    CartAddProductForm,
+    CheckoutForm,
+)
 from .models import (
     Order,
     OrderItem,
@@ -50,7 +57,9 @@ def product_is_professional(product):
 
 def user_can_buy_product(user, product):
     if product_is_professional(product):
-        return user_has_professional_access(user)
+        return user_has_professional_access(
+            user
+        )
 
     return product.retail_price is not None
 
@@ -164,7 +173,9 @@ def product_list(request):
         products = products.filter(
             Q(name__icontains=search_query)
             | Q(
-                description__icontains=search_query
+                description__icontains=(
+                    search_query
+                )
             )
             | Q(
                 usage_recommendations__icontains=(
@@ -176,7 +187,9 @@ def product_list(request):
                     search_query
                 )
             )
-            | Q(sku__icontains=search_query)
+            | Q(
+                sku__icontains=search_query
+            )
         )
 
     paginator = Paginator(
@@ -322,7 +335,9 @@ def cart_add(request, product_id):
         )
 
     product = get_object_or_404(
-        get_purchasable_products(request.user),
+        get_purchasable_products(
+            request.user
+        ),
         pk=product_id,
     )
 
@@ -336,9 +351,9 @@ def cart_add(request, product_id):
 
         cart.add(
             product=product,
-            quantity=form.cleaned_data[
-                "quantity"
-            ],
+            quantity=(
+                form.cleaned_data["quantity"]
+            ),
         )
 
         messages.success(
@@ -385,7 +400,9 @@ def cart_update(request, product_id):
         )
 
     product = get_object_or_404(
-        get_purchasable_products(request.user),
+        get_purchasable_products(
+            request.user
+        ),
         pk=product_id,
     )
 
@@ -399,9 +416,9 @@ def cart_update(request, product_id):
 
         cart.add(
             product=product,
-            quantity=form.cleaned_data[
-                "quantity"
-            ],
+            quantity=(
+                form.cleaned_data["quantity"]
+            ),
             override_quantity=True,
         )
 
@@ -468,7 +485,9 @@ def cart_detail(request):
             CartAddProductForm(
                 product=product,
                 initial={
-                    "quantity": item["quantity"],
+                    "quantity": (
+                        item["quantity"]
+                    ),
                 },
             )
         )
@@ -483,15 +502,13 @@ def cart_detail(request):
             "shop:cart-detail"
         )
 
-    context = {
-        "cart": cart,
-        "cart_items": cart_items,
-    }
-
     return render(
         request,
         "shop/cart_detail.html",
-        context,
+        {
+            "cart": cart,
+            "cart_items": cart_items,
+        },
     )
 
 
@@ -517,7 +534,9 @@ def checkout(request):
                 product,
         ):
             cart.remove(product)
-            add_access_denied_message(request)
+            add_access_denied_message(
+                request
+            )
 
             return redirect(
                 "shop:cart-detail"
@@ -543,7 +562,8 @@ def checkout(request):
                     request,
                     (
                         "Недостатньо товару "
-                        f"«{product.name}» на складі."
+                        f"«{product.name}» "
+                        "на складі."
                     ),
                 )
 
@@ -558,12 +578,16 @@ def checkout(request):
                     if request.user.is_authenticated
                     else None
                 ),
-                client_name=form.cleaned_data[
-                    "client_name"
-                ],
-                client_phone=form.cleaned_data[
-                    "client_phone"
-                ],
+                client_name=(
+                    form.cleaned_data[
+                        "client_name"
+                    ]
+                ),
+                client_phone=(
+                    form.cleaned_data[
+                        "client_phone"
+                    ]
+                ),
                 source=Order.Source.ONLINE,
             )
 
@@ -573,6 +597,14 @@ def checkout(request):
                     product=item["product"],
                     quantity=item["quantity"],
                 )
+
+        transaction.on_commit(
+            lambda order_id=order.pk: (
+                notify_order_created(
+                    order_id
+                )
+            )
+        )
 
         cart.clear()
 
@@ -585,16 +617,14 @@ def checkout(request):
             order_id=order.pk,
         )
 
-    context = {
-        "form": form,
-        "cart": cart,
-        "cart_items": cart_items,
-    }
-
     return render(
         request,
         "shop/checkout.html",
-        context,
+        {
+            "form": form,
+            "cart": cart,
+            "cart_items": cart_items,
+        },
     )
 
 

@@ -1,7 +1,13 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(
+    BASE_DIR / ".env"
+)
 
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
@@ -17,12 +23,12 @@ DEBUG = (
 )
 
 ALLOWED_HOSTS = [
-    host
+    host.strip()
     for host in os.getenv(
         "DJANGO_ALLOWED_HOSTS",
         "127.0.0.1,localhost",
     ).split(",")
-    if host
+    if host.strip()
 ]
 
 INSTALLED_APPS = [
@@ -44,12 +50,24 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    (
+        "django.contrib.sessions.middleware."
+        "SessionMiddleware"
+    ),
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    (
+        "django.contrib.auth.middleware."
+        "AuthenticationMiddleware"
+    ),
+    (
+        "django.contrib.messages.middleware."
+        "MessageMiddleware"
+    ),
+    (
+        "django.middleware.clickjacking."
+        "XFrameOptionsMiddleware"
+    ),
 ]
 
 ROOT_URLCONF = "dr_toister_site.urls"
@@ -84,7 +102,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "dr_toister_site.wsgi.application"
+WSGI_APPLICATION = (
+    "dr_toister_site.wsgi.application"
+)
 
 DATABASES = {
     "default": {
@@ -134,7 +154,9 @@ STATIC_URL = "static/"
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",
-] if (BASE_DIR / "static").exists() else []
+] if (
+        BASE_DIR / "static"
+).exists() else []
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -143,13 +165,56 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 EMAIL_BACKEND = (
-    "django.core.mail.backends.console.EmailBackend"
+    "django.core.mail.backends.console."
+    "EmailBackend"
 )
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = (
+    "django.db.models.BigAutoField"
+)
 
 LOGIN_URL = "accounts:login"
 
 LOGIN_REDIRECT_URL = "accounts:dashboard"
 
 LOGOUT_REDIRECT_URL = "accounts:login"
+
+TELEGRAM_NOTIFICATIONS_ENABLED = (
+        os.getenv(
+            "TELEGRAM_NOTIFICATIONS_ENABLED",
+            "False",
+        ).lower()
+        == "true"
+)
+
+TELEGRAM_BOT_TOKEN = os.getenv(
+    "TELEGRAM_BOT_TOKEN",
+    "",
+).strip()
+
+TELEGRAM_ORDERS_CHAT_ID = os.getenv(
+    "TELEGRAM_ORDERS_CHAT_ID",
+    "",
+).strip()
+
+TELEGRAM_COURSES_CHAT_ID = os.getenv(
+    "TELEGRAM_COURSES_CHAT_ID",
+    "",
+).strip()
+
+TELEGRAM_BOOKINGS_CHAT_ID = os.getenv(
+    "TELEGRAM_BOOKINGS_CHAT_ID",
+    "",
+).strip()
+
+TELEGRAM_DAILY_REMINDER_TIME = os.getenv(
+    "TELEGRAM_DAILY_REMINDER_TIME",
+    "07:30",
+).strip()
+
+TELEGRAM_REQUEST_TIMEOUT = int(
+    os.getenv(
+        "TELEGRAM_REQUEST_TIMEOUT",
+        "5",
+    )
+)

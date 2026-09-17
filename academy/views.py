@@ -1,9 +1,14 @@
 from django.contrib import messages
+from django.db import transaction
 from django.http import Http404
 from django.shortcuts import (
     get_object_or_404,
     redirect,
     render,
+)
+
+from dr_toister_site.telegram_notifications import (
+    notify_course_application_created,
 )
 
 from .forms import CourseApplicationForm
@@ -36,10 +41,15 @@ def course_list(request):
     )
 
     professional_courses = courses.filter(
-        audience=Course.Audience.COSMETOLOGISTS,
+        audience=(
+            Course.Audience.COSMETOLOGISTS
+        ),
     )
 
-    if selected_audience == Course.Audience.EVERYONE:
+    if (
+            selected_audience
+            == Course.Audience.EVERYONE
+    ):
         page_title = "Школа догляду"
         page_description = (
             "Зрозумілі програми для тих, хто хоче "
@@ -50,22 +60,30 @@ def course_list(request):
             selected_audience
             == Course.Audience.COSMETOLOGISTS
     ):
-        page_title = "Підвищення кваліфікації"
+        page_title = (
+            "Підвищення кваліфікації"
+        )
         page_description = (
             "Професійні програми для практикуючих "
-            "косметологів і спеціалістів індустрії краси."
+            "косметологів і спеціалістів "
+            "індустрії краси."
         )
     else:
         page_title = "Навчання"
         page_description = (
-            "Школа догляду для клієнтів і професійне "
-            "підвищення кваліфікації для косметологів."
+            "Школа догляду для клієнтів і "
+            "професійне підвищення кваліфікації "
+            "для косметологів."
         )
 
     context = {
         "public_courses": public_courses,
-        "professional_courses": professional_courses,
-        "selected_audience": selected_audience,
+        "professional_courses": (
+            professional_courses
+        ),
+        "selected_audience": (
+            selected_audience
+        ),
         "page_title": page_title,
         "page_description": page_description,
     }
@@ -103,7 +121,8 @@ def course_detail(request, pk):
                 )
                 .exclude(
                     status=(
-                        CourseEnrollment.Status.CANCELLED
+                        CourseEnrollment
+                        .Status.CANCELLED
                     )
                 )
                 .first()
@@ -129,28 +148,46 @@ def course_detail(request, pk):
                 ),
             )
 
-        application = CourseEnrollment.objects.create(
-            student=(
-                request.user
-                if request.user.is_authenticated
-                else None
-            ),
-            applicant_name=form.cleaned_data[
-                "applicant_name"
-            ],
-            applicant_phone=form.cleaned_data[
-                "applicant_phone"
-            ],
-            applicant_comment=form.cleaned_data[
-                "applicant_comment"
-            ],
-            course=course,
-            created_by=(
-                request.user
-                if request.user.is_authenticated
-                else None
-            ),
-            source=CourseEnrollment.Source.ONLINE,
+        application = (
+            CourseEnrollment.objects.create(
+                student=(
+                    request.user
+                    if request.user.is_authenticated
+                    else None
+                ),
+                applicant_name=(
+                    form.cleaned_data[
+                        "applicant_name"
+                    ]
+                ),
+                applicant_phone=(
+                    form.cleaned_data[
+                        "applicant_phone"
+                    ]
+                ),
+                applicant_comment=(
+                    form.cleaned_data[
+                        "applicant_comment"
+                    ]
+                ),
+                course=course,
+                created_by=(
+                    request.user
+                    if request.user.is_authenticated
+                    else None
+                ),
+                source=(
+                    CourseEnrollment.Source.ONLINE
+                ),
+            )
+        )
+
+        transaction.on_commit(
+            lambda application_id=application.pk: (
+                notify_course_application_created(
+                    application_id
+                )
+            )
         )
 
         request.session[
