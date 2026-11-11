@@ -6,15 +6,24 @@ Django-сайт клініки косметології: публічні сто
 
 ## Локальний запуск
 
+Потрібен Python 3.12 або новіший (перевірка: `python3 --version`).
+На macOS команда `python` може вказувати на старий Python 2.7, тому
+використовуйте `python3`.
+
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 python manage.py migrate
 python manage.py createsuperuser
-python manage.py create_demo_data --clear   # необов'язково: демо-дані
 python manage.py runserver
+```
+
+За бажанням перед `runserver` можна заповнити базу демо-даними:
+
+```bash
+python manage.py create_demo_data --clear
 ```
 
 ## Перевірки
