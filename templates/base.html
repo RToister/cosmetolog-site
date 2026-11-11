@@ -417,49 +417,14 @@
                         </a>
                     </li>
 
-                    <li class="nav-item dropdown">
+                    <li class="nav-item">
                         <a
-                                class="nav-link dropdown-toggle{% if current_ns == 'academy' %} active{% endif %}"
-                                href="#"
-                                role="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
+                                class="nav-link{% if current_ns == 'academy' %} active{% endif %}"
+                                href="{% url 'academy:course-list' %}"
+                                {% if current_ns == 'academy' %}aria-current="page"{% endif %}
                         >
                             Навчання
                         </a>
-
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a
-                                        class="dropdown-item"
-                                        href="{% url 'academy:course-list' %}?audience=everyone"
-                                >
-                                    Школа догляду
-                                </a>
-                            </li>
-
-                            <li>
-                                <a
-                                        class="dropdown-item"
-                                        href="{% url 'academy:course-list' %}?audience=cosmetologists"
-                                >
-                                    Підвищення кваліфікації
-                                </a>
-                            </li>
-
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-
-                            <li>
-                                <a
-                                        class="dropdown-item"
-                                        href="{% url 'academy:course-list' %}"
-                                >
-                                    Усі програми
-                                </a>
-                            </li>
-                        </ul>
                     </li>
 
                     <li class="nav-item">
