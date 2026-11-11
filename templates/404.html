@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Сторінку не знайдено | DR TOISTER{% endblock %}
+
+{% block meta_description %}Сторінку не знайдено.{% endblock %}
+
+{% block content %}
+    <section class="text-center py-5">
+        <div class="auth-eyebrow">Помилка 404</div>
+
+        <h1 class="display-5 mb-3">Сторінку не знайдено</h1>
+
+        <p class="text-secondary mb-4 mx-auto" style="max-width: 520px;">
+            Можливо, посилання застаріло або сторінку було переміщено.
+            Скористайтеся меню або поверніться на головну.
+        </p>
+
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a class="btn btn-dark" href="{% url 'home' %}">На головну</a>
+            <a class="btn btn-outline-dark" href="{% url 'appointments:booking-create' %}">Записатися онлайн</a>
+        </div>
+    </section>
+{% endblock %}

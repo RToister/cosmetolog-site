@@ -1,0 +1,645 @@
+{% extends "base.html" %}
+
+{% block title %}
+    CRM — клієнти | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    {% include "crm/includes/navigation.html" %}
+    <style>
+        .crm-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .crm-header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .crm-eyebrow {
+            margin-bottom: 8px;
+            color: #7b665d;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .crm-title {
+            margin: 0;
+            font-size: clamp(30px, 5vw, 52px);
+            font-weight: 600;
+            letter-spacing: -0.04em;
+        }
+
+        .crm-subtitle {
+            max-width: 650px;
+            margin: 12px 0 0;
+            color: #6c757d;
+        }
+
+        .statistics-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .statistic-card {
+            padding: 22px;
+            background: #f6f2ef;
+            border: 1px solid #ece4df;
+            border-radius: 18px;
+        }
+
+        .statistic-card.pending {
+            background: #fff8eb;
+            border-color: #eeddbd;
+        }
+
+        .statistic-label {
+            color: #766860;
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .statistic-value {
+            margin-top: 8px;
+            font-size: 34px;
+            font-weight: 700;
+        }
+
+        .crm-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .crm-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .crm-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 16px;
+            color: #212529;
+            text-decoration: none;
+            background: #fff;
+            border: 1px solid #ddd3cd;
+            border-radius: 50px;
+        }
+
+        .crm-tab:hover,
+        .crm-tab.active {
+            color: #fff;
+            background: #212529;
+            border-color: #212529;
+        }
+
+        .tab-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 7px;
+            color: #765326;
+            font-size: 12px;
+            font-weight: 700;
+            background: #f2dfc5;
+            border-radius: 50px;
+        }
+
+        .crm-tab:hover .tab-count,
+        .crm-tab.active .tab-count {
+            color: #212529;
+            background: #fff;
+        }
+
+        .crm-search {
+            display: flex;
+            width: min(100%, 430px);
+            gap: 8px;
+        }
+
+        .crm-search input {
+            min-width: 0;
+            flex: 1;
+            border-radius: 50px;
+        }
+
+        .crm-search button {
+            border-radius: 50px;
+        }
+
+        .customer-table-wrapper {
+            overflow-x: auto;
+            background: #fff;
+            border: 1px solid #ece7e3;
+            border-radius: 18px;
+        }
+
+        .customer-table {
+            min-width: 1180px;
+            margin: 0;
+        }
+
+        .customer-table th {
+            padding: 16px;
+            color: #756a64;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            background: #faf8f6;
+            border-bottom: 1px solid #ece7e3;
+        }
+
+        .customer-table td {
+            padding: 17px 16px;
+            vertical-align: middle;
+            border-color: #f0ece9;
+        }
+
+        .customer-name {
+            color: #212529;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .customer-name:hover {
+            text-decoration: underline;
+        }
+
+        .customer-phone {
+            margin-top: 3px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .customer-type,
+        .customer-status,
+        .verification-status {
+            display: inline-flex;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 50px;
+        }
+
+        .customer-type-client {
+            color: #315b43;
+            background: #e5f3ea;
+        }
+
+        .customer-type-cosmetologist {
+            color: #765326;
+            background: #f6ead8;
+        }
+
+        .customer-status-active,
+        .verification-verified {
+            color: #315b43;
+            background: #e5f3ea;
+        }
+
+        .customer-status-inactive,
+        .verification-unlinked {
+            color: #7d3434;
+            background: #f8e1e1;
+        }
+
+        .verification-pending {
+            color: #765326;
+            background: #fff0d8;
+        }
+
+        .verification-not-required {
+            color: #645d58;
+            background: #f1efed;
+        }
+
+        .activity-counts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .activity-badge {
+            padding: 5px 8px;
+            color: #5f5752;
+            font-size: 12px;
+            background: #f4f1ef;
+            border-radius: 8px;
+        }
+
+        .row-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 7px;
+        }
+
+        .row-actions form {
+            margin: 0;
+        }
+
+        .empty-state {
+            padding: 64px 24px;
+            text-align: center;
+        }
+
+        @media (max-width: 1000px) {
+            .statistics-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 767px) {
+            .crm-header {
+                display: block;
+            }
+
+            .crm-header-actions {
+                margin-top: 20px;
+            }
+
+            .statistics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .crm-toolbar {
+                align-items: stretch;
+            }
+
+            .crm-search {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <section>
+        <header class="crm-header">
+            <div>
+                <div class="crm-eyebrow">
+                    Панель керування
+                </div>
+
+                <h1 class="crm-title">
+                    Клієнти CRM
+                </h1>
+
+                <p class="crm-subtitle">
+                    Єдина база клієнтів із записами
+                    на процедури, замовленнями товарів
+                    та заявками на навчання.
+                </p>
+            </div>
+
+            <div class="crm-header-actions">
+                <a
+                        href="{% url 'analytics:dashboard' %}"
+                        class="btn btn-outline-dark"
+                >
+                    Аналітика
+                </a>
+
+                <a
+                        href="{% url 'crm:customer-create' %}"
+                        class="btn btn-dark"
+                >
+                    + Додати клієнта
+                </a>
+            </div>
+        </header>
+
+        <div class="statistics-grid">
+            <article class="statistic-card">
+                <div class="statistic-label">
+                    Усього в CRM
+                </div>
+
+                <div class="statistic-value">
+                    {{ total_customers }}
+                </div>
+            </article>
+
+            <article class="statistic-card">
+                <div class="statistic-label">
+                    Звичайні клієнти
+                </div>
+
+                <div class="statistic-value">
+                    {{ regular_clients }}
+                </div>
+            </article>
+
+            <article class="statistic-card">
+                <div class="statistic-label">
+                    Косметологи
+                </div>
+
+                <div class="statistic-value">
+                    {{ cosmetologists }}
+                </div>
+            </article>
+
+            <article class="statistic-card pending">
+                <div class="statistic-label">
+                    Очікують підтвердження
+                </div>
+
+                <div class="statistic-value">
+                    {{ pending_cosmetologists }}
+                </div>
+            </article>
+        </div>
+
+        <div class="crm-toolbar">
+            <nav
+                    class="crm-tabs"
+                    aria-label="Фільтр клієнтів"
+            >
+                <a
+                        href="
+
+                                {% url 'crm:customer-list' %}{% if search_query %}?q={{ search_query|urlencode }}{% endif %}"
+                        class="crm-tab {% if customer_type == 'all' %}active{% endif %}"
+                >
+                    Усі
+                </a>
+
+                <a
+                        href="{% url 'crm:customer-list' %}?type=clients{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                        class="crm-tab {% if customer_type == 'clients' %}active{% endif %}"
+                >
+                    Клієнти
+                </a>
+
+                <a
+                        href="{% url 'crm:customer-list' %}?type=cosmetologists{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                        class="crm-tab {% if customer_type == 'cosmetologists' %}active{% endif %}"
+                >
+                    Косметологи
+                </a>
+
+                <a
+                        href="{% url 'crm:customer-list' %}?type=pending{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                        class="crm-tab {% if customer_type == 'pending' %}active{% endif %}"
+                >
+                    Очікують підтвердження
+
+                    <span class="tab-count">
+                        {{ pending_cosmetologists }}
+                    </span>
+                </a>
+            </nav>
+
+            <form method="get" class="crm-search">
+                {% if customer_type != "all" %}
+                    <input
+                            type="hidden"
+                            name="type"
+                            value="{{ customer_type }}"
+                    >
+                {% endif %}
+
+                <input
+                        type="search"
+                        name="q"
+                        value="{{ search_query }}"
+                        class="form-control"
+                        placeholder="Ім’я, телефон або email"
+                        aria-label="Пошук клієнта"
+                >
+
+                <button
+                        type="submit"
+                        class="btn btn-dark px-4"
+                >
+                    Знайти
+                </button>
+            </form>
+        </div>
+
+        <div class="customer-table-wrapper">
+            {% if page_obj %}
+                <table class="table customer-table">
+                    <thead>
+                    <tr>
+                        <th>Клієнт</th>
+                        <th>Тип</th>
+                        <th>Підтвердження</th>
+                        <th>Статус</th>
+                        <th>Активність</th>
+                        <th>Витрати</th>
+                        <th>Остання активність</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for customer in page_obj %}
+                        <tr>
+                            <td>
+                                <a
+                                        href="{% url 'crm:customer-detail' customer.pk %}"
+                                        class="customer-name"
+                                >
+                                    {{ customer.full_name }}
+                                </a>
+
+                                <div class="customer-phone">
+                                    {{ customer.phone_number }}
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if customer.customer_type == "cosmetologist" %}
+                                    <span class="customer-type customer-type-cosmetologist">
+                                            Косметолог
+                                        </span>
+                                {% else %}
+                                    <span class="customer-type customer-type-client">
+                                            Клієнт
+                                        </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if customer.customer_type == "cosmetologist" %}
+                                    {% if not customer.user %}
+                                        <span class="verification-status verification-unlinked">
+                                                Немає акаунта
+                                            </span>
+                                    {% elif customer.user.is_cosmetologist_verified %}
+                                        <span class="verification-status verification-verified">
+                                                Підтверджено
+                                            </span>
+                                    {% else %}
+                                        <span class="verification-status verification-pending">
+                                                Очікує
+                                            </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="verification-status verification-not-required">
+                                            Не потрібно
+                                        </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if customer.is_active %}
+                                    <span class="customer-status customer-status-active">
+                                            Активний
+                                        </span>
+                                {% else %}
+                                    <span class="customer-status customer-status-inactive">
+                                            Неактивний
+                                        </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="activity-counts">
+                                        <span class="activity-badge">
+                                            Процедури:
+                                            {{ customer.booking_count }}
+                                        </span>
+
+                                    <span class="activity-badge">
+                                            Товари:
+                                            {{ customer.order_count }}
+                                        </span>
+
+                                    <span class="activity-badge">
+                                            Навчання:
+                                            {{ customer.course_count }}
+                                        </span>
+                                </div>
+                            </td>
+
+                            <td class="fw-semibold">
+                                {{ customer.appointment_spending|add:customer.order_spending|add:customer.course_spending|floatformat:2 }}
+                                ₴
+                            </td>
+
+                            <td>
+                                {{ customer.last_activity_at|date:"d.m.Y H:i" }}
+                            </td>
+
+                            <td>
+                                <div class="row-actions">
+                                    {% if customer.customer_type == "cosmetologist" and customer.user and not customer.user.is_cosmetologist_verified %}
+                                        <form
+                                                method="post"
+                                                action="{% url 'crm:verify-cosmetologist' customer.pk %}"
+                                        >
+                                            {% csrf_token %}
+
+                                            <input
+                                                    type="hidden"
+                                                    name="next"
+                                                    value="{{ request.get_full_path }}"
+                                            >
+
+                                            <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-dark"
+                                            >
+                                                Підтвердити
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+                                    <a
+                                            href="{% url 'crm:customer-detail' customer.pk %}"
+                                            class="btn btn-sm btn-outline-dark"
+                                    >
+                                        Відкрити
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <h2 class="h5">
+                        Клієнтів не знайдено
+                    </h2>
+
+                    <p class="mb-3 text-secondary">
+                        Спробуйте змінити пошуковий
+                        запит або фільтр.
+                    </p>
+
+                    <a
+                            href="{% url 'crm:customer-create' %}"
+                            class="btn btn-dark"
+                    >
+                        Додати клієнта
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <nav
+                    class="mt-4"
+                    aria-label="Навігація сторінками"
+            >
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a
+                                    class="page-link"
+                                    href="?page={{ page_obj.previous_page_number }}&type=
+
+                                            {{ customer_type }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                            >
+                                Назад
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            {{ page_obj.number }}
+                            із
+                            {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a
+                                    class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}&type=
+
+                                            {{ customer_type }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                            >
+                                Далі
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </section>
+{% endblock %}

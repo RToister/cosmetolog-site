@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Коментар до візиту | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <style>
+        .comment-form-page {
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        .form-back {
+            display: inline-flex;
+            margin-bottom: 22px;
+            color: #625a55;
+            text-decoration: none;
+        }
+
+        .form-back:hover {
+            color: #000;
+        }
+
+        .visit-summary {
+            padding: 18px 20px;
+            margin-bottom: 18px;
+            background: #fff;
+            border: 1px solid #e9e3df;
+            border-radius: 16px;
+        }
+
+        .visit-summary-title {
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .visit-summary-meta {
+            color: #746b66;
+            font-size: 14px;
+        }
+
+        .comment-form-card {
+            padding: clamp(24px, 5vw, 44px);
+            background: #f8f5f2;
+            border: 1px solid #ebe3de;
+            border-radius: 24px;
+        }
+
+        .form-eyebrow {
+            margin-bottom: 8px;
+            color: #806e64;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .form-title {
+            margin-bottom: 28px;
+            font-size: clamp(30px, 5vw, 44px);
+            letter-spacing: -0.04em;
+        }
+
+        .form-field {
+            margin-bottom: 22px;
+        }
+
+        .form-label {
+            margin-bottom: 8px;
+            font-weight: 650;
+        }
+
+        .field-errors {
+            margin-top: 8px;
+            color: #b42318;
+            font-size: 14px;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 28px;
+        }
+
+        .form-actions .btn {
+            padding: 11px 20px;
+            border-radius: 50px;
+        }
+    </style>
+
+    <section class="comment-form-page">
+        <a
+                href="{% url 'appointments:manage-detail' booking.pk %}"
+                class="form-back"
+        >
+            ← Повернутися до запису
+        </a>
+
+        <div class="visit-summary">
+            <div class="visit-summary-title">
+                {{ booking.client_name }} —
+                {{ booking.procedure.name }}
+            </div>
+
+            <div class="visit-summary-meta">
+                {{ booking.date|date:"d.m.Y" }}
+                ·
+                {{ booking.start_time|time:"H:i" }}
+            </div>
+        </div>
+
+        <div class="comment-form-card">
+            <div class="form-eyebrow">
+                Результат візиту
+            </div>
+
+            <h1 class="form-title">
+                Коментар лікаря
+            </h1>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="form-field">
+                    <label
+                            for="{{ form.comment.id_for_label }}"
+                            class="form-label"
+                    >
+                        {{ form.comment.label }}
+                    </label>
+
+                    {{ form.comment }}
+
+                    {% for error in form.comment.errors %}
+                        <div class="field-errors">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-field">
+                    <label
+                            for="{{ form.recommendations.id_for_label }}"
+                            class="form-label"
+                    >
+                        {{ form.recommendations.label }}
+                    </label>
+
+                    {{ form.recommendations }}
+
+                    {% for error in form.recommendations.errors %}
+                        <div class="field-errors">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-dark">
+                        Зберегти
+                    </button>
+
+                    <a
+                            href="{% url 'appointments:manage-detail' booking.pk %}"
+                            class="btn btn-outline-dark"
+                    >
+                        Скасувати
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}

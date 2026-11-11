@@ -1,0 +1,566 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Запис №{{ booking.pk }} | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <style>
+        .detail-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .detail-back {
+            color: #5f5752;
+            text-decoration: none;
+        }
+
+        .detail-back:hover {
+            color: #000;
+        }
+
+        .detail-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .booking-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 28px;
+            margin-bottom: 24px;
+            background: #f6f2ef;
+            border: 1px solid #ebe2dc;
+            border-radius: 22px;
+        }
+
+        .booking-eyebrow {
+            margin-bottom: 8px;
+            color: #7b6e66;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .booking-title {
+            margin: 0 0 10px;
+            font-size: clamp(30px, 5vw, 46px);
+            letter-spacing: -0.04em;
+        }
+
+        .booking-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 20px;
+            color: #675e59;
+        }
+
+        .status-badge {
+            padding: 8px 13px;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            border-radius: 50px;
+        }
+
+        .status-pending {
+            color: #765326;
+            background: #f8ead4;
+        }
+
+        .status-confirmed {
+            color: #245071;
+            background: #deedf8;
+        }
+
+        .status-completed {
+            color: #315b43;
+            background: #e1f1e7;
+        }
+
+        .status-cancelled {
+            color: #7d3434;
+            background: #f6dfdf;
+        }
+
+        .information-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 30px;
+        }
+
+        .information-card {
+            padding: 20px;
+            border: 1px solid #e8e2de;
+            border-radius: 16px;
+        }
+
+        .information-label {
+            color: #786d66;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .information-value {
+            margin-top: 8px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.6fr);
+            gap: 20px;
+        }
+
+        .detail-card {
+            padding: 24px;
+            border: 1px solid #e9e3df;
+            border-radius: 18px;
+        }
+
+        .detail-card + .detail-card {
+            margin-top: 18px;
+        }
+
+        .detail-card h2 {
+            margin: 0 0 18px;
+            font-size: 22px;
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0ece9;
+        }
+
+        .detail-row:last-child {
+            border-bottom: 0;
+        }
+
+        .detail-row-label {
+            color: #766d68;
+        }
+
+        .detail-row-value {
+            font-weight: 600;
+        }
+
+        .status-actions {
+            display: grid;
+            gap: 10px;
+        }
+
+        .status-actions form,
+        .status-actions button {
+            width: 100%;
+        }
+
+        .comment-box {
+            padding: 16px;
+            background: #faf8f6;
+            border-radius: 13px;
+        }
+
+        .comment-box + .comment-box {
+            margin-top: 12px;
+        }
+
+        .comment-label {
+            margin-bottom: 7px;
+            color: #776d67;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 950px) {
+            .information-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .detail-navigation,
+            .booking-hero {
+                display: block;
+            }
+
+            .detail-actions,
+            .status-badge {
+                margin-top: 16px;
+            }
+
+            .information-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-row {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+        }
+    </style>
+
+    <div class="detail-navigation">
+        <a
+                href="{% url 'appointments:manage-list' %}"
+                class="detail-back"
+        >
+            ← Повернутися до записів
+        </a>
+
+        <div class="detail-actions">
+            {% if booking.customer %}
+                <a
+                        href="{% url 'crm:customer-detail' booking.customer.pk %}"
+                        class="btn btn-outline-dark"
+                >
+                    Відкрити клієнта
+                </a>
+            {% endif %}
+
+            <a
+                    href="{% url 'appointments:manage-update' booking.pk %}"
+                    class="btn btn-dark"
+            >
+                Редагувати запис
+            </a>
+        </div>
+    </div>
+
+    <section class="booking-hero">
+        <div>
+            <div class="booking-eyebrow">
+                Запис №{{ booking.pk }}
+            </div>
+
+            <h1 class="booking-title">
+                {{ booking.client_name }}
+            </h1>
+
+            <div class="booking-meta">
+                <a href="tel:{{ booking.client_phone }}">
+                    {{ booking.client_phone }}
+                </a>
+
+                <span>
+                {{ booking.procedure.name }}
+            </span>
+
+                <span>
+                {{ booking.date|date:"d.m.Y" }}
+                ·
+                {{ booking.start_time|time:"H:i" }}
+            </span>
+            </div>
+        </div>
+
+        <span class="status-badge status-{{ booking.status }}">
+        {{ booking.get_status_display }}
+    </span>
+    </section>
+
+    <div class="information-grid">
+        <article class="information-card">
+            <div class="information-label">
+                Дата
+            </div>
+
+            <div class="information-value">
+                {{ booking.date|date:"d.m.Y" }}
+            </div>
+        </article>
+
+        <article class="information-card">
+            <div class="information-label">
+                Час
+            </div>
+
+            <div class="information-value">
+                {{ booking.start_time|time:"H:i" }}
+                –
+                {{ booking.end_time|time:"H:i" }}
+            </div>
+        </article>
+
+        <article class="information-card">
+            <div class="information-label">
+                Вартість
+            </div>
+
+            <div class="information-value">
+                {{ booking.price_at_booking|floatformat:2 }} ₴
+            </div>
+        </article>
+
+        <article class="information-card">
+            <div class="information-label">
+                Джерело
+            </div>
+
+            <div class="information-value">
+                {{ booking.get_source_display }}
+            </div>
+        </article>
+    </div>
+
+    <div class="content-grid">
+        <div>
+            <section class="detail-card">
+                <h2>Інформація про запис</h2>
+
+                <div class="detail-row">
+                    <div class="detail-row-label">
+                        Клієнт
+                    </div>
+
+                    <div class="detail-row-value">
+                        {{ booking.client_name }}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-row-label">
+                        Телефон
+                    </div>
+
+                    <div class="detail-row-value">
+                        <a href="tel:{{ booking.client_phone }}">
+                            {{ booking.client_phone }}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-row-label">
+                        Процедура
+                    </div>
+
+                    <div class="detail-row-value">
+                        {{ booking.procedure.name }}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-row-label">
+                        Категорія
+                    </div>
+
+                    <div class="detail-row-value">
+                        {{ booking.procedure.category.name }}
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="detail-row-label">
+                        Створено
+                    </div>
+
+                    <div class="detail-row-value">
+                        {{ booking.created_at|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+
+                {% if booking.created_by %}
+                    <div class="detail-row">
+                        <div class="detail-row-label">
+                            Хто створив
+                        </div>
+
+                        <div class="detail-row-value">
+                            {{ booking.created_by }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="detail-row">
+                    <div class="detail-row-label">
+                        Коментар клієнта
+                    </div>
+
+                    <div class="detail-row-value">
+                        {% if booking.client_note %}
+                            {{ booking.client_note|linebreaksbr }}
+                        {% else %}
+                            <span class="text-secondary">
+                            Не вказаний
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="detail-card">
+                <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                    <h2 class="mb-0">
+                        Коментар лікаря
+                    </h2>
+
+                    <a
+                            href="{% url 'appointments:comment-update' booking.pk %}"
+                            class="btn btn-sm btn-outline-dark"
+                    >
+                        {% if visit_comment %}
+                            Редагувати
+                        {% else %}
+                            Додати
+                        {% endif %}
+                    </a>
+                </div>
+
+                {% if visit_comment %}
+                    <div class="comment-box">
+                        <div class="comment-label">
+                            Коментар
+                        </div>
+
+                        <div>
+                            {{ visit_comment.comment|linebreaks }}
+                        </div>
+                    </div>
+
+                    <div class="comment-box">
+                        <div class="comment-label">
+                            Рекомендації
+                        </div>
+
+                        {% if visit_comment.recommendations %}
+                            <div>
+                                {{ visit_comment.recommendations|linebreaks }}
+                            </div>
+                        {% else %}
+                            <div class="text-secondary">
+                                Рекомендації не вказані.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-3 small text-secondary">
+                        Оновлено:
+                        {{ visit_comment.updated_at|date:"d.m.Y H:i" }}
+                    </div>
+                {% else %}
+                    <p class="mb-0 text-secondary">
+                        Коментар після візиту ще не додано.
+                    </p>
+                {% endif %}
+            </section>
+        </div>
+
+        <aside>
+            <section class="detail-card">
+                <h2>Змінити статус</h2>
+
+                <div class="status-actions">
+                    {% if booking.status != "confirmed" %}
+                        <form
+                                method="post"
+                                action="{% url 'appointments:status-update' booking.pk %}"
+                        >
+                            {% csrf_token %}
+
+                            <input
+                                    type="hidden"
+                                    name="status"
+                                    value="confirmed"
+                            >
+
+                            <button
+                                    type="submit"
+                                    class="btn btn-outline-primary"
+                            >
+                                Підтвердити
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if booking.status != "completed" %}
+                        <form
+                                method="post"
+                                action="{% url 'appointments:status-update' booking.pk %}"
+                        >
+                            {% csrf_token %}
+
+                            <input
+                                    type="hidden"
+                                    name="status"
+                                    value="completed"
+                            >
+
+                            <button
+                                    type="submit"
+                                    class="btn btn-outline-success"
+                            >
+                                Завершити
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if booking.status != "pending" %}
+                        <form
+                                method="post"
+                                action="{% url 'appointments:status-update' booking.pk %}"
+                        >
+                            {% csrf_token %}
+
+                            <input
+                                    type="hidden"
+                                    name="status"
+                                    value="pending"
+                            >
+
+                            <button
+                                    type="submit"
+                                    class="btn btn-outline-warning"
+                            >
+                                Повернути в очікування
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if booking.status != "cancelled" %}
+                        <form
+                                method="post"
+                                action="{% url 'appointments:status-update' booking.pk %}"
+                        >
+                            {% csrf_token %}
+
+                            <input
+                                    type="hidden"
+                                    name="status"
+                                    value="cancelled"
+                            >
+
+                            <button
+                                    type="submit"
+                                    class="btn btn-outline-danger"
+                                    onclick="return confirm('Скасувати цей запис?')"
+                            >
+                                Скасувати запис
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </section>
+        </aside>
+    </div>
+{% endblock %}

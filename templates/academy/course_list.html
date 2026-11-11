@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ page_title }} | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <style>
+        .learning-header {
+            max-width: 850px;
+            margin-bottom: 34px;
+        }
+
+        .learning-eyebrow {
+            margin-bottom: 10px;
+            color: #7b3f3a;
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .learning-title {
+            margin-bottom: 18px;
+            font-size: clamp(42px, 7vw, 78px);
+            font-weight: 500;
+            line-height: 0.98;
+            letter-spacing: -0.055em;
+        }
+
+        .learning-description {
+            color: #736963;
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        .learning-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-bottom: 48px;
+        }
+
+        .learning-tab {
+            padding: 10px 17px;
+            color: #211b18;
+            text-decoration: none;
+            border: 1px solid #d9cec7;
+            border-radius: 50px;
+        }
+
+        .learning-tab:hover,
+        .learning-tab.active {
+            color: #fff;
+            background: #211b18;
+            border-color: #211b18;
+        }
+
+        .learning-section {
+            padding: 44px 0 70px;
+            border-top: 1px solid #e7dfda;
+        }
+
+        .learning-section-heading {
+            display: grid;
+            grid-template-columns: 0.7fr 1.3fr;
+            gap: 30px;
+            margin-bottom: 32px;
+        }
+
+        .learning-section-number {
+            color: #7b3f3a;
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .learning-section h2 {
+            margin: 0;
+            font-size: clamp(32px, 5vw, 54px);
+            letter-spacing: -0.045em;
+        }
+
+        .learning-section-description {
+            max-width: 680px;
+            margin: 14px 0 0;
+            color: #736963;
+            line-height: 1.65;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 17px;
+        }
+
+        .course-card {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: #211b18;
+            text-decoration: none;
+            background: #fff;
+            border: 1px solid #e6ddd7;
+            border-radius: 20px;
+            transition: 0.25s ease;
+        }
+
+        .course-card:hover {
+            color: #211b18;
+            transform: translateY(-5px);
+            box-shadow: 0 18px 40px rgba(54, 39, 32, 0.09);
+        }
+
+        .course-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 260px;
+            overflow: hidden;
+            color: #8b7165;
+            font-family: Georgia, serif;
+            font-size: 42px;
+            font-style: italic;
+            background: #eee6e0;
+        }
+
+        .professional-image {
+            color: #d8c8bf;
+            background: #342925;
+        }
+
+        .course-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .course-content {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            padding: 23px;
+        }
+
+        .course-meta {
+            color: #7b3f3a;
+            font-size: 11px;
+            font-weight: 750;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .course-card h3 {
+            margin: 13px 0;
+            font-size: 24px;
+            letter-spacing: -0.035em;
+        }
+
+        .course-card p {
+            color: #736963;
+            line-height: 1.6;
+        }
+
+        .course-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: auto;
+            padding-top: 20px;
+            font-weight: 700;
+        }
+
+        .empty-learning {
+            padding: 34px;
+            color: #736963;
+            text-align: center;
+            background: #f6f1ed;
+            border-radius: 18px;
+        }
+
+        @media (max-width: 900px) {
+            .course-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .learning-section-heading,
+            .course-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <header class="learning-header">
+        <div class="learning-eyebrow">
+            Освітній напрям
+        </div>
+
+        <h1 class="learning-title">
+            {{ page_title }}
+        </h1>
+
+        <p class="learning-description">
+            {{ page_description }}
+        </p>
+    </header>
+
+    <nav class="learning-tabs">
+        <a
+                href="{% url 'academy:course-list' %}"
+                class="learning-tab {% if not selected_audience %}active{% endif %}"
+        >
+            Усі програми
+        </a>
+
+        <a
+                href="{% url 'academy:course-list' %}?audience=everyone"
+                class="learning-tab {% if selected_audience == 'everyone' %}active{% endif %}"
+        >
+            Школа догляду
+        </a>
+
+        <a
+                href="{% url 'academy:course-list' %}?audience=cosmetologists"
+                class="learning-tab {% if selected_audience == 'cosmetologists' %}active{% endif %}"
+        >
+            Підвищення кваліфікації
+        </a>
+    </nav>
+
+    {% if not selected_audience or selected_audience == "everyone" %}
+        <section class="learning-section">
+            <div class="learning-section-heading">
+                <div class="learning-section-number">
+                    01 · Школа догляду
+                </div>
+
+                <div>
+                    <h2>
+                        Про здорову шкіру
+                    </h2>
+
+                    <p class="learning-section-description">
+                        Зрозумілі практичні програми про потреби
+                        шкіри, косметичні засоби, SPF і побудову
+                        правильного домашнього догляду.
+                    </p>
+                </div>
+            </div>
+
+            {% if public_courses %}
+                <div class="course-grid">
+                    {% for course in public_courses %}
+                        <a
+                                href="{% url 'academy:course-detail' course.pk %}"
+                                class="course-card"
+                        >
+                            <div class="course-image">
+                                {% if course.image %}
+                                    <img
+                                            src="{{ course.image.url }}"
+                                            alt="{{ course.title }}"
+                                    >
+                                {% else %}
+                                    Care
+                                {% endif %}
+                            </div>
+
+                            <div class="course-content">
+                                <div class="course-meta">
+                                    {{ course.get_format_display }}
+                                    ·
+                                    {{ course.duration_hours }} год
+                                </div>
+
+                                <h3>
+                                    {{ course.title }}
+                                </h3>
+
+                                <p>
+                                    {{ course.description|truncatewords:23 }}
+                                </p>
+
+                                <div class="course-footer">
+                                <span>
+                                    {{ course.price|floatformat:0 }} ₴
+                                </span>
+
+                                    <span>
+                                    Детальніше →
+                                </span>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-learning">
+                    Програми Школи догляду скоро з’являться.
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {% if not selected_audience or selected_audience == "cosmetologists" %}
+        <section class="learning-section">
+            <div class="learning-section-heading">
+                <div class="learning-section-number">
+                    02 · Для косметологів
+                </div>
+
+                <div>
+                    <h2>
+                        Підвищення кваліфікації
+                    </h2>
+
+                    <p class="learning-section-description">
+                        Професійні програми для практикуючих
+                        косметологів: техніки процедур, протоколи
+                        роботи та профілактика ускладнень.
+                    </p>
+                </div>
+            </div>
+
+            {% if professional_courses %}
+                <div class="course-grid">
+                    {% for course in professional_courses %}
+                        <a
+                                href="{% url 'academy:course-detail' course.pk %}"
+                                class="course-card"
+                        >
+                            <div class="course-image professional-image">
+                                {% if course.image %}
+                                    <img
+                                            src="{{ course.image.url }}"
+                                            alt="{{ course.title }}"
+                                    >
+                                {% else %}
+                                    Pro
+                                {% endif %}
+                            </div>
+
+                            <div class="course-content">
+                                <div class="course-meta">
+                                    {{ course.get_format_display }}
+                                    ·
+                                    {{ course.duration_hours }} год
+                                </div>
+
+                                <h3>
+                                    {{ course.title }}
+                                </h3>
+
+                                <p>
+                                    {{ course.description|truncatewords:23 }}
+                                </p>
+
+                                <div class="course-footer">
+                                <span>
+                                    {{ course.price|floatformat:0 }} ₴
+                                </span>
+
+                                    <span>
+                                    Детальніше →
+                                </span>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-learning">
+                    Програми підвищення кваліфікації
+                    скоро з’являться.
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
+{% endblock %}

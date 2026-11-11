@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Бізнес-аналітика | DR TOISTER
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-4">
+            <div>
+                <h1 class="display-5 mb-2">
+                    Бізнес-аналітика
+                </h1>
+
+                <p class="text-muted mb-0">
+                    Статистика клініки, магазину та навчання.
+                </p>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a
+                        href="{% url 'admin:index' %}"
+                        class="btn btn-outline-dark"
+                >
+                    Адмінпанель
+                </a>
+
+                <a
+                        href="{% url 'home' %}"
+                        class="btn btn-dark"
+                >
+                    На головну
+                </a>
+            </div>
+        </div>
+
+        <form
+                method="get"
+                class="card border-0 shadow-sm mb-4"
+        >
+            <div class="card-body p-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label
+                                for="{{ form.start_date.id_for_label }}"
+                                class="form-label"
+                        >
+                            {{ form.start_date.label }}
+                        </label>
+
+                        {{ form.start_date }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label
+                                for="{{ form.end_date.id_for_label }}"
+                                class="form-label"
+                        >
+                            {{ form.end_date.label }}
+                        </label>
+
+                        {{ form.end_date }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <button
+                                type="submit"
+                                class="btn btn-dark w-100"
+                        >
+                            Показати статистику
+                        </button>
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3 mb-0">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </form>
+
+        <div class="alert alert-light border mb-4">
+            Період:
+            <strong>
+                {{ start_date|date:"d.m.Y" }}
+                —
+                {{ end_date|date:"d.m.Y" }}
+            </strong>
+        </div>
+
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                Дохід
+            </h2>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card border-0 bg-dark text-white h-100">
+                        <div class="card-body p-4">
+                            <div class="small opacity-75 mb-2">
+                                Загальний дохід
+                            </div>
+
+                            <div class="display-6 fw-semibold">
+                                {{ total_revenue|floatformat:2 }}
+                                грн
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted mb-2">
+                                Завершені процедури
+                            </div>
+
+                            <div class="h2 mb-0">
+                                {{ procedure_revenue|floatformat:2 }}
+                                грн
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card border-0 bg-light h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted mb-2">
+                                Продаж товарів
+                            </div>
+
+                            <div class="h2 mb-0">
+                                {{ product_revenue|floatformat:2 }}
+                                грн
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-5">
+            <h2 class="h4 mb-3">
+                Основні показники
+            </h2>
+
+            <div class="row g-3">
+                <div class="col-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted">
+                                Записи
+                            </div>
+
+                            <div class="display-6">
+                                {{ bookings_count }}
+                            </div>
+
+                            <div class="small text-muted">
+                                за обраний період
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted">
+                                Завершені візити
+                            </div>
+
+                            <div class="display-6">
+                                {{ completed_bookings_count }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted">
+                                Скасовані записи
+                            </div>
+
+                            <div class="display-6">
+                                {{ cancelled_bookings_count }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted">
+                                Майбутні записи
+                            </div>
+
+                            <div class="display-6">
+                                {{ upcoming_bookings_count }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted">
+                                Замовлення
+                            </div>
+
+                            <div class="display-6">
+                                {{ orders_count }}
+                            </div>
+
+                            <div class="small text-muted">
+                                оплачено: {{ paid_orders_count }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted">
+                                Унікальні клієнти
+                            </div>
+
+                            <div class="display-6">
+                                {{ unique_booking_clients }}
+                            </div>
+
+                            <div class="small text-muted">
+                                за номером телефону
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted">
+                                Косметологи
+                            </div>
+
+                            <div class="display-6">
+                                {{ cosmetologists_count }}
+                            </div>
+
+                            <div class="small text-muted">
+                                зареєстровані
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-lg-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="small text-muted">
+                                Клієнти
+                            </div>
+
+                            <div class="display-6">
+                                {{ registered_clients_count }}
+                            </div>
+
+                            <div class="small text-muted">
+                                зареєстровані
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-5">
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <h2 class="h4 mb-4">
+                                Популярні процедури
+                            </h2>
+
+                            {% if top_procedures %}
+                                <div class="table-responsive">
+                                    <table class="table align-middle">
+                                        <thead>
+                                        <tr>
+                                            <th>Процедура</th>
+                                            <th>Візити</th>
+                                            <th>Дохід</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody>
+                                        {% for procedure in top_procedures %}
+                                            <tr>
+                                                <td>
+                                                    {{ procedure.procedure__name }}
+                                                </td>
+
+                                                <td>
+                                                    {{ procedure.bookings_count }}
+                                                </td>
+
+                                                <td>
+                                                    {{ procedure.revenue|floatformat:2 }}
+                                                    грн
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted mb-0">
+                                    За обраний період немає завершених процедур.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <h2 class="h4 mb-4">
+                                Популярні товари
+                            </h2>
+
+                            {% if top_products %}
+                                <div class="table-responsive">
+                                    <table class="table align-middle">
+                                        <thead>
+                                        <tr>
+                                            <th>Товар</th>
+                                            <th>Продано</th>
+                                            <th>Дохід</th>
+                                        </tr>
+                                        </thead>
+
+                                        <tbody>
+                                        {% for product in top_products %}
+                                            <tr>
+                                                <td>
+                                                    <div>
+                                                        {{ product.product__name }}
+                                                    </div>
+
+                                                    <div class="small text-muted">
+                                                        {{ product.product__sku }}
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    {{ product.sold_quantity }}
+                                                </td>
+
+                                                <td>
+                                                    {{ product.revenue|floatformat:2 }}
+                                                    грн
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted mb-0">
+                                    За обраний період немає оплачених товарів.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-5">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between gap-3 mb-4">
+                                <h2 class="h5 mb-0">
+                                    Найближчі записи
+                                </h2>
+
+                                <span class="badge text-bg-dark">
+                {{ upcoming_bookings_count }}
+              </span>
+                            </div>
+
+                            {% if upcoming_bookings %}
+                                {% for booking in upcoming_bookings %}
+                                    <div class="border-bottom pb-3 mb-3">
+                                        <div class="fw-semibold">
+                                            {{ booking.client_name }}
+                                        </div>
+
+                                        <div class="small text-muted">
+                                            {{ booking.procedure.name }}
+                                        </div>
+
+                                        <div class="small">
+                                            {{ booking.date|date:"d.m.Y" }},
+                                            {{ booking.start_time|time:"H:i" }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">
+                                    Майбутніх записів немає.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between gap-3 mb-4">
+                                <h2 class="h5 mb-0">
+                                    Нові замовлення
+                                </h2>
+
+                                <span class="badge text-bg-dark">
+                {{ pending_orders_count }}
+              </span>
+                            </div>
+
+                            {% if recent_orders %}
+                                {% for order in recent_orders %}
+                                    <div class="border-bottom pb-3 mb-3">
+                                        <div class="fw-semibold">
+                                            Замовлення №{{ order.pk }}
+                                        </div>
+
+                                        <div class="small text-muted">
+                                            {{ order.client_name }}
+                                        </div>
+
+                                        <div class="small">
+                                            {{ order.total_price|floatformat:2 }}
+                                            грн · {{ order.get_status_display }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">
+                                    Замовлень немає.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between gap-3 mb-4">
+                                <h2 class="h5 mb-0">
+                                    Заявки на курси
+                                </h2>
+
+                                <span class="badge text-bg-dark">
+                {{ pending_course_applications_count }}
+              </span>
+                            </div>
+
+                            {% if recent_course_applications %}
+                                {% for application in recent_course_applications %}
+                                    <div class="border-bottom pb-3 mb-3">
+                                        <div class="fw-semibold">
+                                            {{ application.applicant_name }}
+                                        </div>
+
+                                        <div class="small text-muted">
+                                            {{ application.course.title }}
+                                        </div>
+
+                                        <div class="small">
+                                            {{ application.get_status_display }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">
+                                    Заявок на навчання немає.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+{% endblock %}

@@ -1,0 +1,751 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ customer.full_name }} | CRM
+{% endblock %}
+
+{% block content %}
+    {% include "crm/includes/navigation.html" %}
+    <style>
+        .detail-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .detail-back {
+            color: #59514d;
+            text-decoration: none;
+        }
+
+        .detail-back:hover {
+            color: #000;
+        }
+
+        .customer-hero {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 28px;
+            margin-bottom: 24px;
+            background: #f6f2ef;
+            border: 1px solid #ebe2dc;
+            border-radius: 22px;
+        }
+
+        .customer-hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(30px, 5vw, 48px);
+            font-weight: 650;
+            letter-spacing: -0.04em;
+        }
+
+        .customer-contact {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            color: #675e59;
+        }
+
+        .customer-contact a {
+            color: inherit;
+        }
+
+        .customer-badges {
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .customer-badge {
+            padding: 8px 13px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 50px;
+        }
+
+        .badge-client,
+        .badge-active,
+        .badge-verified {
+            color: #315b43;
+            background: #dceee3;
+        }
+
+        .badge-cosmetologist {
+            color: #765326;
+            background: #f2dfc5;
+        }
+
+        .badge-pending {
+            color: #765326;
+            background: #fff0d8;
+        }
+
+        .badge-inactive,
+        .badge-rejected {
+            color: #7d3434;
+            background: #f8e1e1;
+        }
+
+        .customer-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .customer-actions form {
+            margin: 0;
+        }
+
+        .verification-card {
+            display: grid;
+            grid-template-columns:
+                minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 24px;
+            padding: 22px;
+            margin-bottom: 28px;
+            border: 1px solid #e8e2de;
+            border-radius: 18px;
+        }
+
+        .verification-card.is-verified {
+            background: #f1f8f3;
+            border-color: #cfe4d5;
+        }
+
+        .verification-card.is-pending {
+            background: #fffaf1;
+            border-color: #eddfc5;
+        }
+
+        .verification-card.is-unlinked {
+            background: #faf8f7;
+        }
+
+        .verification-title {
+            margin: 0 0 6px;
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        .verification-description {
+            margin: 0;
+            color: #6d645f;
+        }
+
+        .verification-meta {
+            margin-top: 10px;
+            color: #6d645f;
+            font-size: 14px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 32px;
+        }
+
+        .summary-card {
+            padding: 20px;
+            border: 1px solid #e8e2de;
+            border-radius: 16px;
+        }
+
+        .summary-label {
+            color: #786d66;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .summary-value {
+            margin-top: 8px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .crm-section {
+            margin-top: 38px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+
+        .section-heading h2 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .section-meta {
+            color: #746b66;
+        }
+
+        .history-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .history-card {
+            display: grid;
+            grid-template-columns:
+                1.4fr 0.8fr 0.8fr;
+            gap: 16px;
+            padding: 18px;
+            border: 1px solid #ebe6e2;
+            border-radius: 15px;
+        }
+
+        .history-title {
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .history-description {
+            color: #746b66;
+            font-size: 14px;
+        }
+
+        .history-label {
+            color: #887d76;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .history-value {
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .notes-card {
+            padding: 22px;
+            margin-top: 24px;
+            background: #fffaf2;
+            border: 1px solid #eee0c9;
+            border-radius: 16px;
+        }
+
+        .empty-history {
+            padding: 28px;
+            color: #766d68;
+            text-align: center;
+            background: #faf9f8;
+            border-radius: 15px;
+        }
+
+        @media (max-width: 900px) {
+            .summary-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+            .history-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .verification-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .detail-navigation,
+            .customer-hero {
+                display: block;
+            }
+
+            .detail-navigation .btn {
+                margin-top: 14px;
+            }
+
+            .customer-badges {
+                margin-top: 20px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-heading {
+                display: block;
+            }
+
+            .section-meta {
+                margin-top: 6px;
+            }
+        }
+    </style>
+
+    <div class="detail-navigation">
+        <a
+                href="{% url 'crm:customer-list' %}"
+                class="detail-back"
+        >
+            ← Повернутися до клієнтів
+        </a>
+
+        <a
+                href="{% url 'crm:customer-update' customer.pk %}"
+                class="btn btn-outline-dark"
+        >
+            Редагувати
+        </a>
+    </div>
+
+    <section class="customer-hero">
+        <div>
+            <h1>
+                {{ customer.full_name }}
+            </h1>
+
+            <div class="customer-contact">
+                <a href="tel:{{ customer.phone_number }}">
+                    {{ customer.phone_number }}
+                </a>
+
+                {% if customer.user and customer.user.email %}
+                    <a href="mailto:{{ customer.user.email }}">
+                        {{ customer.user.email }}
+                    </a>
+                {% endif %}
+
+                <span>
+                    Перше звернення:
+                    {{ customer.first_contact_at|date:"d.m.Y" }}
+                </span>
+
+                <span>
+                    Остання активність:
+                    {{ customer.last_activity_at|date:"d.m.Y H:i" }}
+                </span>
+            </div>
+        </div>
+
+        <div class="customer-badges">
+            {% if customer.customer_type == "cosmetologist" %}
+                <span class="customer-badge badge-cosmetologist">
+                    Косметолог
+                </span>
+
+                {% if customer.user %}
+                    {% if customer.user.is_cosmetologist_verified %}
+                        <span class="customer-badge badge-verified">
+                            Підтверджено
+                        </span>
+                    {% else %}
+                        <span class="customer-badge badge-pending">
+                            Очікує підтвердження
+                        </span>
+                    {% endif %}
+                {% else %}
+                    <span class="customer-badge badge-rejected">
+                        Немає облікового запису
+                    </span>
+                {% endif %}
+            {% else %}
+                <span class="customer-badge badge-client">
+                    Звичайний клієнт
+                </span>
+            {% endif %}
+
+            {% if customer.is_active %}
+                <span class="customer-badge badge-active">
+                    Активний
+                </span>
+            {% else %}
+                <span class="customer-badge badge-inactive">
+                    Неактивний
+                </span>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if customer.customer_type == "cosmetologist" %}
+        {% if customer.user %}
+            {% if customer.user.is_cosmetologist_verified %}
+                <section class="verification-card is-verified">
+                    <div>
+                        <h2 class="verification-title">
+                            Косметолога підтверджено
+                        </h2>
+
+                        <p class="verification-description">
+                            Користувач бачить професійні ціни
+                            та може купувати препарати для
+                            спеціалістів.
+                        </p>
+
+                        <div class="verification-meta">
+                            {% if customer.user.cosmetologist_verified_at %}
+                                Дата:
+                                {{ customer.user.cosmetologist_verified_at|date:"d.m.Y H:i" }}
+                            {% endif %}
+
+                            {% if customer.user.cosmetologist_verified_by %}
+                                · Підтвердив:
+                                {{ customer.user.cosmetologist_verified_by.get_full_name|default:customer.user.cosmetologist_verified_by.username }}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <form
+                            method="post"
+                            action="{% url 'crm:revoke-cosmetologist-verification' customer.pk %}"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                                type="submit"
+                                class="btn btn-outline-danger"
+                        >
+                            Скасувати підтвердження
+                        </button>
+                    </form>
+                </section>
+            {% else %}
+                <section class="verification-card is-pending">
+                    <div>
+                        <h2 class="verification-title">
+                            Очікує підтвердження
+                        </h2>
+
+                        <p class="verification-description">
+                            До підтвердження професійні ціни
+                            та придбання препаратів для
+                            спеціалістів недоступні.
+                        </p>
+                    </div>
+
+                    <form
+                            method="post"
+                            action="{% url 'crm:verify-cosmetologist' customer.pk %}"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                                type="submit"
+                                class="btn btn-dark"
+                        >
+                            Підтвердити косметолога
+                        </button>
+                    </form>
+                </section>
+            {% endif %}
+        {% else %}
+            <section class="verification-card is-unlinked">
+                <div>
+                    <h2 class="verification-title">
+                        Немає облікового запису
+                    </h2>
+
+                    <p class="verification-description">
+                        Для підтвердження косметолог повинен
+                        мати пов’язаний обліковий запис
+                        користувача.
+                    </p>
+                </div>
+            </section>
+        {% endif %}
+    {% endif %}
+
+    <div class="customer-actions">
+        <a
+                href="tel:{{ customer.phone_number }}"
+                class="btn btn-dark"
+        >
+            Зателефонувати
+        </a>
+
+        <a
+                href="{% url 'crm:customer-update' customer.pk %}"
+                class="btn btn-outline-dark"
+        >
+            Редагувати дані
+        </a>
+
+        <form
+                method="post"
+                action="{% url 'crm:customer-toggle-active' customer.pk %}"
+        >
+            {% csrf_token %}
+
+            <input
+                    type="hidden"
+                    name="next"
+                    value="{% url 'crm:customer-detail' customer.pk %}"
+            >
+
+            {% if customer.is_active %}
+                <button
+                        type="submit"
+                        class="btn btn-outline-danger"
+                >
+                    Деактивувати
+                </button>
+            {% else %}
+                <button
+                        type="submit"
+                        class="btn btn-outline-success"
+                >
+                    Активувати
+                </button>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="summary-grid">
+        <article class="summary-card">
+            <div class="summary-label">
+                Загальні витрати
+            </div>
+
+            <div class="summary-value">
+                {{ total_spending|floatformat:2 }} ₴
+            </div>
+        </article>
+
+        <article class="summary-card">
+            <div class="summary-label">
+                Усі взаємодії
+            </div>
+
+            <div class="summary-value">
+                {{ total_interactions }}
+            </div>
+        </article>
+
+        <article class="summary-card">
+            <div class="summary-label">
+                Завершені процедури
+            </div>
+
+            <div class="summary-value">
+                {{ booking_statistics.completed }}
+            </div>
+        </article>
+
+        <article class="summary-card">
+            <div class="summary-label">
+                Оплачені замовлення
+            </div>
+
+            <div class="summary-value">
+                {{ order_statistics.paid }}
+            </div>
+        </article>
+    </div>
+
+    <section class="notes-card">
+        <h2 class="h5">
+            Внутрішні нотатки
+        </h2>
+
+        {% if customer.notes %}
+            <div class="mt-3">
+                {{ customer.notes|linebreaks }}
+            </div>
+        {% else %}
+            <p class="mt-3 mb-0 text-secondary">
+                Нотаток про клієнта поки немає.
+            </p>
+        {% endif %}
+    </section>
+
+    <section class="crm-section">
+        <div class="section-heading">
+            <h2>Процедури</h2>
+
+            <div class="section-meta">
+                {{ booking_statistics.total }} записів ·
+                {{ booking_statistics.spending|floatformat:2 }} ₴
+            </div>
+        </div>
+
+        {% if bookings %}
+            <div class="history-list">
+                {% for booking in bookings %}
+                    <article class="history-card">
+                        <div>
+                            <div class="history-title">
+                                {{ booking.procedure.name }}
+                            </div>
+
+                            <div class="history-description">
+                                {{ booking.get_source_display }}
+                            </div>
+
+                            {% if booking.client_note %}
+                                <div class="history-description mt-2">
+                                    Коментар:
+                                    {{ booking.client_note|linebreaksbr }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <div class="history-label">
+                                Дата і час
+                            </div>
+
+                            <div class="history-value">
+                                {{ booking.date|date:"d.m.Y" }}
+                                ·
+                                {{ booking.start_time|time:"H:i" }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="history-label">
+                                Статус і вартість
+                            </div>
+
+                            <div class="history-value">
+                                {{ booking.get_status_display }}
+                                ·
+                                {{ booking.price_at_booking|floatformat:2 }} ₴
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-history">
+                Записів на процедури ще немає.
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="crm-section">
+        <div class="section-heading">
+            <h2>Замовлення</h2>
+
+            <div class="section-meta">
+                {{ order_statistics.total }} замовлень ·
+                {{ order_statistics.spending|floatformat:2 }} ₴
+            </div>
+        </div>
+
+        {% if orders %}
+            <div class="history-list">
+                {% for order in orders %}
+                    <article class="history-card">
+                        <div>
+                            <div class="history-title">
+                                Замовлення №{{ order.pk }}
+                            </div>
+
+                            <div class="history-description">
+                                {{ order.items.count }} товарів ·
+                                {{ order.get_source_display }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="history-label">
+                                Дата
+                            </div>
+
+                            <div class="history-value">
+                                {{ order.created_at|date:"d.m.Y H:i" }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="history-label">
+                                Статус і сума
+                            </div>
+
+                            <div class="history-value">
+                                {{ order.get_status_display }}
+                                ·
+                                {{ order.total_price|floatformat:2 }} ₴
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-history">
+                Замовлень ще немає.
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="crm-section">
+        <div class="section-heading">
+            <h2>Навчання</h2>
+
+            <div class="section-meta">
+                {{ course_statistics.total }} заявок ·
+                {{ course_statistics.spending|floatformat:2 }} ₴
+            </div>
+        </div>
+
+        {% if course_applications %}
+            <div class="history-list">
+                {% for application in course_applications %}
+                    <article class="history-card">
+                        <div>
+                            <div class="history-title">
+                                {{ application.course.title }}
+                            </div>
+
+                            <div class="history-description">
+                                {{ application.course.get_format_display }}
+                                ·
+                                {{ application.get_source_display }}
+                            </div>
+
+                            {% if application.applicant_comment %}
+                                <div class="history-description mt-2">
+                                    {{ application.applicant_comment|linebreaksbr }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <div class="history-label">
+                                Дата заявки
+                            </div>
+
+                            <div class="history-value">
+                                {{ application.enrolled_at|date:"d.m.Y H:i" }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="history-label">
+                                Статус і вартість
+                            </div>
+
+                            <div class="history-value">
+                                {{ application.get_status_display }}
+                                ·
+                                {{ application.price_at_enrollment|floatformat:2 }}
+                                ₴
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-history">
+                Заявок на навчання ще немає.
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
