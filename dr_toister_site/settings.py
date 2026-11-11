@@ -1,33 +1,50 @@
 import os
 from pathlib import Path
 
+from django.contrib.messages import constants as message_constants
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.getenv(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-development-key",
+
+def env_bool(name, default=False):
+    return os.getenv(name, str(default)).strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def env_list(name, default=""):
+    return [
+        item.strip()
+        for item in os.getenv(name, default).split(",")
+        if item.strip()
+    ]
+
+
+DEBUG = env_bool("DJANGO_DEBUG", True)
+
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "").strip()
+
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is False."
+        )
+
+    SECRET_KEY = "django-insecure-development-key"
+
+ALLOWED_HOSTS = env_list(
+    "DJANGO_ALLOWED_HOSTS",
+    "127.0.0.1,localhost",
 )
 
-DEBUG = (
-    os.getenv(
-        "DJANGO_DEBUG",
-        "True",
-    ).lower()
-    == "true"
-)
-
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.getenv(
-        "DJANGO_ALLOWED_HOSTS",
-        "127.0.0.1,localhost",
-    ).split(",")
-    if host.strip()
-]
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -71,6 +88,7 @@ TEMPLATES = [
                 ("django.contrib.auth." "context_processors.auth"),
                 ("django.contrib.messages." "context_processors.messages"),
                 "shop.context_processors.cart",
+                "dr_toister_site.context_processors.site",
             ],
         },
     },
@@ -139,6 +157,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 EMAIL_BACKEND = "django.core.mail.backends.console." "EmailBackend"
 
+MESSAGE_TAGS = {
+    message_constants.ERROR: "danger",
+}
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "accounts:login"
@@ -147,12 +169,9 @@ LOGIN_REDIRECT_URL = "accounts:dashboard"
 
 LOGOUT_REDIRECT_URL = "accounts:login"
 
-TELEGRAM_NOTIFICATIONS_ENABLED = (
-    os.getenv(
-        "TELEGRAM_NOTIFICATIONS_ENABLED",
-        "False",
-    ).lower()
-    == "true"
+TELEGRAM_NOTIFICATIONS_ENABLED = env_bool(
+    "TELEGRAM_NOTIFICATIONS_ENABLED",
+    False,
 )
 
 TELEGRAM_BOT_TOKEN = os.getenv(
@@ -186,3 +205,48 @@ TELEGRAM_REQUEST_TIMEOUT = int(
         "5",
     )
 )
+
+SITE_PHONE = os.getenv("SITE_PHONE", "").strip()
+
+SITE_EMAIL = os.getenv("SITE_EMAIL", "").strip()
+
+SITE_ADDRESS = os.getenv("SITE_ADDRESS", "").strip()
+
+SITE_INSTAGRAM_URL = os.getenv("SITE_INSTAGRAM_URL", "").strip()
+
+SITE_TELEGRAM_URL = os.getenv("SITE_TELEGRAM_URL", "").strip()
+
+SESSION_COOKIE_HTTPONLY = True
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+X_FRAME_OPTIONS = "DENY"
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", True)
+    SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "0"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool(
+        "DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS",
+        False,
+    )
+
+    if env_bool("DJANGO_BEHIND_PROXY", False):
+        SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.getenv("DJANGO_LOG_LEVEL", "WARNING"),
+    },
+}

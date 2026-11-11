@@ -146,7 +146,7 @@
                     </h3>
 
                     <p class="mb-1">
-                        {{ booking.date }}
+                        {{ booking.date|date:"d.m.Y" }}
                         ·
                         {{ booking.start_time|time:"H:i" }}
                         –
@@ -185,7 +185,7 @@
                     </h3>
 
                     <p>
-                        {{ booking.date }}
+                        {{ booking.date|date:"d.m.Y" }}
                         ·
                         {{ booking.start_time|time:"H:i" }}
                     </p>
@@ -201,7 +201,7 @@
                                 Коментар лікаря:
                             </strong>
 
-                            {{ booking.visit_comment.comment }}
+                            {{ booking.visit_comment.comment|linebreaksbr }}
 
                             {% if booking.visit_comment.recommendations %}
                                 <hr>
@@ -210,7 +210,7 @@
                                     Рекомендації:
                                 </strong>
 
-                                {{ booking.visit_comment.recommendations }}
+                                {{ booking.visit_comment.recommendations|linebreaksbr }}
                             {% endif %}
                         </div>
                     {% endif %}

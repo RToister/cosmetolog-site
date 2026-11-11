@@ -10,12 +10,9 @@ class Cart:
         self.session = request.session
         self.user = request.user
 
-        cart = self.session.get(CART_SESSION_ID)
-
-        if cart is None:
-            cart = self.session[CART_SESSION_ID] = {}
-
-        self.cart = cart
+        # Do not write to the session until the cart is actually changed,
+        # so anonymous visitors do not get a session row on every page.
+        self.cart = self.session.get(CART_SESSION_ID) or {}
 
     @property
     def user_has_professional_access(self):
@@ -60,11 +57,11 @@ class Cart:
             self.save()
 
     def save(self):
+        self.session[CART_SESSION_ID] = self.cart
         self.session.modified = True
 
     def clear(self):
-        self.session[CART_SESSION_ID] = {}
-        self.cart = self.session[CART_SESSION_ID]
+        self.cart = {}
         self.save()
 
     def __len__(self):

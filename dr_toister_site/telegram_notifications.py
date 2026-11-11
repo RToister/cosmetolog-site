@@ -82,7 +82,7 @@ def send_telegram_message(
     except (
             HTTPError,
             URLError,
-            TimeoutError,
+            OSError,
             ValueError,
     ) as error:
         logger.warning(

@@ -60,6 +60,7 @@ def dashboard(request):
     bookings = request.user.bookings.select_related(
         "procedure",
         "procedure__category",
+        "visit_comment",
     ).order_by(
         "-date",
         "-start_time",

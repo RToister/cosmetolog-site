@@ -136,10 +136,12 @@ def product_list(request):
     else:
         selected_group = ""
 
-    if selected_category:
+    if selected_category.isdigit():
         products = products.filter(
             category_id=selected_category,
         )
+    else:
+        selected_category = ""
 
     if search_query:
         products = products.filter(

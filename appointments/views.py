@@ -164,12 +164,19 @@ def available_times(request):
         status=Booking.Status.CANCELLED,
     )
 
-    excluded_booking_id = request.GET.get("exclude_booking")
+    excluded_booking_id = request.GET.get("exclude_booking", "")
 
-    if excluded_booking_id:
+    if excluded_booking_id.isdigit():
         existing_bookings = existing_bookings.exclude(
             pk=excluded_booking_id,
         )
+
+    busy_intervals = list(
+        existing_bookings.values_list(
+            "start_time",
+            "end_time",
+        )
+    )
 
     current_datetime = timezone.localtime()
 
@@ -201,10 +208,10 @@ def available_times(request):
             and slot_start <= current_datetime.time()
         )
 
-        has_overlap = existing_bookings.filter(
-            start_time__lt=slot_end,
-            end_time__gt=slot_start,
-        ).exists()
+        has_overlap = any(
+            busy_start < slot_end and busy_end > slot_start
+            for busy_start, busy_end in busy_intervals
+        )
 
         if not slot_is_in_past and not has_overlap:
             available_slots.append(

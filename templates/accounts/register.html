@@ -52,36 +52,6 @@
             margin-bottom: 5px;
         }
 
-        .registration-card form p {
-            margin-bottom: 18px;
-        }
-
-        .registration-card form label {
-            display: block;
-            margin-bottom: 7px;
-            font-weight: 600;
-        }
-
-        .registration-card form input {
-            display: block;
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #d8d0cb;
-            border-radius: 10px;
-        }
-
-        .registration-card .helptext {
-            display: block;
-            margin-top: 6px;
-            color: #746b66;
-            font-size: 13px;
-        }
-
-        .registration-card ul.errorlist {
-            padding-left: 0;
-            color: #a33c3c;
-            list-style: none;
-        }
     </style>
 
     <div class="registration-wrapper">
@@ -112,7 +82,7 @@
 
             <form method="post">
                 {% csrf_token %}
-                {{ form.as_p }}
+                {% include "includes/form_fields.html" %}
 
                 <button
                         class="btn btn-dark w-100"

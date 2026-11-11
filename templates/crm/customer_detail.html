@@ -591,7 +591,7 @@
                             {% if booking.client_note %}
                                 <div class="history-description mt-2">
                                     Коментар:
-                                    {{ booking.client_note }}
+                                    {{ booking.client_note|linebreaksbr }}
                                 </div>
                             {% endif %}
                         </div>
@@ -712,7 +712,7 @@
 
                             {% if application.applicant_comment %}
                                 <div class="history-description mt-2">
-                                    {{ application.applicant_comment }}
+                                    {{ application.applicant_comment|linebreaksbr }}
                                 </div>
                             {% endif %}
                         </div>

@@ -8,7 +8,9 @@ from django.core.paginator import Paginator
 from django.db.models import (
     Count,
     DecimalField,
+    OuterRef,
     Q,
+    Subquery,
     Sum,
 )
 from django.db.models.functions import Coalesce
@@ -25,12 +27,35 @@ from academy.models import CourseEnrollment
 from appointments.models import Booking
 from crm.forms import CustomerForm
 from crm.models import Customer
+from crm.verification_views import get_safe_next_url
 from shop.models import Order
 
 MONEY_FIELD = DecimalField(
     max_digits=12,
     decimal_places=2,
 )
+
+
+def sum_subquery(queryset, field_name):
+    """Sum ``field_name`` of ``queryset`` rows linked to the outer customer.
+
+    A subquery is used instead of ``Sum(..., distinct=True)`` across joins,
+    which would silently drop repeated amounts (e.g. two bookings with the
+    same price).
+    """
+    totals = (
+        queryset.filter(customer=OuterRef("pk"))
+        .order_by()
+        .values("customer")
+        .annotate(total=Sum(field_name))
+        .values("total")
+    )
+
+    return Coalesce(
+        Subquery(totals, output_field=MONEY_FIELD),
+        Decimal("0.00"),
+        output_field=MONEY_FIELD,
+    )
 
 
 def pending_cosmetologists_queryset():
@@ -70,40 +95,23 @@ def customer_list(request):
             "course_applications",
             distinct=True,
         ),
-        appointment_spending=Coalesce(
-            Sum(
-                "bookings__price_at_booking",
-                filter=Q(
-                    bookings__status=(Booking.Status.COMPLETED),
-                ),
-                distinct=True,
+        appointment_spending=sum_subquery(
+            Booking.objects.filter(
+                status=Booking.Status.COMPLETED,
             ),
-            Decimal("0.00"),
-            output_field=MONEY_FIELD,
+            "price_at_booking",
         ),
-        order_spending=Coalesce(
-            Sum(
-                "orders__total_price",
-                filter=Q(
-                    orders__status=Order.Status.PAID,
-                ),
-                distinct=True,
+        order_spending=sum_subquery(
+            Order.objects.filter(
+                status=Order.Status.PAID,
             ),
-            Decimal("0.00"),
-            output_field=MONEY_FIELD,
+            "total_price",
         ),
-        course_spending=Coalesce(
-            Sum(
-                "course_applications__price_at_enrollment",
-                filter=Q(
-                    course_applications__status=(
-                        CourseEnrollment.Status.COMPLETED
-                    ),
-                ),
-                distinct=True,
+        course_spending=sum_subquery(
+            CourseEnrollment.objects.filter(
+                status=CourseEnrollment.Status.COMPLETED,
             ),
-            Decimal("0.00"),
-            output_field=MONEY_FIELD,
+            "price_at_enrollment",
         ),
     )
 
@@ -283,145 +291,11 @@ def customer_toggle_active(request, pk):
         message,
     )
 
-    next_url = request.POST.get("next")
-
-    if next_url:
-        return HttpResponseRedirect(next_url)
-
-    return redirect(
-        "crm:customer-detail",
-        pk=customer.pk,
-    )
-
-
-@staff_member_required
-@require_POST
-def verify_cosmetologist(request, pk):
-    customer = get_object_or_404(
-        Customer.objects.select_related("user"),
-        pk=pk,
-    )
-
-    next_url = request.POST.get("next")
-
-    if customer.user_id is None:
-        messages.error(
+    return HttpResponseRedirect(
+        get_safe_next_url(
             request,
-            (
-                "Підтвердити косметолога неможливо: "
-                "клієнт не має пов’язаного "
-                "облікового запису."
-            ),
+            customer,
         )
-
-        if next_url:
-            return HttpResponseRedirect(next_url)
-
-        return redirect(
-            "crm:customer-detail",
-            pk=customer.pk,
-        )
-
-    if (
-        customer.customer_type != Customer.CustomerType.COSMETOLOGIST
-        or not customer.user.is_cosmetologist
-    ):
-        messages.error(
-            request,
-            ("Підтвердити можна лише клієнта " "з типом «Косметолог»."),
-        )
-
-        if next_url:
-            return HttpResponseRedirect(next_url)
-
-        return redirect(
-            "crm:customer-detail",
-            pk=customer.pk,
-        )
-
-    if customer.user.is_cosmetologist_verified:
-        messages.info(
-            request,
-            ("Цього косметолога вже " "підтверджено."),
-        )
-
-        if next_url:
-            return HttpResponseRedirect(next_url)
-
-        return redirect(
-            "crm:customer-detail",
-            pk=customer.pk,
-        )
-
-    customer.user.verify_cosmetologist(
-        verified_by=request.user,
-    )
-
-    messages.success(
-        request,
-        (
-            "Косметолога підтверджено. "
-            "Тепер йому доступні професійні "
-            "ціни та препарати."
-        ),
-    )
-
-    if next_url:
-        return HttpResponseRedirect(next_url)
-
-    return redirect(
-        "crm:customer-detail",
-        pk=customer.pk,
-    )
-
-
-@staff_member_required
-@require_POST
-def revoke_cosmetologist_verification(
-    request,
-    pk,
-):
-    customer = get_object_or_404(
-        Customer.objects.select_related("user"),
-        pk=pk,
-    )
-
-    if customer.user_id is None:
-        messages.error(
-            request,
-            ("Клієнт не має пов’язаного " "облікового запису."),
-        )
-
-        return redirect(
-            "crm:customer-detail",
-            pk=customer.pk,
-        )
-
-    if not customer.user.is_cosmetologist_verified:
-        messages.info(
-            request,
-            ("Цей косметолог не має " "активного підтвердження."),
-        )
-
-        return redirect(
-            "crm:customer-detail",
-            pk=customer.pk,
-        )
-
-    customer.user.revoke_cosmetologist_verification()
-
-    messages.success(
-        request,
-        (
-            "Підтвердження косметолога "
-            "скасовано. Професійні ціни "
-            "та придбання препаратів закрито."
-        ),
-    )
-
-    return redirect(
-        "crm:customer-detail",
-        pk=customer.pk,
     )
 
 

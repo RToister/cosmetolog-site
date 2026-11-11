@@ -218,7 +218,7 @@
 
                         {% if category.description %}
                             <p class="category-description">
-                                {{ category.description }}
+                                {{ category.description|linebreaksbr }}
                             </p>
                         {% endif %}
                     </div>
@@ -237,7 +237,7 @@
 
                             {% if procedure.description %}
                                 <p>
-                                    {{ procedure.description }}
+                                    {{ procedure.description|linebreaksbr }}
                                 </p>
                             {% endif %}
 
