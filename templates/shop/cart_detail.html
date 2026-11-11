@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
     Кошик | DR TOISTER
@@ -45,12 +46,17 @@
                                                 >
                                             </a>
                                         {% else %}
-                                            <div
-                                                    class="bg-light rounded d-flex align-items-center justify-content-center text-muted text-center"
-                                                    style="height: 130px;"
+                                            <a
+                                                    href="{% url 'shop:product-detail' item.product.pk %}"
                                             >
-                                                Без зображення
-                                            </div>
+                                                <img
+                                                        src="{% static item.product.illustration %}"
+                                                        alt="{{ item.product.name }}"
+                                                        class="img-fluid rounded"
+                                                        style="height: 130px; width: 100%; object-fit: cover;"
+                                                        loading="lazy"
+                                                >
+                                            </a>
                                         {% endif %}
                                     </div>
 

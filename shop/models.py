@@ -6,6 +6,7 @@ from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.utils import timezone
 
+from dr_toister_site.illustrations import product_illustration
 from dr_toister_site.phone_numbers import (
     normalize_phone_number,
 )
@@ -160,6 +161,10 @@ class Product(models.Model):
                     )
                 }
             )
+
+    @property
+    def illustration(self):
+        return product_illustration(self)
 
     def save(self, *args, **kwargs):
         self.full_clean()

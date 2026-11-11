@@ -6,6 +6,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q
 
+from dr_toister_site.illustrations import course_illustration
 from dr_toister_site.phone_numbers import (
     normalize_phone_number,
 )
@@ -142,6 +143,10 @@ class Course(models.Model):
         )
         verbose_name = "Курс"
         verbose_name_plural = "Курси"
+
+    @property
+    def illustration(self):
+        return course_illustration(self)
 
     def __str__(self):
         return self.title

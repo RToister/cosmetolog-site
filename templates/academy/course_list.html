@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
     {{ page_title }} | DR TOISTER
@@ -265,7 +266,11 @@
                                             alt="{{ course.title }}"
                                     >
                                 {% else %}
-                                    Care
+                                    <img
+                                            src="{% static course.illustration %}"
+                                            alt=""
+                                            loading="lazy"
+                                    >
                                 {% endif %}
                             </div>
 
@@ -339,7 +344,11 @@
                                             alt="{{ course.title }}"
                                     >
                                 {% else %}
-                                    Pro
+                                    <img
+                                            src="{% static course.illustration %}"
+                                            alt=""
+                                            loading="lazy"
+                                    >
                                 {% endif %}
                             </div>
 

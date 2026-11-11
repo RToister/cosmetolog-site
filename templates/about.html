@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
     Про лікаря | DR TOISTER
@@ -32,6 +33,12 @@
             padding: 36px;
             color: #fff;
             background: linear-gradient(
+                    to top,
+                    rgba(43, 31, 28, 0.78),
+                    rgba(43, 31, 28, 0) 46%
+            ),
+            url("{% static 'img/doctor.svg' %}") center top / cover,
+            linear-gradient(
                     150deg,
                     #d8c5ba,
                     #9d7468 58%,

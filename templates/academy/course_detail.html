@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
     {{ course.title }} | DR TOISTER
@@ -25,12 +26,12 @@
                             style="max-height: 620px; object-fit: cover;"
                     >
                 {% else %}
-                    <div
-                            class="bg-light rounded d-flex align-items-center justify-content-center text-muted"
-                            style="height: 520px;"
+                    <img
+                            src="{% static course.illustration %}"
+                            alt="{{ course.title }}"
+                            class="img-fluid rounded shadow-sm w-100"
+                            style="max-height: 620px; object-fit: cover;"
                     >
-                        Зображення буде додано
-                    </div>
                 {% endif %}
             </div>
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
     DR TOISTER — косметологія та професійний догляд
@@ -124,32 +125,12 @@
             );
         }
 
-        .hero-visual::before,
-        .hero-visual::after {
+        .hero-visual img {
             position: absolute;
-            content: "";
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-        }
-
-        .hero-visual::before {
-            width: 390px;
-            height: 390px;
-        }
-
-        .hero-visual::after {
-            width: 520px;
-            height: 520px;
-        }
-
-        .hero-monogram {
-            position: relative;
-            z-index: 1;
-            color: #fff;
-            font-family: Georgia, serif;
-            font-size: clamp(90px, 14vw, 170px);
-            font-style: italic;
-            letter-spacing: -0.08em;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .trust-line {
@@ -237,6 +218,12 @@
             overflow: hidden;
             color: #fff;
             background: linear-gradient(
+                    to top,
+                    rgba(43, 31, 28, 0.78),
+                    rgba(43, 31, 28, 0) 46%
+            ),
+            url("{% static 'img/doctor.svg' %}") center top / cover,
+            linear-gradient(
                     150deg,
                     #d8c5ba,
                     #9d7468 58%,
@@ -301,6 +288,12 @@
             border: 1px solid #e5ddd7;
             border-radius: 20px;
             transition: 0.25s ease;
+        }
+
+        .service-icon {
+            width: 56px;
+            height: 56px;
+            margin-bottom: 18px;
         }
 
         .service-card:hover {
@@ -605,9 +598,13 @@
             </div>
 
             <div class="hero-visual">
-                <div class="hero-monogram">
-                    DT
-                </div>
+                <img
+                        src="{% static 'img/hero.svg' %}"
+                        alt="Засоби для догляду за шкірою"
+                        width="600"
+                        height="700"
+                        fetchpriority="high"
+                >
             </div>
         </section>
 
@@ -739,6 +736,15 @@
                             href="{% url 'appointments:booking-create' %}?procedure={{ procedure.pk }}"
                             class="service-card"
                     >
+                        <img
+                                class="service-icon"
+                                src="{% static procedure.illustration %}"
+                                alt=""
+                                width="56"
+                                height="56"
+                                loading="lazy"
+                        >
+
                         <div class="service-category">
                             {{ procedure.category.name }}
                         </div>
@@ -904,7 +910,11 @@
                                         alt="{{ course.title }}"
                                 >
                             {% else %}
-                                Care
+                                <img
+                                        src="{% static course.illustration %}"
+                                        alt=""
+                                        loading="lazy"
+                                >
                             {% endif %}
                         </div>
 
@@ -981,7 +991,11 @@
                                         alt="{{ course.title }}"
                                 >
                             {% else %}
-                                Pro
+                                <img
+                                        src="{% static course.illustration %}"
+                                        alt=""
+                                        loading="lazy"
+                                >
                             {% endif %}
                         </div>
 
@@ -1056,7 +1070,11 @@
                                         alt="{{ product.name }}"
                                 >
                             {% else %}
-                                Care
+                                <img
+                                        src="{% static product.illustration %}"
+                                        alt=""
+                                        loading="lazy"
+                                >
                             {% endif %}
                         </div>
 

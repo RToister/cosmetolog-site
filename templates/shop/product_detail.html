@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
     {{ product.name }} | DR TOISTER
@@ -279,10 +280,12 @@
                         src="{{ product.image.url }}"
                         alt="{{ product.name }}"
                 >
-            {% elif product.is_professional_product %}
-                Pro
             {% else %}
-                Care
+                <img
+                        src="{% static product.illustration %}"
+                        alt=""
+                        loading="lazy"
+                >
             {% endif %}
         </div>
 
@@ -466,10 +469,12 @@
                                         src="{{ related_product.image.url }}"
                                         alt="{{ related_product.name }}"
                                 >
-                            {% elif related_product.is_professional_product %}
-                                Pro
                             {% else %}
-                                Care
+                                <img
+                                        src="{% static related_product.illustration %}"
+                                        alt=""
+                                        loading="lazy"
+                                >
                             {% endif %}
                         </div>
 

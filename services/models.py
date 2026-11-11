@@ -1,6 +1,8 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from dr_toister_site.illustrations import procedure_illustration
+
 
 class ProcedureCategory(models.Model):
     name = models.CharField(
@@ -65,6 +67,10 @@ class Procedure(models.Model):
         ordering = ("name",)
         verbose_name = "Процедура"
         verbose_name_plural = "Процедури"
+
+    @property
+    def illustration(self):
+        return procedure_illustration(self)
 
     def __str__(self):
         return self.name

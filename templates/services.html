@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
     Послуги | DR TOISTER
@@ -105,8 +106,19 @@
             letter-spacing: 0.1em;
         }
 
+        .procedure-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .procedure-icon {
+            width: 56px;
+            height: 56px;
+        }
+
         .procedure-card h3 {
-            margin: 36px 0 14px;
+            margin: 24px 0 14px;
             font-size: 27px;
             letter-spacing: -0.035em;
         }
@@ -227,8 +239,19 @@
                 <div class="procedure-grid">
                     {% for procedure in category.active_procedures %}
                         <article class="procedure-card">
-                            <div class="procedure-index">
-                                {{ forloop.counter|stringformat:"02d" }}
+                            <div class="procedure-top">
+                                <img
+                                        class="procedure-icon"
+                                        src="{% static procedure.illustration %}"
+                                        alt=""
+                                        width="56"
+                                        height="56"
+                                        loading="lazy"
+                                >
+
+                                <div class="procedure-index">
+                                    {{ forloop.counter|stringformat:"02d" }}
+                                </div>
                             </div>
 
                             <h3>
